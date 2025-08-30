@@ -1,0 +1,104 @@
+.DepartmentPageContainer{
+    gap: 1rem;
+}
+
+.DepartmentPageContainer h1{
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.DepartmentHeaderContainer{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.SideHeaderButton{
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    padding: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
+
+.SideHeaderButtonActive{
+    background-color: var(--third-color);
+    transform: scale(1.1);
+}
+
+.ProcessListContainer{
+    display: flex;
+    width: 100%;
+    gap: 1rem;
+}
+
+.ProcessSelectContainer{
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    width: 100%;
+}
+
+.ProcessOptionContainer{
+    background-color: var(--third-color);
+    color: var(--text-primary-color);
+}
+
+.ProcessButton{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+}
+
+.FormPageContainer{
+    overflow-x: auto;
+    border-width: 1px;
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.TableHeader, th {
+    font-weight: 600 !important;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color) !important;
+}
+
+.TableBody{
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.TableHeaderContent {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    white-space: nowrap;
+}
+
+.RowsField{
+    white-space: nowrap;
+}
+
+.SelectedRowField{
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    transform: scale(1.02);
+}
+
+.InputField{
+    background-color: var(--primary-color);
+    width: calc(100% + 0.5rem);
+    padding: 0.25rem;
+    white-space: nowrap;
+}

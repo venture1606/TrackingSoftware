@@ -1,0 +1,704 @@
+{
+  "SideHeadersList": [
+    "Products",
+    "Department",
+    "Quality Management System",
+    "Sales Order",
+    "Purchase",
+    "Manufacturing",
+    "Stock",
+    "New Development",
+    "Master"
+  ],
+  "DepartmentsListName":[
+    "Design",
+    "Manufacturing",
+    "Quality",
+    "Maintenance",
+    "Sales",
+    "Purchase",
+    "Stores",
+    "Human Resources"
+  ],
+  "Products": [
+    {
+      "id": 1,
+      "name": "Hydraulic Motor",
+      "status": "Available",
+      "partNo": "HM-001",
+      "series": "HM-100",
+      "description": "A high-performance hydraulic motor",
+      "image": "https://example.com/images/hydraulic_motor.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 2,
+      "name": "Electric Motor",
+      "status": "Building",
+      "partNo": "EM-001",
+      "series": "EM-100",
+      "description": "A high-performance electric motor",
+      "image": "https://example.com/images/electric_motor.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 3,
+      "name": "Hydraulic Pump",
+      "status": "Available",
+      "partNo": "HP-001",
+      "series": "HP-100",
+      "description": "A high-performance hydraulic pump",
+      "image": "https://example.com/images/hydraulic_pump.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 4,
+      "name": "Electric Pump",
+      "status": "Checking",
+      "partNo": "EP-001",
+      "series": "EP-100",
+      "description": "A high-performance electric pump",
+      "image": "https://example.com/images/electric_pump.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 5,
+      "name": "Electric Actuator",
+      "status": "Available",
+      "partNo": "EA-001",
+      "series": "EA-100",
+      "description": "A high-performance electric actuator",
+      "image": "https://example.com/images/electric_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 6,
+      "name": "Hydraulic Cylinder",
+      "status": "Available",
+      "partNo": "HC-001",
+      "series": "HC-100",
+      "description": "A high-performance hydraulic cylinder",
+      "image": "https://example.com/images/hydraulic_cylinder.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 7,
+      "name": "Electric Cylinder",
+      "status": "Available",
+      "partNo": "EC-001",
+      "series": "EC-100",
+      "description": "A high-performance electric cylinder",
+      "image": "https://example.com/images/electric_cylinder.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 8,
+      "name": "Hydraulic Actuator",
+      "status": "Available",
+      "partNo": "HA-001",
+      "series": "HA-100",
+      "description": "A high-performance hydraulic actuator",
+      "image": "https://example.com/images/hydraulic_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 9,
+      "name": "Electric Actuator",
+      "status": "Available",
+      "partNo": "EA-001",
+      "series": "EA-100",
+      "description": "A high-performance electric actuator",
+      "image": "https://example.com/images/electric_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 10,
+      "name": "Hydraulic Actuator",
+      "status": "Available",
+      "partNo": "HA-001",
+      "series": "HA-100",
+      "description": "A high-performance hydraulic actuator",
+      "image": "https://example.com/images/hydraulic_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    }
+  ],
+  "SubDepartments": [
+    {
+      "key": "Design",
+      "value": [
+        "NPD Register",
+        "Product Validation Report",
+        "Master Piece",
+        "Product List",
+        "Product Drawing Control",
+        "Bill of Materials - BOM",
+        "Revision Control",
+        "Product Revision",
+        "Product Success Rate",
+        "Product Sample List"
+      ]
+    },
+    {
+      "key": "Manufacturing",
+      "value": [
+        "Request Slip",
+        "Production Planning Control",
+        "Production Report",
+        "Rejection Report",
+        "Rework Report",
+        "Dispatch",
+        "Shift Schedule"
+      ]
+    },
+    {
+      "key": "Quality",
+      "value": [
+        "Instruments",
+        "Calibration Report",
+        "Incoming Inspection",
+        "Customer Complient Register",
+        "Process Control Rate",
+        "Certificate Renewal",
+        "Quality Audits",
+        "Continous Improvement"
+      ]
+    },
+    {
+      "key": "Maintenance",
+      "value": [
+        "Machine List",
+        "Machine History Card",
+        "Preventive Maintenance",
+        "KWH Monitoring"
+      ]
+    },
+    {
+      "key": "Sales",
+      "value": [
+        "Customer List",
+        "Field Visit Report",
+        "Quotation List",
+        "Order List",
+        "Product Sample Register",
+        "Customer Trail"
+      ]
+    },
+    {
+      "key": "Purchase",
+      "value": [
+        "Production Plan",
+        "Purchase Items",
+        "Pending Plan Items",
+        "Item List",
+        "Vendor List",
+        "Procurement Register"
+      ]
+    },
+    {
+      "key": "Stores",
+      "value": [
+        "Store Register",
+        "Stock Data",
+        "Stock Adjustment"
+      ]
+    },
+    {
+      "key": "Human Resources",
+      "value": [
+        "Employee History",
+        "Attendance Register",
+        "Training Schedule",
+        "Safety Follow Ups"
+      ]
+    }
+  ],
+  "DesignProcess":[
+    {
+      "process": "NPD Register",
+      "header": [
+        "NO",
+        "BY",
+        "FROM",
+        "DATE",
+        "PART",
+        "SPEC",
+        "QTY",
+        "REVIEW DATE",
+        "REVIEW BY",
+        "STATUS",
+        "UPLOAD",
+        "PROTO",
+        "VALIDATION",
+        "MASTER"
+      ],
+      "data": [
+        [
+          { "key": "NO", "value": "1" },
+          { "key": "BY", "value": "John Doe" },
+          { "key": "FROM", "value": "Design Team" },
+          { "key": "DATE", "value": "2023-01-01" },
+          { "key": "PART", "value": "Part A" },
+          { "key": "SPEC", "value": "Specification A" },
+          { "key": "QTY", "value": "100" },
+          { "key": "REVIEW DATE", "value": "2023-01-10" },
+          { "key": "REVIEW BY", "value": "Jane Smith" },
+          { "key": "STATUS", "value": "In Progress" },
+          { "key": "UPLOAD", "value": "File.pdf" },
+          { "key": "PROTO", "value": "Prototype 1" },
+          { "key": "VALIDATION", "value": "Validated" },
+          { "key": "MASTER", "value": "Master Document" }
+        ]
+      ]
+    },
+    {
+      "process": "Product Validation Report",
+      "header": [],
+      "data": []
+    },
+    {
+      "process": "Master Piece",
+      "header": [
+        "SL.NO",
+        "PART",
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "SPECIFICATION",
+        "MASTER PIECE",
+        "REMARK"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product List",
+      "header": [
+        "DATE",
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "REV NO",
+        "TECHINICAL SPECIFICATION",
+        "BOM",
+        "DRAWING CONROL",
+        "REVISION CONTROL",
+        "PROCESS CONTROL PLAN"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Drawing Control",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "DRAWING NO",
+        "UPDATED REV NO",
+        "CONTROL COPY",
+        "VERIFIED COPY",
+        "PHOTO COPY",
+        "REJECT COPY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Bill of Materials - BOM",
+      "header": [
+        "SERIES",
+        "PART NO",
+        "PARTS NAME",
+        "DRW NO",
+        "CODE",
+        "REV NO",
+        "ITEM CODE",
+        "GRADE",
+        "ITEM NAME",
+        "QTY",
+        "UNITS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Revision Control",
+      "header": [
+        "DATE",
+        "SERIES",
+        "PART NO",
+        "DEPARTMENT",
+        "PROBLEM DESCRIPTION",
+        "PART REV NO ",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Update",
+      "header": [
+        "SUB PART NO",
+        "SUB PART NAME",
+        "DRAWING NO",
+        "REV NO",
+        "ACTION TAKEN",
+        "UPDATED DATE",
+        "SUB PART  REV NO",
+        "PREPARED BY",
+        "CHECKED BY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Revision",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "CODE",
+        "REVISION"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Success Rate",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "QTY SOLD",
+        "QTY RETURNED",
+        "SUCCESS RATE"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Sample List",
+      "header": [
+        "S.NO",
+        "ENQ. NO",
+        "PART",
+        "MAKE",
+        "MODEL",
+        "MATERIAL",
+        "SPECIFICATION",
+        "QTY",
+        "IMAGE"
+      ],
+      "data": []
+    }
+  ],
+  "ManufacturingProcess": [
+    {
+      "process": "Request Slip",
+      "header": [
+        "DATE",
+        "DEPARTMENTS",
+        "ITEM CATEGORY",
+        "PART NO",
+        "PART NAME",
+        "ITEM NAME",
+        "QTY",
+        "UNITS",
+        "APPROVED BY",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Production Planning Control",
+      "header": [
+        "PLAN NO",
+        "DATE",
+        "CUSTOMER NAME",
+        "PART NO",
+        "PART NAME",
+        "DESCRIPTION ",
+        "GRADE",
+        "PLAN QTY",
+        "RM",
+        "INCOMING INSPECTION",
+        "MACHINE",
+        "OUT PROCESS",
+        "ASSEMBLY",
+        "STOCK QTY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Production Report",
+      "header":[
+        "DATE",
+        "SHIFT",
+        "MACHINE",
+        "START TIME",
+        "END TIME",
+        "SETTING",
+        "PART NO",
+        "PART NAME",
+        "OPT. NAME",
+        "PROGRAM NO",
+        "CYCLE TIME",
+        "PLAN ",
+        "ACTUAL ",
+        "REJECT",
+        "BREAK HOUR",
+        "OPERATED BY",
+        "INCHARGE",
+        "OEE",
+        "PLAN NO",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Rejection Report",
+      "header": [
+        "DATE",
+        "SHIFT",
+        "STAGE",
+        "PART NO",
+        "PART NAME",
+        "PROBLEM DESCRIPTION",
+        "REJECT QTY",
+        "REJECT STAGE",
+        "INSPECT BY",
+        "ACTION TAKEN"
+      ],
+      "data": []
+    },
+    {
+      "process": "Rework Report",
+      "header": [
+        "PART NO",
+        "PART NAME",
+        "PROBLEM DESCRIPTION",
+        "REWORK QTY",
+        "REJECT STAGE",
+        "ACTION PLAN",
+        "VERIFIED BY",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Dispatch",
+      "header": [
+        "DATE",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "BATCH",
+        "DISPATCHQTY",
+        "DESCRIPTION",
+        "DC NO"
+      ],
+      "data": []
+    },
+    {
+      "process": "Shift Schedule",
+      "header": [
+        "DATE",
+        "STAGE",
+        "EMPLOYEE NAME",
+        "1 SHIFT",
+        "2 SHIFT",
+        "3 SHIFT",
+        "GENERAL SHIFT"
+      ],
+      "data": []
+    }
+  ],
+  "QualityProcess":[
+    {
+      "process": "Instruments"
+    },
+    {
+      "process": "Calibration Report"
+    },
+    {
+      "process": "Incoming Inspection"
+    },
+    {
+      "process": "Customer Complient Register"
+    },
+    {
+      "process": "Process Control Rate"
+    },
+    {
+      "process": "Certificate Renewal"
+    },
+    {
+      "process": "Quality Audits"
+    },
+    {
+      "process": "Continous Improvement"
+    }
+  ],
+  "MaintenaceProcess": [
+    {
+      "process": "Machine List"
+    },
+    {
+      "process": "Machine History Card"
+    },
+    {
+      "process": "Preventive Maintenance"
+    },
+    {
+      "process": "KWH Monitoring"
+    }
+  ],
+  "SalesProcess": [
+    {
+      "process": "Customer List"
+    },
+    {
+      "process": "Field Visit Report"
+    },
+    {
+      "process": "Quotation List"
+    },
+    {
+      "process": "Order List"
+    },
+    {
+      "process": "Product Sample Register"
+    },
+    {
+      "process": "Customer Trail"
+    }
+  ],
+  "PurchaseProcess": [
+    {
+      "process": "Production Plan"
+    },
+    {
+      "process": "Purchase Items"
+    },
+    {
+      "process": "Pending Plan Items"
+    },
+    {
+      "process": "Item List"
+    },
+    {
+      "process": "Vendor List"
+    },
+    {
+      "process": "Procurement Register"
+    }
+  ],
+  "StoresProcess": [
+    {
+      "process": "Stock Register"
+    },
+    {
+      "process": "Stock Data"
+    },
+    {
+      "process": "Stock Adjustment"
+    }
+  ],
+  "HumanResourcesProcess": [
+    {
+      "process": "Employee History"
+    },
+    {
+      "process": "Attendance Register"
+    },
+    {
+      "process": "Training Schedule"
+    },
+    {
+      "process": "Safety Follow Ups"
+    }
+  ]
+}

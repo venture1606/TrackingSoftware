@@ -1,0 +1,1881 @@
+{
+    "DepartmentsList": [
+    {
+    "id": 1,
+    "department": "Design And Development",
+    "department_id": "DG001",
+    "process": [
+    {
+        "id": 1,
+        "process": "Product List",
+        "process_id": "PD001",
+        "column": [
+        "SL.NO",
+        "PART",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "SPECIFICATION",
+        "FILE LOCATION",
+        "REMARK"  
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SERIES", "val": "Series 1" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name A" },
+            { "key": "DRAWING NO", "val": "Drawing 1" },
+            { "key": "SPECIFICATION", "val": "Specification A" },
+            { "key": "FILE LOCATION", "val": "File Location A" },
+            { "key": "REMARK", "val": "Remark A" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SERIES", "val": "Series 2" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name B" },
+            { "key": "DRAWING NO", "val": "Drawing 2" },
+            { "key": "SPECIFICATION", "val": "Specification B" },
+            { "key": "FILE LOCATION", "val": "File Location B" },
+            { "key": "REMARK", "val": "Remark B" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "PART", "val": "Part C" },
+            { "key": "SERIES", "val": "Series 3" },
+            { "key": "PART NO", "val": "11223" },
+            { "key": "PART NAME", "val": "Part Name C" },
+            { "key": "DRAWING NO", "val": "Drawing 3" },
+            { "key": "SPECIFICATION", "val": "Specification C" },
+            { "key": "FILE LOCATION", "val": "File Location C" },
+            { "key": "REMARK", "val": "Remark C" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "PART", "val": "Part D" },
+            { "key": "SERIES", "val": "Series 4" },
+            { "key": "PART NO", "val": "44556" },
+            { "key": "PART NAME", "val": "Part Name D" },
+            { "key": "DRAWING NO", "val": "Drawing 4" },
+            { "key": "SPECIFICATION", "val": "Specification D" },
+            { "key": "FILE LOCATION", "val": "File Location D" },
+            { "key": "REMARK", "val": "Remark D" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "PART", "val": "Part E" },
+            { "key": "SERIES", "val": "Series 5" },
+            { "key": "PART NO", "val": "77889" },
+            { "key": "PART NAME", "val": "Part Name E" },
+            { "key": "DRAWING NO", "val": "Drawing 5" },
+            { "key": "SPECIFICATION", "val": "Specification E" },
+            { "key": "FILE LOCATION", "val": "File Location E" },
+            { "key": "REMARK", "val": "Remark E" }
+        ],
+        [
+            { "key": "SL.NO", "val": "6" },
+            { "key": "PART", "val": "Part F" },
+            { "key": "SERIES", "val": "Series 6" },
+            { "key": "PART NO", "val": "11223" },
+            { "key": "PART NAME", "val": "Part Name F" },
+            { "key": "DRAWING NO", "val": "Drawing 6" },
+            { "key": "SPECIFICATION", "val": "Specification F" },
+            { "key": "FILE LOCATION", "val": "File Location F" },
+            { "key": "REMARK", "val": "Remark F" }
+        ],
+        [
+            { "key": "SL.NO", "val": "7" },
+            { "key": "PART", "val": "Part G" },
+            { "key": "SERIES", "val": "Series 7" },
+            { "key": "PART NO", "val": "44556" },
+            { "key": "PART NAME", "val": "Part Name G" },
+            { "key": "DRAWING NO", "val": "Drawing 7" },
+            { "key": "SPECIFICATION", "val": "Specification G" },
+            { "key": "FILE LOCATION", "val": "File Location G" },
+            { "key": "REMARK", "val": "Remark G" }
+        ],
+        [
+            { "key": "SL.NO", "val": "8" },
+            { "key": "PART", "val": "Part H" },
+            { "key": "SERIES", "val": "Series 8" },
+            { "key": "PART NO", "val": "77889" },
+            { "key": "PART NAME", "val": "Part Name H" },
+            { "key": "DRAWING NO", "val": "Drawing 8" },
+            { "key": "SPECIFICATION", "val": "Specification H" },
+            { "key": "FILE LOCATION", "val": "File Location H" },
+            { "key": "REMARK", "val": "Remark H" }
+        ]
+        ]
+    },
+    {
+        "id": 2,
+        "process": "Product Drawing Control",
+        "process_id": "PD002",
+        "column": [
+        "SL.NO",
+        "PART",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "CODE",
+        "REVISON NO",
+        "CONTROL COPY",
+        "VERIFIED COPY",
+        "PHOTO COPY",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SERIES", "val": "Series 1" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name A" },
+            { "key": "DRAWING NO", "val": "Drawing 1" },
+            { "key": "CODE", "val": "Code A" },
+            { "key": "REVISON NO", "val": "Revision 1" },
+            { "key": "CONTROL COPY", "val": "Control Copy A" },
+            { "key": "VERIFIED COPY", "val": "Verified Copy A" },
+            { "key": "PHOTO COPY", "val": "Photo Copy A" },
+            { "key": "REMARKS", "val": "Remarks A" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SERIES", "val": "Series 2" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name B" },
+            { "key": "DRAWING NO", "val": "Drawing 2" },
+            { "key": "CODE", "val": "Code B" },
+            { "key": "REVISON NO", "val": "Revision 2" },
+            { "key": "CONTROL COPY", "val": "Control Copy B" },
+            { "key": "VERIFIED COPY", "val": "Verified Copy B" },
+            { "key": "PHOTO COPY", "val": "Photo Copy B" },
+            { "key": "REMARKS", "val": "Remarks B" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "PART", "val": "Part C" },
+            { "key": "SERIES", "val": "Series 3" },
+            { "key": "PART NO", "val": "11223" },
+            { "key": "PART NAME", "val": "Part Name C" },
+            { "key": "DRAWING NO", "val": "Drawing 3" },
+            { "key": "CODE", "val": "Code C" },
+            { "key": "REVISON NO", "val": "Revision 3" },
+            { "key": "CONTROL COPY", "val": "Control Copy C" },
+            { "key": "VERIFIED COPY", "val": "Verified Copy C" },
+            { "key": "PHOTO COPY", "val": "Photo Copy C" },
+            { "key": "REMARKS", "val": "Remarks C" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "PART", "val": "Part D" },
+            { "key": "SERIES", "val": "Series 4" },
+            { "key": "PART NO", "val": "44556" },
+            { "key": "PART NAME", "val": "Part Name D" },
+            { "key": "DRAWING NO", "val": "Drawing 4" },
+            { "key": "CODE", "val": "Code D" },
+            { "key": "REVISON NO", "val": "Revision 4" },
+            { "key": "CONTROL COPY", "val": "Control Copy D" },
+            { "key": "VERIFIED COPY", "val": "Verified Copy D" },
+            { "key": "PHOTO COPY", "val": "Photo Copy D" },
+            { "key": "REMARKS", "val": "Remarks D" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "PART", "val": "Part E" },
+            { "key": "SERIES", "val": "Series 5" },
+            { "key": "PART NO", "val": "77889" },
+            { "key": "PART NAME", "val": "Part Name E" },
+            { "key": "DRAWING NO", "val": "Drawing 5" },
+            { "key": "CODE", "val": "Code E" },
+            { "key": "REVISON NO", "val": "Revision 5" },
+            { "key": "CONTROL COPY", "val": "Control Copy E" },
+            { "key": "VERIFIED COPY", "val": "Verified Copy E" },
+            { "key": "PHOTO COPY", "val": "Photo Copy E" },
+            { "key": "REMARKS", "val": "Remarks E" }
+        ]
+        ]
+    },
+    {
+        "id": 3,
+        "process": "Revision Control",
+        "process_id": "PD003",
+        "column": [
+        "S.NO",
+        "DATE",
+        "PART NO",
+        "DEPARTMENT",
+        "PROBLEM DESCRIPTION",
+        "ACTION TAKEN",
+        "SUB PART NO",
+        "SUB PART NAME",
+        "DRAWING NO",
+        "REV NO",
+        "UPDATED DATE",
+        "UPDATED REV NO",
+        "PREPARED BY",
+        "CHECKED BY",
+        "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-01-01" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "DEPARTMENT", "val": "Department A" },
+            { "key": "PROBLEM DESCRIPTION", "val": "Problem description A" },
+            { "key": "ACTION TAKEN", "val": "Action taken A" },
+            { "key": "SUB PART NO", "val": "12345" },
+            { "key": "SUB PART NAME", "val": "Sub part name A" },
+            { "key": "DRAWING NO", "val": "Drawing A" },
+            { "key": "REV NO", "val": "1" },
+            { "key": "UPDATED DATE", "val": "2023-01-02" },
+            { "key": "UPDATED REV NO", "val": "2" },
+            { "key": "PREPARED BY", "val": "Prepared by A" },
+            { "key": "CHECKED BY", "val": "Checked by A" },
+            { "key": "STATUS", "val": "Open" }
+        ],
+        [
+            { "key": "S.NO", "val": "2" },
+            { "key": "DATE", "val": "2023-01-02" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "DEPARTMENT", "val": "Department B" },
+            { "key": "PROBLEM DESCRIPTION", "val": "Problem description B" },
+            { "key": "ACTION TAKEN", "val": "Action taken B" },
+            { "key": "SUB PART NO", "val": "67890" },
+            { "key": "SUB PART NAME", "val": "Sub part name B" },
+            { "key": "DRAWING NO", "val": "Drawing B" },
+            { "key": "REV NO", "val": "2" },
+            { "key": "UPDATED DATE", "val": "2023-01-03" },
+            { "key": "UPDATED REV NO", "val": "3" },
+            { "key": "PREPARED BY", "val": "Prepared by B" },
+            { "key": "CHECKED BY", "val": "Checked by B" },
+            { "key": "STATUS", "val": "Closed" }
+        ],
+        [
+            { "key": "S.NO", "val": "3" },
+            { "key": "DATE", "val": "2023-01-03" },
+            { "key": "PART NO", "val": "11223" },
+            { "key": "DEPARTMENT", "val": "Department C" },
+            { "key": "PROBLEM DESCRIPTION", "val": "Problem description C" },
+            { "key": "ACTION TAKEN", "val": "Action taken C" },
+            { "key": "SUB PART NO", "val": "11223" },
+            { "key": "SUB PART NAME", "val": "Sub part name C" },
+            { "key": "DRAWING NO", "val": "Drawing C" },
+            { "key": "REV NO", "val": "3" },
+            { "key": "UPDATED DATE", "val": "2023-01-04" },
+            { "key": "UPDATED REV NO", "val": "4" },
+            { "key": "PREPARED BY", "val": "Prepared by C" },
+            { "key": "CHECKED BY", "val": "Checked by C" },
+            { "key": "STATUS", "val": "In Progress" }
+        ],
+        [
+            { "key": "S.NO", "val": "4" },
+            { "key": "DATE", "val": "2023-01-04" },
+            { "key": "PART NO", "val": "44556" },
+            { "key": "DEPARTMENT", "val": "Department D" },
+            { "key": "PROBLEM DESCRIPTION", "val": "Problem description D" },
+            { "key": "ACTION TAKEN", "val": "Action taken D" },
+            { "key": "SUB PART NO", "val": "44556" },
+            { "key": "SUB PART NAME", "val": "Sub part name D" },
+            { "key": "DRAWING NO", "val": "Drawing D" },
+            { "key": "REV NO", "val": "4" },
+            { "key": "UPDATED DATE", "val": "2023-01-05" },
+            { "key": "UPDATED REV NO", "val": "5" },
+            { "key": "PREPARED BY", "val": "Prepared by D" },
+            { "key": "CHECKED BY", "val": "Checked by D" },
+            { "key": "STATUS", "val": "Open" }
+        ]
+        ]
+    },
+    {
+        "id": 4,
+        "process": "Product Revision",
+        "process_id": "PD004",
+        "column": [
+        "SL.NO",
+        "PART",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "CODE",
+        "REV00",
+        "REV01",
+        "REV02",
+        "REV03",
+        "REV04",
+        "REV05"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SERIES", "val": "Series 1" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name A" },
+            { "key": "DRAWING NO", "val": "Drawing 1" },
+            { "key": "CODE", "val": "Code A" },
+            { "key": "REV00", "val": "Rev00 A" },
+            { "key": "REV01", "val": "Rev01 A" },
+            { "key": "REV02", "val": "Rev02 A" },
+            { "key": "REV03", "val": "Rev03 A" },
+            { "key": "REV04", "val": "Rev04 A" },
+            { "key": "REV05", "val": "Rev05 A" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SERIES", "val": "Series 2" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name B" },
+            { "key": "DRAWING NO", "val": "Drawing 2" },
+            { "key": "CODE", "val": "Code B" },
+            { "key": "REV00", "val": "Rev00 B" },
+            { "key": "REV01", "val": "Rev01 B" },
+            { "key": "REV02", "val": "Rev02 B" },
+            { "key": "REV03", "val": "Rev03 B" },
+            { "key": "REV04", "val": "Rev04 B" },
+            { "key": "REV05", "val": "Rev05 B" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "PART", "val": "Part C" },
+            { "key": "SERIES", "val": "Series 3" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name C" },
+            { "key": "DRAWING NO", "val": "Drawing 3" },
+            { "key": "CODE", "val": "Code C" },
+            { "key": "REV00", "val": "Rev00 C" },
+            { "key": "REV01", "val": "Rev01 C" },
+            { "key": "REV02", "val": "Rev02 C" },
+            { "key": "REV03", "val": "Rev03 C" },
+            { "key": "REV04", "val": "Rev04 C" },
+            { "key": "REV05", "val": "Rev05 C" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "PART", "val": "Part D" },
+            { "key": "SERIES", "val": "Series 4" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name D" },
+            { "key": "DRAWING NO", "val": "Drawing 4" },
+            { "key": "CODE", "val": "Code D" },
+            { "key": "REV00", "val": "Rev00 D" },
+            { "key": "REV01", "val": "Rev01 D" },
+            { "key": "REV02", "val": "Rev02 D" },
+            { "key": "REV03", "val": "Rev03 D" },
+            { "key": "REV04", "val": "Rev04 D" },
+            { "key": "REV05", "val": "Rev05 D" }
+        ]
+        ]
+    },
+    {
+        "id": 5,
+        "process": "Product Success Rate",
+        "process_id": "PD005",
+        "column": [
+        "SL NO",
+        "PART",
+        "SERIES",
+        "PART NO",
+        "PRODUCT NAME",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+        "JAN",
+        "FEB",
+        "MAR",
+        "AVERAGE"
+        ],
+        "value": [
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SERIES", "val": "Series 1" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PRODUCT NAME", "val": "Product A" },
+            { "key": "APR", "val": "80%" },
+            { "key": "MAY", "val": "85%" },
+            { "key": "JUN", "val": "90%" },
+            { "key": "JUL", "val": "95%" },
+            { "key": "AUG", "val": "100%" },
+            { "key": "SEP", "val": "80%" },
+            { "key": "OCT", "val": "85%" },
+            { "key": "NOV", "val": "90%" },
+            { "key": "DEC", "val": "95%" },
+            { "key": "JAN", "val": "100%" },
+            { "key": "FEB", "val": "80%" },
+            { "key": "MAR", "val": "85%" },
+            { "key": "AVERAGE", "val": "90%" }
+        ],
+        [
+            { "key": "SL NO", "val": "2" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SERIES", "val": "Series 2" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PRODUCT NAME", "val": "Product B" },
+            { "key": "APR", "val": "80%" },
+            { "key": "MAY", "val": "85%" },
+            { "key": "JUN", "val": "90%" },
+            { "key": "JUL", "val": "95%" },
+            { "key": "AUG", "val": "100%" },
+            { "key": "SEP", "val": "80%" },
+            { "key": "OCT", "val": "85%" },
+            { "key": "NOV", "val": "90%" },
+            { "key": "DEC", "val": "95%" },
+            { "key": "JAN", "val": "100%" },
+            { "key": "FEB", "val": "80%" },
+            { "key": "MAR", "val": "85%" },
+            { "key": "AVERAGE", "val": "90%" }
+        ],
+        [
+            { "key": "SL NO", "val": "3" },
+            { "key": "PART", "val": "Part C" },
+            { "key": "SERIES", "val": "Series 3" },
+            { "key": "PART NO", "val": "11223" },
+            { "key": "PRODUCT NAME", "val": "Product C" },
+            { "key": "APR", "val": "80%" },
+            { "key": "MAY", "val": "85%" },
+            { "key": "JUN", "val": "90%" },
+            { "key": "JUL", "val": "95%" },
+            { "key": "AUG", "val": "100%" },
+            { "key": "SEP", "val": "80%" },
+            { "key": "OCT", "val": "85%" },
+            { "key": "NOV", "val": "90%" },
+            { "key": "DEC", "val": "95%" },
+            { "key": "JAN", "val": "100%" },
+            { "key": "FEB", "val": "80%" },
+            { "key": "MAR", "val": "85%" },
+            { "key": "AVERAGE", "val": "90%" }
+        ]
+        ]
+    },
+    {
+        "id": 6,
+        "process": "Master Piece",
+        "process_id": "PD006",
+        "column": [
+        "SL.NO",
+        "PART",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "SPECIFICATION",
+        "MASTER PIECE",
+        "REMARK"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SERIES", "val": "Series 1" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name A" },
+            { "key": "SPECIFICATION", "val": "Specification A" },
+            { "key": "MASTER PIECE", "val": "Master Piece A" },
+            { "key": "REMARK", "val": "Remark A" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SERIES", "val": "Series 2" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name B" },
+            { "key": "SPECIFICATION", "val": "Specification B" },
+            { "key": "MASTER PIECE", "val": "Master Piece B" },
+            { "key": "REMARK", "val": "Remark B" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "PART", "val": "Part C" },
+            { "key": "SERIES", "val": "Series 3" },
+            { "key": "PART NO", "val": "12345" },
+            { "key": "PART NAME", "val": "Part Name C" },
+            { "key": "SPECIFICATION", "val": "Specification C" },
+            { "key": "MASTER PIECE", "val": "Master Piece C" },
+            { "key": "REMARK", "val": "Remark C" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "PART", "val": "Part D" },
+            { "key": "SERIES", "val": "Series 4" },
+            { "key": "PART NO", "val": "67890" },
+            { "key": "PART NAME", "val": "Part Name D" },
+            { "key": "SPECIFICATION", "val": "Specification D" },
+            { "key": "MASTER PIECE", "val": "Master Piece D" },
+            { "key": "REMARK", "val": "Remark D" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "PART", "val": "Part E" },
+            { "key": "SERIES", "val": "Series 5" },
+            { "key": "PART NO", "val": "77889" },
+            { "key": "PART NAME", "val": "Part Name E" },
+            { "key": "SPECIFICATION", "val": "Specification E" },
+            { "key": "MASTER PIECE", "val": "Master Piece E" },
+            { "key": "REMARK", "val": "Remark E" }
+        ]
+        ]
+    },
+    {
+        "id": 7,
+        "process": "NPD Register",
+        "process_id": "PD007",
+        "column": [
+        "SL.NO",
+        "ENQ. NO",
+        "DATE",
+        "ENQUIRED BY",
+        "CUSTOMER NAME",
+        "PART",
+        "SPECIFICATION",
+        "PARTICULAR",
+        "QTY",
+        "FEASIBILITY",
+        "REVIEW DATE",
+        "REVIEW BY",
+        "STATUS",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "ENQ. NO", "val": "ENQ001" },
+            { "key": "DATE", "val": "2023-10-01" },
+            { "key": "ENQUIRED BY", "val": "John Doe" },
+            { "key": "CUSTOMER NAME", "val": "Customer A" },
+            { "key": "PART", "val": "Part X" },
+            { "key": "SPECIFICATION", "val": "Spec Y" },
+            { "key": "PARTICULAR", "val": "Particular Z" },
+            { "key": "QTY", "val": "100" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-05" },
+            { "key": "REVIEW BY", "val": "Jane Smith" },
+            { "key": "STATUS", "val": "In Progress" },
+            { "key": "REMARKS", "val": "No remarks" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "ENQ. NO", "val": "ENQ002" },
+            { "key": "DATE", "val": "2023-10-03" },
+            { "key": "ENQUIRED BY", "val": "Alice Green" },
+            { "key": "CUSTOMER NAME", "val": "Customer B" },
+            { "key": "PART", "val": "Part Y" },
+            { "key": "SPECIFICATION", "val": "Spec A" },
+            { "key": "PARTICULAR", "val": "Particular B" },
+            { "key": "QTY", "val": "200" },
+            { "key": "FEASIBILITY", "val": "Not Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-06" },
+            { "key": "REVIEW BY", "val": "Tom Blake" },
+            { "key": "STATUS", "val": "Rejected" },
+            { "key": "REMARKS", "val": "Material unavailable" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "ENQ. NO", "val": "ENQ003" },
+            { "key": "DATE", "val": "2023-10-04" },
+            { "key": "ENQUIRED BY", "val": "Brian Lee" },
+            { "key": "CUSTOMER NAME", "val": "Customer C" },
+            { "key": "PART", "val": "Part Z" },
+            { "key": "SPECIFICATION", "val": "Spec C" },
+            { "key": "PARTICULAR", "val": "Particular D" },
+            { "key": "QTY", "val": "150" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-07" },
+            { "key": "REVIEW BY", "val": "Sara Wong" },
+            { "key": "STATUS", "val": "Approved" },
+            { "key": "REMARKS", "val": "Go ahead" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "ENQ. NO", "val": "ENQ004" },
+            { "key": "DATE", "val": "2023-10-06" },
+            { "key": "ENQUIRED BY", "val": "David Kim" },
+            { "key": "CUSTOMER NAME", "val": "Customer D" },
+            { "key": "PART", "val": "Part A" },
+            { "key": "SPECIFICATION", "val": "Spec D" },
+            { "key": "PARTICULAR", "val": "Particular X" },
+            { "key": "QTY", "val": "75" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-10" },
+            { "key": "REVIEW BY", "val": "Emily Stone" },
+            { "key": "STATUS", "val": "Pending" },
+            { "key": "REMARKS", "val": "Awaiting confirmation" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "ENQ. NO", "val": "ENQ005" },
+            { "key": "DATE", "val": "2023-10-08" },
+            { "key": "ENQUIRED BY", "val": "Eva Brown" },
+            { "key": "CUSTOMER NAME", "val": "Customer E" },
+            { "key": "PART", "val": "Part B" },
+            { "key": "SPECIFICATION", "val": "Spec B" },
+            { "key": "PARTICULAR", "val": "Particular A" },
+            { "key": "QTY", "val": "300" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-12" },
+            { "key": "REVIEW BY", "val": "Nick Hall" },
+            { "key": "STATUS", "val": "In Progress" },
+            { "key": "REMARKS", "val": "Prototype ready" }
+        ],
+        [
+            { "key": "SL.NO", "val": "6" },
+            { "key": "ENQ. NO", "val": "ENQ006" },
+            { "key": "DATE", "val": "2023-10-10" },
+            { "key": "ENQUIRED BY", "val": "Frank Miller" },
+            { "key": "CUSTOMER NAME", "val": "Customer F" },
+            { "key": "PART", "val": "Part Q" },
+            { "key": "SPECIFICATION", "val": "Spec G" },
+            { "key": "PARTICULAR", "val": "Particular C" },
+            { "key": "QTY", "val": "50" },
+            { "key": "FEASIBILITY", "val": "Not Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-14" },
+            { "key": "REVIEW BY", "val": "Lily Young" },
+            { "key": "STATUS", "val": "Rejected" },
+            { "key": "REMARKS", "val": "Design issue" }
+        ],
+        [
+            { "key": "SL.NO", "val": "7" },
+            { "key": "ENQ. NO", "val": "ENQ007" },
+            { "key": "DATE", "val": "2023-10-11" },
+            { "key": "ENQUIRED BY", "val": "George White" },
+            { "key": "CUSTOMER NAME", "val": "Customer G" },
+            { "key": "PART", "val": "Part M" },
+            { "key": "SPECIFICATION", "val": "Spec M" },
+            { "key": "PARTICULAR", "val": "Particular E" },
+            { "key": "QTY", "val": "80" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-16" },
+            { "key": "REVIEW BY", "val": "Olivia Reed" },
+            { "key": "STATUS", "val": "Approved" },
+            { "key": "REMARKS", "val": "Ready for production" }
+        ],
+        [
+            { "key": "SL.NO", "val": "8" },
+            { "key": "ENQ. NO", "val": "ENQ008" },
+            { "key": "DATE", "val": "2023-10-13" },
+            { "key": "ENQUIRED BY", "val": "Helen Moore" },
+            { "key": "CUSTOMER NAME", "val": "Customer H" },
+            { "key": "PART", "val": "Part D" },
+            { "key": "SPECIFICATION", "val": "Spec J" },
+            { "key": "PARTICULAR", "val": "Particular F" },
+            { "key": "QTY", "val": "95" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-17" },
+            { "key": "REVIEW BY", "val": "Paul Allen" },
+            { "key": "STATUS", "val": "In Progress" },
+            { "key": "REMARKS", "val": "Tooling under review" }
+        ],
+        [
+            { "key": "SL.NO", "val": "9" },
+            { "key": "ENQ. NO", "val": "ENQ009" },
+            { "key": "DATE", "val": "2023-10-15" },
+            { "key": "ENQUIRED BY", "val": "Isaac Gray" },
+            { "key": "CUSTOMER NAME", "val": "Customer I" },
+            { "key": "PART", "val": "Part N" },
+            { "key": "SPECIFICATION", "val": "Spec L" },
+            { "key": "PARTICULAR", "val": "Particular G" },
+            { "key": "QTY", "val": "60" },
+            { "key": "FEASIBILITY", "val": "Not Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-19" },
+            { "key": "REVIEW BY", "val": "Rachel Adams" },
+            { "key": "STATUS", "val": "Rejected" },
+            { "key": "REMARKS", "val": "Incompatible specs" }
+        ],
+        [
+            { "key": "SL.NO", "val": "10" },
+            { "key": "ENQ. NO", "val": "ENQ010" },
+            { "key": "DATE", "val": "2023-10-17" },
+            { "key": "ENQUIRED BY", "val": "Laura James" },
+            { "key": "CUSTOMER NAME", "val": "Customer J" },
+            { "key": "PART", "val": "Part T" },
+            { "key": "SPECIFICATION", "val": "Spec Z" },
+            { "key": "PARTICULAR", "val": "Particular H" },
+            { "key": "QTY", "val": "120" },
+            { "key": "FEASIBILITY", "val": "Feasible" },
+            { "key": "REVIEW DATE", "val": "2023-10-20" },
+            { "key": "REVIEW BY", "val": "Steve Nash" },
+            { "key": "STATUS", "val": "Approved" },
+            { "key": "REMARKS", "val": "Customer approved" }
+        ]
+        ]
+    },
+    {
+        "id": 8,
+        "process": "Product Sample List",
+        "process_id": "PD008",
+        "column": [
+        "S.NO",
+        "ENQ. NO",
+        "PART",
+        "MAKE",
+        "MODEL",
+        "MATERIAL",
+        "SPECIFICATION",
+        "QTY",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "ENQ. NO", "val": "ENQ001" },
+            { "key": "PART", "val": "Part X" },
+            { "key": "MAKE", "val": "Make A" },
+            { "key": "MODEL", "val": "Model 1" },
+            { "key": "MATERIAL", "val": "Material A" },
+            { "key": "SPECIFICATION", "val": "Spec Y" },
+            { "key": "QTY", "val": "10" },
+            { "key": "REMARKS", "val": "" }
+        ],
+        [
+            { "key": "S.NO", "val": "2" },
+            { "key": "ENQ. NO", "val": "ENQ002" },
+            { "key": "PART", "val": "Part Y" },
+            { "key": "MAKE", "val": "Make B" },
+            { "key": "MODEL", "val": "Model 2" },
+            { "key": "MATERIAL", "val": "Material B" },
+            { "key": "SPECIFICATION", "val": "Spec B" },
+            { "key": "QTY", "val": "20" },
+            { "key": "REMARKS", "val":"Sample not available" }
+        ],
+        [
+            { "key": "S.NO", "val": "3" },
+            { "key": "ENQ. NO", "val": "ENQ003" },
+            { "key": "PART", "val": "Part Z" },
+            { "key": "MAKE", "val": "Make C" },
+            { "key": "MODEL", "val": "Model 3" },
+            { "key": "MATERIAL", "val": "Material C" },
+            { "key": "SPECIFICATION", "val": "Spec A" },
+            { "key": "QTY", "val": "21" },
+            { "key": "REMARKS", "val":"Sample pending" }
+        ],
+        [
+            { "key": "S.NO", "val": "4" },
+            { "key": "ENQ. NO", "val": "ENQ004" },
+            { "key": "PART", "val": "Part T" },
+            { "key": "MAKE", "val": "Make D" },
+            { "key": "MODEL", "val": "Model 4" },
+            { "key": "MATERIAL", "val": "Material D" },
+            { "key": "SPECIFICATION", "val": "Spec B" },
+            { "key": "QTY", "val": "11" },
+            { "key": "REMARKS", "val": "Sample not available" }
+        ]
+        ]
+    }
+    ]
+    },
+    {
+    "id": 2,
+    "department": "Quality",
+    "department_id": "QM001",
+    "process": [
+    {
+        "process": "Instrument calibration report",
+        "process_id": "QM001",
+        "column": [
+        "SL NO",
+        "INSTRUMENT NO",
+        "MAKE",
+        "INSTRUMENT NAME",
+        "LOCATION",
+        "SIZE / RANGES",
+        "CALIBRATION DONE DATE",
+        "CALIBRATION DUE DATE",
+        "CALIBRATION CERTIFICATE NO / DATE",
+        "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "INSTRUMENT NO", "val": "INS-001" },
+            { "key": "MAKE", "val": "Make A" },
+            { "key": "INSTRUMENT NAME", "val": "Pressure Gauge" },
+            { "key": "LOCATION", "val": "Lab A" },
+            { "key": "SIZE / RANGES", "val": "0-100 psi" },
+            { "key": "CALIBRATION DONE DATE", "val": "2025-01-15" },
+            { "key": "CALIBRATION DUE DATE", "val": "2026-01-15" },
+            { "key": "CALIBRATION CERTIFICATE NO / DATE", "val": "CERT-001 / 2025-01-15" },
+            { "key": "STATUS", "val": "Calibrated" }
+        ],
+        [
+            { "key": "SL NO", "val": "2" },
+            { "key": "INSTRUMENT NO", "val": "INS-002" },
+            { "key": "MAKE", "val": "Make B" },
+            { "key": "INSTRUMENT NAME", "val": "Thermometer" },
+            { "key": "LOCATION", "val": "Lab B" },
+            { "key": "SIZE / RANGES", "val": "-50 to 150°C" },
+            { "key": "CALIBRATION DONE DATE", "val": "2024-12-10" },
+            { "key": "CALIBRATION DUE DATE", "val": "2025-12-10" },
+            { "key": "CALIBRATION CERTIFICATE NO / DATE", "val": "CERT-002 / 2024-12-10" },
+            { "key": "STATUS", "val": "Calibrated" }
+        ],
+        [
+            { "key": "SL NO", "val": "3" },
+            { "key": "INSTRUMENT NO", "val": "INS-003" },
+            { "key": "MAKE", "val": "Make C" },
+            { "key": "INSTRUMENT NAME", "val": "Multimeter" },
+            { "key": "LOCATION", "val": "Workshop" },
+            { "key": "SIZE / RANGES", "val": "0-600V" },
+            { "key": "CALIBRATION DONE DATE", "val": "2025-03-22" },
+            { "key": "CALIBRATION DUE DATE", "val": "2026-03-22" },
+            { "key": "CALIBRATION CERTIFICATE NO / DATE", "val": "CERT-003 / 2025-03-22" },
+            { "key": "STATUS", "val": "Calibrated" }
+        ]
+        ]
+    },
+    {
+        "process": "Incoming Inspection",
+        "process_id": "QM002",
+        "column": [
+            "SL NO",
+            "DATE",
+            "PLAN (QTY)",
+            "PART NO",
+            "PART NAME",
+            "RAW MATERIAL DESCRIPTION",
+            "ACTUAL (QTY)",
+            "DIMENSION",
+            "MATERIAL",
+            "GRADE",
+            "VISUAL CHECKING",
+            "SUPPLIER NAME",
+            "INVOICE/D.C NO.",
+            "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "DATE", "val": "2025-07-01" },
+            { "key": "PLAN (QTY)", "val": "100" },
+            { "key": "PART NO", "val": "PN001" },
+            { "key": "PART NAME", "val": "Bracket" },
+            { "key": "RAW MATERIAL DESCRIPTION", "val": "Mild Steel Sheet" },
+            { "key": "ACTUAL (QTY)", "val": "98" },
+            { "key": "DIMENSION", "val": "200x150x5 mm" },
+            { "key": "MATERIAL", "val": "MS" },
+            { "key": "GRADE", "val": "IS2062" },
+            { "key": "VISUAL CHECKING", "val": "OK" },
+            { "key": "SUPPLIER NAME", "val": "ABC Steels" },
+            { "key": "INVOICE/D.C NO.", "val": "INV-001" },
+            { "key": "STATUS", "val": "Accepted" }
+        ],
+        [
+            { "key": "SL NO", "val": "2" },
+            { "key": "DATE", "val": "2025-07-02" },
+            { "key": "PLAN (QTY)", "val": "150" },
+            { "key": "PART NO", "val": "PN002" },
+            { "key": "PART NAME", "val": "Cover Plate" },
+            { "key": "RAW MATERIAL DESCRIPTION", "val": "Aluminum Sheet" },
+            { "key": "ACTUAL (QTY)", "val": "149" },
+            { "key": "DIMENSION", "val": "300x200x3 mm" },
+            { "key": "MATERIAL", "val": "Aluminum" },
+            { "key": "GRADE", "val": "6061-T6" },
+            { "key": "VISUAL CHECKING", "val": "OK" },
+            { "key": "SUPPLIER NAME", "val": "XYZ Metals" },
+            { "key": "INVOICE/D.C NO.", "val": "INV-002" },
+            { "key": "STATUS", "val": "Accepted" }
+        ],
+        [
+            { "key": "SL NO", "val": "3" },
+            { "key": "DATE", "val": "2025-07-03" },
+            { "key": "PLAN (QTY)", "val": "200" },
+            { "key": "PART NO", "val": "PN003" },
+            { "key": "PART NAME", "val": "Support Arm" },
+            { "key": "RAW MATERIAL DESCRIPTION", "val": "Stainless Steel Rod" },
+            { "key": "ACTUAL (QTY)", "val": "198" },
+            { "key": "DIMENSION", "val": "Ø20 x 1000 mm" },
+            { "key": "MATERIAL", "val": "SS" },
+            { "key": "GRADE", "val": "304" },
+            { "key": "VISUAL CHECKING", "val": "Minor scratches" },
+            { "key": "SUPPLIER NAME", "val": "SteelCraft Ltd." },
+            { "key": "INVOICE/D.C NO.", "val": "INV-003" },
+            { "key": "STATUS", "val": "Accepted with remarks" }
+        ],
+        [
+            { "key": "SL NO", "val": "4" },
+            { "key": "DATE", "val": "2025-07-04" },
+            { "key": "PLAN (QTY)", "val": "75" },
+            { "key": "PART NO", "val": "PN004" },
+            { "key": "PART NAME", "val": "Base Plate" },
+            { "key": "RAW MATERIAL DESCRIPTION", "val": "Cast Iron" },
+            { "key": "ACTUAL (QTY)", "val": "75" },
+            { "key": "DIMENSION", "val": "500x500x10 mm" },
+            { "key": "MATERIAL", "val": "CI" },
+            { "key": "GRADE", "val": "FG260" },
+            { "key": "VISUAL CHECKING", "val": "OK" },
+            { "key": "SUPPLIER NAME", "val": "FoundryWorks" },
+            { "key": "INVOICE/D.C NO.", "val": "INV-004" },
+            { "key": "STATUS", "val": "Accepted" }
+        ],
+        [
+            { "key": "SL NO", "val": "5" },
+            { "key": "DATE", "val": "2025-07-05" },
+            { "key": "PLAN (QTY)", "val": "120" },
+            { "key": "PART NO", "val": "PN005" },
+            { "key": "PART NAME", "val": "Clamp" },
+            { "key": "RAW MATERIAL DESCRIPTION", "val": "Spring Steel Strip" },
+            { "key": "ACTUAL (QTY)", "val": "120" },
+            { "key": "DIMENSION", "val": "50x10x1.5 mm" },
+            { "key": "MATERIAL", "val": "Spring Steel" },
+            { "key": "GRADE", "val": "EN47" },
+            { "key": "VISUAL CHECKING", "val": "OK" },
+            { "key": "SUPPLIER NAME", "val": "SpringMetals" },
+            { "key": "INVOICE/D.C NO.", "val": "INV-005" },
+            { "key": "STATUS", "val": "Accepted" }
+        ]
+        ]
+    },
+    {
+        "process": "Customer Complaint Register",
+        "process_id": "SR001",
+        "column": [
+        "SL.NO",
+        "ACTION",
+        "DATE",
+        "PART NAME",
+        "PART NO",
+        "BATCH NO",
+        "DISPATCH DATE",
+        "INVOICE NO",
+        "CUSTOMER NAME",
+        "QUANTITY UNDER COMPLAINT",
+        "NATURE OF PROBLEM",
+        "ROOT CAUSE",
+        "WARRANTY PERIOD",
+        "RESPONSIBLE PERSON",
+        "CORRECTIVE ACTION",
+        "TARGET TO CLOSE",
+        "CLOSING DATE",
+        "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "ACTION", "val": "Repair" },
+            { "key": "DATE", "val": "2025-07-01" },
+            { "key": "PART NAME", "val": "Gear Box" },
+            { "key": "PART NO", "val": "GBX001" },
+            { "key": "BATCH NO", "val": "B123" },
+            { "key": "DISPATCH DATE", "val": "2025-06-20" },
+            { "key": "INVOICE NO", "val": "INV001" },
+            { "key": "CUSTOMER NAME", "val": "ABC Corp" },
+            { "key": "QUANTITY UNDER COMPLAINT", "val": "5" },
+            { "key": "NATURE OF PROBLEM", "val": "Noise during operation" },
+            { "key": "ROOT CAUSE", "val": "Improper lubrication" },
+            { "key": "WARRANTY PERIOD", "val": "12 Months" },
+            { "key": "RESPONSIBLE PERSON", "val": "John Doe" },
+            { "key": "CORRECTIVE ACTION", "val": "Re-lubrication and testing" },
+            { "key": "TARGET TO CLOSE", "val": "2025-07-10" },
+            { "key": "CLOSING DATE", "val": "2025-07-09" },
+            { "key": "STATUS", "val": "Closed" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "ACTION", "val": "Replacement" },
+            { "key": "DATE", "val": "2025-07-03" },
+            { "key": "PART NAME", "val": "Hydraulic Pump" },
+            { "key": "PART NO", "val": "HP456" },
+            { "key": "BATCH NO", "val": "B456" },
+            { "key": "DISPATCH DATE", "val": "2025-06-18" },
+            { "key": "INVOICE NO", "val": "INV002" },
+            { "key": "CUSTOMER NAME", "val": "XYZ Ltd" },
+            { "key": "QUANTITY UNDER COMPLAINT", "val": "2" },
+            { "key": "NATURE OF PROBLEM", "val": "Oil leakage" },
+            { "key": "ROOT CAUSE", "val": "Seal failure" },
+            { "key": "WARRANTY PERIOD", "val": "18 Months" },
+            { "key": "RESPONSIBLE PERSON", "val": "Jane Smith" },
+            { "key": "CORRECTIVE ACTION", "val": "Seal replaced" },
+            { "key": "TARGET TO CLOSE", "val": "2025-07-12" },
+            { "key": "CLOSING DATE", "val": "2025-07-11" },
+            { "key": "STATUS", "val": "Closed" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "ACTION", "val": "Inspection" },
+            { "key": "DATE", "val": "2025-07-05" },
+            { "key": "PART NAME", "val": "Control Panel" },
+            { "key": "PART NO", "val": "CP789" },
+            { "key": "BATCH NO", "val": "B789" },
+            { "key": "DISPATCH DATE", "val": "2025-06-25" },
+            { "key": "INVOICE NO", "val": "INV003" },
+            { "key": "CUSTOMER NAME", "val": "Delta Inc" },
+            { "key": "QUANTITY UNDER COMPLAINT", "val": "1" },
+            { "key": "NATURE OF PROBLEM", "val": "No power output" },
+            { "key": "ROOT CAUSE", "val": "Internal wiring issue" },
+            { "key": "WARRANTY PERIOD", "val": "24 Months" },
+            { "key": "RESPONSIBLE PERSON", "val": "Raj Kumar" },
+            { "key": "CORRECTIVE ACTION", "val": "Rewiring performed" },
+            { "key": "TARGET TO CLOSE", "val": "2025-07-15" },
+            { "key": "CLOSING DATE", "val": "2025-07-14" },
+            { "key": "STATUS", "val": "Closed" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "ACTION", "val": "Refund" },
+            { "key": "DATE", "val": "2025-07-06" },
+            { "key": "PART NAME", "val": "Motor Housing" },
+            { "key": "PART NO", "val": "MH321" },
+            { "key": "BATCH NO", "val": "B654" },
+            { "key": "DISPATCH DATE", "val": "2025-06-22" },
+            { "key": "INVOICE NO", "val": "INV004" },
+            { "key": "CUSTOMER NAME", "val": "Omega Systems" },
+            { "key": "QUANTITY UNDER COMPLAINT", "val": "3" },
+            { "key": "NATURE OF PROBLEM", "val": "Cracks on surface" },
+            { "key": "ROOT CAUSE", "val": "Improper casting" },
+            { "key": "WARRANTY PERIOD", "val": "6 Months" },
+            { "key": "RESPONSIBLE PERSON", "val": "Amrita Singh" },
+            { "key": "CORRECTIVE ACTION", "val": "Full refund issued" },
+            { "key": "TARGET TO CLOSE", "val": "2025-07-10" },
+            { "key": "CLOSING DATE", "val": "2025-07-08" },
+            { "key": "STATUS", "val": "Closed" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "ACTION", "val": "Pending Review" },
+            { "key": "DATE", "val": "2025-07-07" },
+            { "key": "PART NAME", "val": "Sensor Module" },
+            { "key": "PART NO", "val": "SM987" },
+            { "key": "BATCH NO", "val": "B987" },
+            { "key": "DISPATCH DATE", "val": "2025-06-29" },
+            { "key": "INVOICE NO", "val": "INV005" },
+            { "key": "CUSTOMER NAME", "val": "Techtronics" },
+            { "key": "QUANTITY UNDER COMPLAINT", "val": "10" },
+            { "key": "NATURE OF PROBLEM", "val": "Inconsistent readings" },
+            { "key": "ROOT CAUSE", "val": "Under investigation" },
+            { "key": "WARRANTY PERIOD", "val": "12 Months" },
+            { "key": "RESPONSIBLE PERSON", "val": "Mohit R" },
+            { "key": "CORRECTIVE ACTION", "val": "Pending analysis" },
+            { "key": "TARGET TO CLOSE", "val": "2025-07-20" },
+            { "key": "CLOSING DATE", "val": "" },
+            { "key": "STATUS", "val": "Open" }
+        ]
+        ]
+    },
+    {
+        "process": "Certificate Renewal",
+        "process_id": "QM004",
+        "column": [
+        "SL.NO",
+        "DEPARTMENT",
+        "CERTIFICATE NAME",
+        "CATEGORY",
+        "CERTIFICATE NO",
+        "ISSUE DATE",
+        "EXPIRY DATE",
+        "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "DEPARTMENT", "val": "Quality Assurance" },
+            { "key": "CERTIFICATE NAME", "val": "ISO 9001" },
+            { "key": "CATEGORY", "val": "Quality Management" },
+            { "key": "CERTIFICATE NO", "val": "QA-ISO-001" },
+            { "key": "ISSUE DATE", "val": "2023-01-15" },
+            { "key": "EXPIRY DATE", "val": "2026-01-14" },
+            { "key": "STATUS", "val": "Valid" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "DEPARTMENT", "val": "Health & Safety" },
+            { "key": "CERTIFICATE NAME", "val": "OHSAS 18001" },
+            { "key": "CATEGORY", "val": "Occupational Health" },
+            { "key": "CERTIFICATE NO", "val": "HS-OHSAS-002" },
+            { "key": "ISSUE DATE", "val": "2022-08-10" },
+            { "key": "EXPIRY DATE", "val": "2025-08-09" },
+            { "key": "STATUS", "val": "Valid" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "DEPARTMENT", "val": "Environmental" },
+            { "key": "CERTIFICATE NAME", "val": "ISO 14001" },
+            { "key": "CATEGORY", "val": "Environmental Management" },
+            { "key": "CERTIFICATE NO", "val": "ENV-ISO-003" },
+            { "key": "ISSUE DATE", "val": "2021-05-20" },
+            { "key": "EXPIRY DATE", "val": "2024-05-19" },
+            { "key": "STATUS", "val": "Expiring Soon" }
+        ],
+        [
+            { "key": "SL.NO", "val": "4" },
+            { "key": "DEPARTMENT", "val": "Production" },
+            { "key": "CERTIFICATE NAME", "val": "Lean Six Sigma" },
+            { "key": "CATEGORY", "val": "Process Improvement" },
+            { "key": "CERTIFICATE NO", "val": "PRD-LSS-004" },
+            { "key": "ISSUE DATE", "val": "2020-09-01" },
+            { "key": "EXPIRY DATE", "val": "2023-08-31" },
+            { "key": "STATUS", "val": "Expired" }
+        ],
+        [
+            { "key": "SL.NO", "val": "5" },
+            { "key": "DEPARTMENT", "val": "IT" },
+            { "key": "CERTIFICATE NAME", "val": "ISO/IEC 27001" },
+            { "key": "CATEGORY", "val": "Information Security" },
+            { "key": "CERTIFICATE NO", "val": "IT-ISO-27001-005" },
+            { "key": "ISSUE DATE", "val": "2024-03-12" },
+            { "key": "EXPIRY DATE", "val": "2027-03-11" },
+            { "key": "STATUS", "val": "Valid" }
+        ]
+        ]
+    }
+    ]
+    },
+    {
+    "id": 3,
+    "department": "Production",
+    "department_id": "PR001",
+    "process": [
+    {
+        "process": "Production Plan",
+        "process_id": "PR001",
+        "column": [
+        "SL.No",
+        "DATE",
+        "CUSTOMER NAME",
+        "PART",
+        "PART NO",
+        "PART NAME",
+        "DESCRIPTION",
+        "MATERIAL",
+        "GRADE",
+        "PLAN GIVEN BY",
+        "ORDER GIVEN BY",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-01-15" },
+            { "key": "CUSTOMER NAME", "val": "Customer A" },
+            { "key": "PART", "val": "Part 1" },
+            { "key": "PART NO", "val": "P001" },
+            { "key": "PART NAME", "val": "Part Name 1" },
+            { "key": "DESCRIPTION", "val": "Description 1" },
+            { "key": "MATERIAL", "val": "Material 1" },
+            { "key": "GRADE", "val": "Grade 1" },
+            { "key": "PLAN GIVEN BY", "val": "Plan A" },
+            { "key": "ORDER GIVEN BY", "val": "Order B" },
+            { "key": "REMARKS", "val": "Remarks 1" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "DATE", "val": "2023-01-16" },
+            { "key": "CUSTOMER NAME", "val": "Customer B" },
+            { "key": "PART", "val": "Part 2" },
+            { "key": "PART NO", "val": "P002" },
+            { "key": "PART NAME", "val": "Part Name 2" },
+            { "key": "DESCRIPTION", "val": "Description 2" },
+            { "key": "MATERIAL", "val": "Material 2" },
+            { "key": "GRADE", "val": "Grade 2" },
+            { "key": "PLAN GIVEN BY", "val": "Plan B" },
+            { "key": "ORDER GIVEN BY", "val": "Order C" },
+            { "key": "REMARKS", "val": "Remarks 2" }
+        ]
+        ]
+    },
+    {
+        "process": "Shift Scedule",
+        "process_id": "PR002",
+        "column": [
+        "SL NO",
+        "YEAR",
+        "MONTH",
+        "EMPLOYE CODE",
+        "EMPLOYEE NAME",
+        "WEEK 1",
+        "WEEK 2",
+        "WEEK 3",
+        "WEEK 4"
+        ],
+        "value": [
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "YEAR", "val": "2023" },
+            { "key": "MONTH", "val": "January" },
+            { "key": "EMPLOYE CODE", "val": "E001" },
+            { "key": "EMPLOYEE NAME", "val": "John Doe" },
+            { "key": "WEEK 1", "val": "Week 1" },
+            { "key": "WEEK 2", "val": "Week 2" },
+            { "key": "WEEK 3", "val": "Week 3" },
+            { "key": "WEEK 4", "val": "Week 4" }
+        ]
+        ]
+    },
+    {
+        "process": "Report Rejection",
+        "process_id": "PR003",
+        "column": [
+        "DATE",
+        "SHIFT",
+        "STAGE",
+        "PART NO",
+        "PART NAME",
+        "PROBLEM DESCRIPTION",
+        "DEPT",
+        "REJECT QTY",
+        "REJECT STAGE",
+        "INSPECTED BY",
+        "ROUTE CAUSE",
+        "ACTION PLAN",
+        "MOVE TO",
+        "TOTAL TIME",
+        "COST /DAY",
+        "VALUE",
+        "REF NO",
+        "VERIFIED BY",
+        "STATUS"
+        ],
+        "value": [
+        [
+            { "key": "DATE", "val": "2023-01-15" },
+            { "key": "SHIFT", "val": "Shift 1" },
+            { "key": "STAGE", "val": "Stage 1" },
+            { "key": "PART NO", "val": "P001" },
+            { "key": "PART NAME", "val": "Part Name 1" },
+            { "key": "PROBLEM DESCRIPTION", "val": "Problem Description 1" },
+            { "key": "DEPT", "val": "Dept 1" },
+            { "key": "REJECT QTY", "val": "10" },
+            { "key": "REJECT STAGE", "val": "Reject Stage 1" },
+            { "key": "INSPECTED BY", "val": "Inspected By 1" },
+            { "key": "ROUTE CAUSE", "val": "Route Cause 1" },
+            { "key": "ACTION PLAN", "val": "Action Plan 1" },
+            { "key": "MOVE TO", "val": "Move To 1" },
+            { "key": "TOTAL TIME", "val": "Total Time 1" },
+            { "key": "COST /DAY", "val": "Cost / Day 1" },
+            { "key": "VALUE", "val": "Value 1" },
+            { "key": "REF NO", "val": "Ref No 1" },
+            { "key": "VERIFIED BY", "val": "Verified By 1" },
+            { "key": "STATUS", "val": "Status 1" }
+        ]
+        ]
+    },
+    {
+        "process": "Rework Report",
+        "process_id": "PR004",
+        "column": [
+        "REF NO",
+        "FROM STAGE",
+        "PART NO",
+        "PART NAME",
+        "PROBLEM",
+        "QTY",
+        "ISSUED BY",
+        "DATE",
+        "SHIFT",
+        "JOB DESCRIPTION",
+        "SETTING TIME",
+        "REJECTION",
+        "CYCLE TIME",
+        "RUNNING MINUTE",
+        "OPERATED BY",
+        "SUPERVISOR SIGN"
+        ],
+        "value": [
+        [
+            { "key": "REF NO", "val": "R001" },
+            { "key": "FROM STAGE", "val": "From Stage 1" },
+            { "key": "PART NO", "val": "P001" },
+            { "key": "PART NAME", "val": "Part Name 1" },
+            { "key": "PROBLEM", "val": "Problem 1" },
+            { "key": "QTY", "val": "10" },
+            { "key": "ISSUED BY", "val": "Issued By 1" },
+            { "key": "DATE", "val": "2023-01-15" },
+            { "key": "SHIFT", "val": "Shift 1" },
+            { "key": "JOB DESCRIPTION", "val": "Job Description 1" },
+            { "key": "SETTING TIME", "val": "Setting Time 1" },
+            { "key": "REJECTION", "val": "Rejection 1" },
+            { "key": "CYCLE TIME", "val": "Cycle Time 1" },
+            { "key": "RUNNING MINUTE", "val": "Running Minute 1" },
+            { "key": "OPERATED BY", "val": "Operated By 1" },
+            { "key": "SUPERVISOR SIGN", "val": "Supervisor Sign 1" }
+        ]
+        ]
+    },
+    {
+        "process": "Continous Improvement",
+        "process_id": "PR005",
+        "column":[
+        "SL NO",
+        "DATE",
+        "IMPROVEMENT AREA",
+        "IMPROVEMENT ACTIVITIES",
+        "BENEFITS",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "DATE", "val": "2023-01-15" },
+            { "key": "IMPROVEMENT AREA", "val": "Improvement Area 1" },
+            { "key": "IMPROVEMENT ACTIVITIES", "val": "Improvement Activities 1" },
+            { "key": "BENEFITS", "val": "Benefits 1" },
+            { "key": "REMARKS", "val": "Remarks 1" }
+        ]
+        ]
+    }
+    ]
+    },
+    {
+    "id": 4,
+    "department": "Sales",
+    "department_id": "SL001",
+    "process": [
+    {
+        "id":1,
+        "process": "Quatation List",
+        "process_id": "SL001",
+        "column": [
+        "DATE",
+        "ENQ NO",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "DESCRIPTION",
+        "QTY",
+        "UNITS",
+        "NPD FORM",
+        "QUOTATION DATE",
+        "QUOTATION NO",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "ENQ NO", "val": "E001" },
+            { "key": "ENQ BY", "val": "John Doe" },
+            { "key": "CUSTOMER NAME", "val": "ABC Company" },
+            { "key": "LOCATION", "val": "New York" },
+            { "key": "DESCRIPTION", "val": "Product A" },
+            { "key": "QTY", "val": "10" },
+            { "key": "UNITS", "val": "pcs" },
+            { "key": "NPD FORM", "val": "Yes" },
+            { "key": "QUOTATION DATE", "val": "2023-08-15" },
+            { "key": "QUOTATION NO", "val": "Q001" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "id":2,
+        "process": "Order List",
+        "process_id": "SL002",
+        "column": [
+        "DATE",
+        "QUOTE NO",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "DESCRIPTION",
+        "QTY",
+        "UNITS",
+        "VALUE",
+        "ORDER DATE",
+        "PO NO",
+        "LEAD TIME",
+        "DELIVER QTY",
+        "PENDING QTY",
+        "DELIVERY DATE",
+        "GRN",
+        "PAYMENT",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "QUOTE NO", "val": "Q001" },
+            { "key": "ENQ BY", "val": "John Doe" },
+            { "key": "CUSTOMER NAME", "val": "ABC Company" },
+            { "key": "LOCATION", "val": "New York" },
+            { "key": "DESCRIPTION", "val": "Product A" },
+            { "key": "QTY", "val": "10" },
+            { "key": "UNITS", "val": "pcs" },
+            { "key": "VALUE", "val": "$1000" },
+            { "key": "ORDER DATE", "val": "2023-08-15" },
+            { "key": "PO NO", "val": "PO001" },
+            { "key": "LEAD TIME", "val": "2 weeks" },
+            { "key": "DELIVER QTY", "val": "5" },
+            { "key": "PENDING QTY", "val": "5" },
+            { "key": "DELIVERY DATE", "val": "2023-08-22" },
+            { "key": "GRN", "val": "GRN001" },
+            { "key": "PAYMENT", "val": "Paid" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "id":3,
+        "process": "Customer Trail List",
+        "process_id": "SL003",
+        "column": [
+        "S.NO",
+        "DATE",
+        "CUSTOMER",
+        "LOCATION",
+        "MACHINE",
+        "USER NAME",
+        "PART DETAILS",
+        "RESPONSIBLE",
+        "TRIAL PERIOD",
+        "STATUS",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "CUSTOMER", "val": "ABC Company" },
+            { "key": "LOCATION", "val": "New York" },
+            { "key": "MACHINE", "val": "Machine A" },
+            { "key": "USER NAME", "val": "John Doe" },
+            { "key": "PART DETAILS", "val": "Part A" },
+            { "key": "RESPONSIBLE", "val": "John Doe" },
+            { "key": "TRIAL PERIOD", "val": "2 weeks" },
+            { "key": "STATUS", "val": "Pending" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "id":4,
+        "process": "Samples Register",
+        "process_id": "SL004",
+        "column":[
+        "S.NO",
+        "DATE",
+        "SAMPLES FROM",
+        "DESCRIPTION",
+        "DC NO",
+        "STATUS",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "SAMPLES FROM", "val": "ABC Company" },
+            { "key": "DESCRIPTION", "val": "Product A" },
+            { "key": "DC NO", "val": "DC001" },
+            { "key": "STATUS", "val": "Pending" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "id":5,
+        "process": "Field Report",
+        "process_id": "SL005",
+        "column":[
+        "S.NO",
+        "DATE",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "NAME",
+        "STATUS",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "CUSTOMER NAME", "val": "ABC Company" },
+            { "key": "LOCATION", "val": "New York" },
+            { "key": "NAME", "val": "John Doe" },
+            { "key": "STATUS", "val": "Pending" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "id":6,
+        "process": "Customer List",
+        "process_id": "SL006",
+        "column": [
+        "S.NO",
+        "VENDOR CODE",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "SALES PERSON",
+        "STATUS",
+        "APPLICATION",
+        "CUSTOMERS REQUIREMENT",
+        "REMARKS"
+        ],
+        "value": [
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "VENDOR CODE", "val": "VC001" },
+            { "key": "CUSTOMER NAME", "val": "ABC Company" },
+            { "key": "LOCATION", "val": "New York" },
+            { "key": "SALES PERSON", "val": "John Doe" },
+            { "key": "STATUS", "val": "Pending" },
+            { "key": "APPLICATION", "val": "Application A" },
+            { "key": "CUSTOMERS REQUIREMENT", "val": "Requirement A" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    }
+    ]
+    },
+    {
+    "id": 5,
+    "department": "Purchase And Store",
+    "department_id": "MK001",
+    "process": [
+    {
+        "process": "Vendor List",
+        "process_id": "MK002",
+        "column": [
+        "S.NO",
+        "DATE",
+        "VENDOR CODE",
+        "VENDOR NAME",
+        "ITEM CATEGORY",
+        "ITEMS",
+        "EVALUATED",
+        "GST",
+        "CONTACT DETAIL",
+        "CONTACT PERSON",
+        "SUPPLIER QUALITY RATIO",
+        "REMARK"
+        ],
+        "value": [
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "VENDOR CODE", "val": "VC001" },
+            { "key": "VENDOR NAME", "val": "ABC Company" },
+            { "key": "ITEM CATEGORY", "val": "Item A" },
+            { "key": "ITEMS", "val": "Item A" },
+            { "key": "EVALUATED", "val": "Item A" },
+            { "key": "GST", "val": "Item A" },
+            { "key": "CONTACT DETAIL", "val": "Item A" },
+            { "key": "CONTACT PERSON", "val": "Item A" },
+            { "key": "SUPPLIER QUALITY RATIO", "val": "Item A" },
+            { "key": "REMARK", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "process": "Item List",
+        "process_id": "MK003",
+        "column":[
+        "S.NO",
+        "DATE",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "TYPE",
+        "BUFFER STOCK",
+        "PRICE"
+        ],
+        "value":[
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "ITEM CATEGORY", "val": "Item A" },
+            { "key": "ITEM CODE", "val": "IC001" },
+            { "key": "ITEM NAME", "val": "Item A" },
+            { "key": "TYPE", "val": "Item A" },
+            { "key": "BUFFER STOCK", "val": "Item A" },
+            { "key": "PRICE", "val": "Item A" }
+        ]
+        ]
+    },
+    {
+        "process": "Procurement Report",
+        "process_id": "MK004",
+        "column":[
+        "DATE",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "VENDOR CODE",
+        "VENDOR NAME",
+        "ITEM NAME",
+        "QTY",
+        "UNITS",
+        "VALUE",
+        "PO NO",
+        "LEAD TIME",
+        "DELIVER QTY",
+        "DELIVERY DATE",
+        "QUALITY INSPECTION",
+        "DEFECT QTY",
+        "PENDING QTY",
+        "PAYMENT",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "ITEM CATEGORY", "val": "Item A" },
+            { "key": "ITEM CODE", "val": "IC001" },
+            { "key": "VENDOR CODE", "val": "VC001" },
+            { "key": "VENDOR NAME", "val": "ABC Company" },
+            { "key": "ITEM NAME", "val": "Item A" },
+            { "key": "QTY", "val": "10" },
+            { "key": "UNITS", "val": "pcs" },
+            { "key": "VALUE", "val": "$1000" },
+            { "key": "PO NO", "val": "PO001" },
+            { "key": "LEAD TIME", "val": "2 weeks" },
+            { "key": "DELIVER QTY", "val": "5" },
+            { "key": "DELIVERY DATE", "val": "2023-08-22" },
+            { "key": "QUALITY INSPECTION", "val": "Yes" },
+            { "key": "DEFECT QTY", "val": "0" },
+            { "key": "PENDING QTY", "val": "5" },
+            { "key": "PAYMENT", "val": "Yes" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "process": "Store Register",
+        "process_id": "MK005",
+        "column":[
+        "S.NO",
+        "DATE",
+        "IN / OUT",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "VENDOR / CUSTOMER",
+        "QTY",
+        "DOC NO",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "IN / OUT", "val": "IN" },
+            { "key": "ITEM CATEGORY", "val": "Item A" },
+            { "key": "ITEM CODE", "val": "IC001" },
+            { "key": "ITEM NAME", "val": "Item A" },
+            { "key": "VENDOR / CUSTOMER", "val": "ABC Company" },
+            { "key": "QTY", "val": "10" },
+            { "key": "DOC NO", "val": "PO001" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "process": "Stock Register",
+        "process_id": "MK006",
+        "column":[
+        "S.NO",
+        "ITEM CODE",
+        "ITEM CATEGORY",
+        "ITEM NAME",
+        "IN",
+        "SUB PART OUT",
+        "OUT",
+        "STOCK",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "S.NO", "val": "1" },
+            { "key": "ITEM CODE", "val": "IC001" },
+            { "key": "ITEM CATEGORY", "val": "Item A" },
+            { "key": "ITEM NAME", "val": "Item A" },
+            { "key": "IN", "val": "10" },
+            { "key": "SUB PART OUT", "val": "0" },
+            { "key": "OUT", "val": "0" },
+            { "key": "STOCK", "val": "10" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    }
+    ]
+    },
+    {
+    "id": 6,
+    "department": "Maintance",
+    "department_id": "MT001",
+    "process": [
+    {
+        "process": "Machine List",
+        "process_id": "MT002",
+        "column": [
+        "SL NO",
+        "MACHINE ID",
+        "MACHINE NAME",
+        "MAKE",
+        "MODEL",
+        "COMMISIONING DATE",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "SL NO", "val": "1" },
+            { "key": "MACHINE ID", "val": "MT001" },
+            { "key": "MACHINE NAME", "val": "Machine A" },
+            { "key": "MAKE", "val": "ABC Company" },
+            { "key": "MODEL", "val": "Model A" },
+            { "key": "COMMISIONING DATE", "val": "2023-08-15" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "process": "Machine History",
+        "process_id": "MT003",
+        "column": [
+        "SL.NO",
+        "DATE",
+        "MACHINE NAME",
+        "PROBLEM",
+        "PHENOMENON",
+        "WORK CARRIED OUT",
+        "SPARE CONSUMED",
+        "BD / PM",
+        "START TIME",
+        "END TIME",
+        "DONE BY",
+        "STATUS",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "MACHINE NAME", "val": "Machine A" },
+            { "key": "PROBLEM", "val": "Problem A" },
+            { "key": "PHENOMENON", "val": "Phenomenon A" },
+            { "key": "WORK CARRIED OUT", "val": "Work A" },
+            { "key": "SPARE CONSUMED", "val": "Spare A" },
+            { "key": "BD / PM", "val": "BD" },
+            { "key": "START TIME", "val": "10:00 AM" },
+            { "key": "END TIME", "val": "12:00 PM" },
+            { "key": "DONE BY", "val": "John Doe" },
+            { "key": "STATUS", "val": "Completed" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    },
+    {
+        "process": "KWH",
+        "process_id": "MT004",
+        "column": [
+        "SL",
+        "MONTH",
+        "DAY",
+        "DATE",
+        "P.F",
+        "KWH",
+        "KWH/DAY"
+        ],
+        "value":[
+        [
+            { "key": "SL", "val": "1" },
+            { "key": "MONTH", "val": "August" },
+            { "key": "DAY", "val": "15" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "P.F", "val": "PF001" },
+            { "key": "KWH", "val": "1000" },
+            { "key": "KWH/DAY", "val": "100" }
+        ]
+        ]
+    },
+    {
+        "process": "Service Report",
+        "process_id": "MT005",
+        "column":[
+        "SL.NO",
+        "DATE",
+        "MACHINE NAME",
+        "MODEL NAME",
+        "PROBLEM RECTIFIED",
+        "SOLUTION",
+        "SERVICE DONE BY",
+        "REMARKS"
+        ],
+        "value":[
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "DATE", "val": "2023-08-15" },
+            { "key": "MACHINE NAME", "val": "Machine A" },
+            { "key": "MODEL NAME", "val": "Model A" },
+            { "key": "PROBLEM RECTIFIED", "val": "Problem A" },
+            { "key": "SOLUTION", "val": "Solution A" },
+            { "key": "SERVICE DONE BY", "val": "John Doe" },
+            { "key": "REMARKS", "val": "No" }
+        ]
+        ]
+    }          
+    ]
+    },
+    {
+    "id": 7,
+    "department": "Human Resources",
+    "department_id": "HR001",
+    "process": [
+    {
+        "process": "Employee List",
+        "process_id": "HR001",
+        "column": [
+        "SL.NO",
+        "NAME",
+        "ID NO",
+        "FATHER NAME",
+        "DATE OF BIRTH",
+        "DESIGNATION",
+        "QUALIFICATION",
+        "MOBILE NO",
+        "DATE OF JOINING",
+        "RESIDENTIAL ADDRESS"
+        ],
+        "value":[
+        [
+            { "key": "SL.NO", "val": "1" },
+            { "key": "NAME", "val": "John Doe" },
+            { "key": "ID NO", "val": "12345" },
+            { "key": "FATHER NAME", "val": "John Doe" },
+            { "key": "DATE OF BIRTH", "val": "1990-01-01" },
+            { "key": "DESIGNATION", "val": "Manager" },
+            { "key": "QUALIFICATION", "val": "Bachelor's Degree" },
+            { "key": "MOBILE NO", "val": "1234567890" },
+            { "key": "DATE OF JOINING", "val": "2022-01-01" },
+            { "key": "RESIDENTIAL ADDRESS", "val": "123 Main Street, City" }
+        ],
+        [
+            { "key": "SL.NO", "val": "2" },
+            { "key": "NAME", "val": "Jane Doe" },
+            { "key": "ID NO", "val": "67890" },
+            { "key": "FATHER NAME", "val": "Jane Doe" },
+            { "key": "DATE OF BIRTH", "val": "1995-05-05" },
+            { "key": "DESIGNATION", "val": "Developer" },
+            { "key": "QUALIFICATION", "val": "Master's Degree" },
+            { "key": "MOBILE NO", "val": "9876543210" },
+            { "key": "DATE OF JOINING", "val": "2022-02-01" },
+            { "key": "RESIDENTIAL ADDRESS", "val": "456 Elm Street, City" }
+        ],
+        [
+            { "key": "SL.NO", "val": "3" },
+            { "key": "NAME", "val": "John Doe" },
+            { "key": "ID NO", "val": "12345" },
+            { "key": "FATHER NAME", "val": "John Doe" },
+            { "key": "DATE OF BIRTH", "val": "1990-01-01" },
+            { "key": "DESIGNATION", "val": "Manager" },
+            { "key": "QUALIFICATION", "val": "Bachelor's Degree" },
+            { "key": "MOBILE NO", "val": "1234567890" },
+            { "key": "DATE OF JOINING", "val": "2022-01-01" },
+            { "key": "RESIDENTIAL ADDRESS", "val": "123 Main Street, City" }
+        ]
+        ]
+    }
+    ]
+    }
+    ]
+}
