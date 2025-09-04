@@ -23,8 +23,6 @@ function Login() {
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     handleLogin(form);
-    console.log('submitted');
-    // Add login logic here
   };
 
   const handleCreateAccount = (e) => {

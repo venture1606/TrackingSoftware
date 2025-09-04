@@ -25,6 +25,12 @@
   margin: 0.5rem 1rem;
   padding: 0.5rem;
   color: rgb(29, 28, 28);
+  cursor: pointer;
+}
+
+.ProductListCardContainer:hover{
+  transform: scale(1.05);
+  transition: all 0.5s ease;
 }
 
 .ProductListCardHeader{

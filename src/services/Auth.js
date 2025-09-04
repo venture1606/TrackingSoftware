@@ -7,7 +7,7 @@ import { setToken, setUserDetails, setLogin } from '../redux/slices/auth'
 
 function Auth() {
 
-  const URL = 'http://localhost:3008/api/v1/user'
+  const URL = 'https://adl-server.onrender.com/api/v1/user'
 
   const dispatch = useDispatch();
   const navigate = useNavigate();

@@ -7,61 +7,88 @@ import {
   Th,
   Td,
   Button,
-  Input,
+  useDisclosure,
 } from "@chakra-ui/react";
 
-// importing data
-import ItemData from '../utils/ItemsData.json';
+// Importing API
+import Process from "../services/Process";
+
+// importing components
+import SubProcess from "./SubProcess"; // modal for nested process
+import FormDialog from "../hooks/FormDialog";
 
 // importing styles
 import "../styles/departmentpage.css";
 
 function FormPage({ process }) {
+  const { loading, handleGetSingleProcess } = Process();
 
-  const { DesignProcess } = ItemData;
+  const [rows, setRows] = useState([]);
+  const [popupData, setPopupData] = useState(null);
 
-  const [rows, setRows] = useState([]); // local state for row data
-  const [editingRow, setEditingRow] = useState(null);
-  const [editedData, setEditedData] = useState({});
+  // For SubProcess modal
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // sync process.value to local rows whenever process changes
+  // For FormDialog modal
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formRowIdx, setFormRowIdx] = useState(null);
+  const [formInitialData, setFormInitialData] = useState({});
+
   useEffect(() => {
-    if (process?.value) {
+    if (process?.value && process?.header) {
       setRows(process.value);
+    } else {
+      setRows([]); // clear rows when process changes
     }
   }, [process]);
 
+
+  // Convert row to object keyed by column names
+  const getRowData = (row) => {
+    const obj = {};
+    process.header.forEach((col, idx) => {
+      obj[col] = row[idx]?.value || "";
+    });
+    return obj;
+  };
+
+  // Convert back to row format (array of { value })
+  const objectToRow = (data, oldRow) =>
+    process.header.map((col, idx) => ({
+      ...oldRow[idx],
+      value: data[col] || "",
+    }));
+
+  // When Edit is clicked
   const handleEditClick = (rowIdx) => {
-    setEditingRow(rowIdx);
-    setEditedData(
-      Object.fromEntries(rows[rowIdx].map((cell, idx) => [idx, cell.val]))
-    );
+    setFormRowIdx(rowIdx);
+    setFormInitialData(getRowData(rows[rowIdx]));
+    setIsFormOpen(true);
   };
 
-  const handleInputChange = (idx, value) => {
-    setEditedData((prev) => ({
-      ...prev,
-      [idx]: value,
-    }));
-  };
-
-  const handleSaveClick = (rowIdx) => {
-    const updatedRow = rows[rowIdx].map((cell, idx) => ({
-      ...cell,
-      val: editedData[idx],
-    }));
-
+  // When FormDialog saves
+  const handleFormSubmit = (data) => {
     const updatedRows = [...rows];
-    updatedRows[rowIdx] = updatedRow;
-
+    updatedRows[formRowIdx] = objectToRow(data, rows[formRowIdx]);
     setRows(updatedRows);
-    setEditingRow(null);
-    setEditedData({});
+    setIsFormOpen(false);
+    setFormRowIdx(null);
   };
 
-  const handleCancelClick = () => {
-    setEditingRow(null);
-    setEditedData({});
+  // When process button inside a cell is clicked
+  const handleCellButtonClick = async (row, rowIdx, cellIdx) => {
+    const cell = row[cellIdx];
+    let id = cell.value.split("processId -")[1]?.trim();
+    cell.process = await handleGetSingleProcess(id);
+    console.log(cell.process);
+    setPopupData({
+      parentProcess: process.process,
+      row,
+      rowIdx,
+      cellIdx,
+      nestedProcess: cell.process || null,
+    });
+    onOpen();
   };
 
   return (
@@ -72,9 +99,9 @@ function FormPage({ process }) {
       <Table size="sm" variant="simple">
         <Thead className="TableHeader">
           <Tr>
-            {process && process.column?.length > 0 ? (
+            {process && process.header?.length > 0 ? (
               <>
-                {process.column.map((col, idx) => (
+                {process.header.map((col, idx) => (
                   <Th key={idx} className="TableHeaderContent">
                     {col}
                   </Th>
@@ -92,75 +119,60 @@ function FormPage({ process }) {
             rows.map((row, rowIdx) => (
               <Tr key={rowIdx}>
                 {row.map((cell, cellIdx) => (
-                  <Td
-                    key={cellIdx}
-                    className={
-                      editingRow !== rowIdx
-                        ? "RowsField"
-                        : "RowsField SelectedRowField"
-                    }
-                  >
-                    {editingRow === rowIdx ? (
-                      <Input
+                  <Td key={cellIdx} className="RowsField">
+                    {cell.value?.startsWith("processId -") ? (
+                      <Button
                         size="sm"
-                        value={editedData[cellIdx] || ""}
-                        className="InputField"
-                        onChange={(e) =>
-                          handleInputChange(cellIdx, e.target.value)
+                        colorScheme="blue"
+                        onClick={() =>
+                          handleCellButtonClick(row, rowIdx, cellIdx)
                         }
-                      />
+                      >
+                        Update
+                      </Button>
                     ) : (
-                      cell.val
+                      cell.value
                     )}
                   </Td>
                 ))}
 
-                <Td
-                  className={
-                    editingRow !== rowIdx
-                      ? "RowsField"
-                      : "RowsField SelectedRowField"
-                  }
-                >
-                  {editingRow === rowIdx ? (
-                    <>
-                      <Button
-                        size="sm"
-                        colorScheme="green"
-                        className="IconButtonStyle"
-                        mr={2}
-                        onClick={() => handleSaveClick(rowIdx)}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        className="IconButtonStyle"
-                        onClick={handleCancelClick}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="IconButtonStyle"
-                      onClick={() => handleEditClick(rowIdx)}
-                    >
-                      Edit
-                    </Button>
-                  )}
+                <Td className="RowsField">
+                  <Button
+                    size="sm"
+                    className="IconButtonStyle"
+                    onClick={() => handleEditClick(rowIdx)}
+                  >
+                    Edit
+                  </Button>
                 </Td>
               </Tr>
             ))
           ) : (
             <Tr>
-              <Td colSpan={(process?.column?.length || 1) + 1}>No Data</Td>
+              <Td colSpan={(process?.header?.length || 1) + 1}>No Data</Td>
             </Tr>
           )}
         </Tbody>
       </Table>
+
+      {/* SubProcess Modal */}
+      <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
+
+      {/* FormDialog Modal */}
+      {isFormOpen && (
+        <FormDialog
+          IndicationText="Edit Row"
+          FormArray={process.header.map((col) => ({
+            label: col,
+            key: col,
+          }))}
+          handleSubmit={handleFormSubmit}
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          initialData={formInitialData}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }

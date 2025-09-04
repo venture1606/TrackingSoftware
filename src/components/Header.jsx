@@ -8,7 +8,7 @@ import Auth from '../services/Auth'
 import '../styles/components.css'
 
 // importing assests
-import Logo from '../assets/logo.png'
+import Logo from '../assets/logo.jpg'
 
 function Header() {
 

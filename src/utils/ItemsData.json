@@ -209,7 +209,17 @@
       "ratedFlow": "25 GPM",
       "sealingMaterial": "Nitrile",
       "suggestedFlow": "30 GPM",
-      "temperature": "80°C"
+      "temperature": "80°C",
+      "graph": [
+        {
+          "name": "pressureDrop",
+          "data": [3000, 2900, 2800, 2700, 2600]
+        },
+        {
+          "name": "LPA",
+          "data": [25, 24, 23, 22, 21]
+        }
+      ]
     }
   ],
   "SubDepartments": [
@@ -217,15 +227,18 @@
       "key": "Design",
       "value": [
         "NPD Register",
+        "Product List",
+        
+        "Product Success Rate",
+        "Product Sample List"
+      ],
+      "subprocess":[
         "Product Validation Report",
         "Master Piece",
-        "Product List",
         "Product Drawing Control",
         "Bill of Materials - BOM",
         "Revision Control",
-        "Product Revision",
-        "Product Success Rate",
-        "Product Sample List"
+        "Product Revision"
       ]
     },
     {
@@ -305,6 +318,7 @@
   "DesignProcess":[
     {
       "process": "NPD Register",
+      "processId":"AB123",
       "header": [
         "NO",
         "BY",
@@ -336,7 +350,42 @@
           { "key": "UPLOAD", "value": "File.pdf" },
           { "key": "PROTO", "value": "Prototype 1" },
           { "key": "VALIDATION", "value": "Validated" },
-          { "key": "MASTER", "value": "Master Document" }
+          { "key": "MASTER", "value": "processId", 
+            "process":  {
+              "process": "Master Piece",
+              "header": [
+                "SL.NO",
+                "PART",
+                "SERIES ",
+                "PART NO",
+                "PART NAME",
+                "SPECIFICATION",
+                "MASTER PIECE",
+                "REMARK"
+              ],
+              "data": [
+                [
+                  { "key": "SL.NO", "value": "1" },
+                  { "key": "PART", "value": "Part A" },
+                  { "key": "SERIES ", "value": "Series 1" },
+                  { "key": "PART NO", "value": "PA-001" },
+                  { "key": "PART NAME", "value": "Part A Name" },
+                  { "key": "SPECIFICATION", "value": "Spec A" },
+                  { "key": "MASTER PIECE", "value": "Master Piece A" },
+                  { "key": "REMARK", "value": "No remarks" }
+                ],
+                [
+                  { "key": "SL.NO", "value": "2" },
+                  { "key": "PART", "value": "Part B" },
+                  { "key": "SERIES ", "value": "Series 1" },
+                  { "key": "PART NO", "value": "PB-001" },
+                  { "key": "PART NAME", "value": "Part B Name" },
+                  { "key": "SPECIFICATION", "value": "Spec B" },
+                  { "key": "MASTER PIECE", "value": "Master Piece B" },
+                  { "key": "REMARK", "value": "Urgent" }
+                ]
+              ]
+              } }
         ]
       ]
     },
@@ -357,7 +406,28 @@
         "MASTER PIECE",
         "REMARK"
       ],
-      "data": []
+      "data": [
+        [
+          { "key": "SL.NO", "value": "1" },
+          { "key": "PART", "value": "Part A" },
+          { "key": "SERIES ", "value": "Series 1" },
+          { "key": "PART NO", "value": "PA-001" },
+          { "key": "PART NAME", "value": "Part A Name" },
+          { "key": "SPECIFICATION", "value": "Spec A" },
+          { "key": "MASTER PIECE", "value": "Master Piece A" },
+          { "key": "REMARK", "value": "No remarks" }
+        ],
+        [
+          { "key": "SL.NO", "value": "2" },
+          { "key": "PART", "value": "Part B" },
+          { "key": "SERIES ", "value": "Series 1" },
+          { "key": "PART NO", "value": "PB-001" },
+          { "key": "PART NAME", "value": "Part B Name" },
+          { "key": "SPECIFICATION", "value": "Spec B" },
+          { "key": "MASTER PIECE", "value": "Master Piece B" },
+          { "key": "REMARK", "value": "Urgent" }
+        ]
+      ]
     },
     {
       "process": "Product List",
@@ -598,33 +668,150 @@
   ],
   "QualityProcess":[
     {
-      "process": "Instruments"
+      "process": "Instruments",
+      "header": [
+        "INT NO",
+        "MAKE",
+        "INSTRUMENT NAME",
+        "SIZE / RANGES",
+        "CALIBRATION",
+        "STATUS"
+      ],
+      "data": []
     },
     {
-      "process": "Calibration Report"
+      "process": "Calibration Report",
+      "header": [
+        "SL NO",
+        "INSTRUMENT NO",
+        "MAKE",
+        "INSTRUMENT NAME",
+        "LOCATION",
+        "SIZE / RANGES",
+        "CALIBRATION DONE DATE",
+        "CALIBRATION DUE DATE",
+        "NEXT SCHEDULE",
+        "CALIBRATION CERTIFICATE NO / DATE",
+        "STATUS"
+      ],
+      "data": []
     },
     {
-      "process": "Incoming Inspection"
+      "process": "Incoming Inspection",
+      "header": [
+        "PART NO",
+        "PART NAME",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "QTY",
+        "UNITS ",
+        "VENDOR NAME",
+        "INVOICE NO",
+        "DELIVER DATE",
+        "QTY",
+        "QUALITY INSPECTION ",
+        "STATUS"
+      ],
+      "data": []
     },
     {
-      "process": "Customer Complient Register"
+      "process": "Customer Complient Register", 
+      "header": [
+        "DATE",
+        "PART NO",
+        "PART NAME",
+        "BATCH NO",
+        "DISPATCH DATE",
+        "INVOICE NO",
+        "CUSTOMER NAME",
+        "FAILED QTY",
+        "NATURE OF PROBLEM",
+        "UNDER WARANTY",
+        "ACTION PLAN",
+        "STATUS"
+      ],
+      "data": []
     },
     {
       "process": "Process Control Rate"
     },
     {
-      "process": "Certificate Renewal"
+      "process": "Certificate Renewal",
+      "header": [
+        "SL.NO",
+        "DEPARTMENT",
+        "CERTIFICATE NAME",
+        "CATEGORY",
+        "CERTIFICATE NO ",
+        "ISSUE DATE",
+        "EXPIRY DATE",
+        "NEXT RENEVAL",
+        "STATUS"
+      ],
+      "data": []
     },
     {
-      "process": "Quality Audits"
+      "process": "Quality Audits",
+      "header": [
+        "DATE",
+        "AUDITEE",
+        "DEPARTMENT",
+        "QUESTIONNAIRE",
+        "EVIDENCE",
+        "FINDINGS",
+        "SCORE",
+        "RESPONSIBLE",
+        "ACTION PLAN",
+        "TARGET",
+        "STATUS"
+      ],
+      "data": []
     },
     {
-      "process": "Continous Improvement"
+      "process": "Audit Score",
+      "header": [
+        "DEPARTMENT",
+        "DESIGN",
+        "QUALITY",
+        "MANUFACTURING",
+        "MAINTENANCE",
+        "PURCHASE",
+        "STORES",
+        "SALES ",
+        "HR"
+      ],
+      "data": []
+    },
+    {
+      "process": "Continous Improvement",
+      "header": [
+        "IMP. NO",
+        "DATE",
+        "NATURE OF PROBLEM",
+        "IMPROVEMENT DESCRIPTION",
+        "AREA",
+        "OWNER",
+        "TEAM",
+        "STATUS"
+      ],
+      "data": []
     }
   ],
-  "MaintenaceProcess": [
+  "MaintenanceProcess": [
     {
-      "process": "Machine List"
+      "process": "Machine List",
+      "header": [
+        "SL NO",
+        "MACHINE ID",
+        "MACHINE NAME",
+        "MAKE",
+        "MODEL ",
+        "COMMISIONING DATE",
+        "REMARKS"
+      ],
+      "data": []
     },
     {
       "process": "Machine History Card"

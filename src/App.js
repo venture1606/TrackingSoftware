@@ -14,7 +14,14 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DepartmentPage from './pages/DepartmentPage';
 import Products from './pages/Products';
-
+import ShowProduct from './pages/ShowProduct';
+import Qms from './pages/Qms';
+import SalesOrder from './pages/SalesOrder';
+import Purchase from './pages/Purchase';
+import Manufacturing from './pages/Manufacturing';
+import Stock from './pages/Stock';
+import Development from './pages/Development';
+import Master from './pages/Master';
 
 function App() {
 
@@ -38,7 +45,15 @@ function App() {
                   <DepartmentPageWrapper />
                 }
               />
+              <Route path="/quality management system" element={<Qms />} />
+              <Route path="/sales order" element={<SalesOrder />} />
+              <Route path="/purchase" element={<Purchase />} />
+              <Route path="/manufacturing" element={<Manufacturing />} />
+              <Route path="/stock" element={<Stock />} />
+              <Route path="/new development" element={<Development />} />
+              <Route path="/master" element={<Master />} />
               <Route path="/products" element={<Products />} />
+              <Route path="/products/:id" element={<ShowProduct />} />
             </Routes>
           </div>
         </div>

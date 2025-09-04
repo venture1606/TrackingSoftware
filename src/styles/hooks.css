@@ -1,0 +1,12 @@
+.LoadingContainer{
+    position: absolute;
+    top: 40%;
+    left: 47%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.LoadingContainer span{
+    text-align: center;
+}

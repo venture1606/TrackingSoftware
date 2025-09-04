@@ -1,3 +1,88 @@
 .ProductContainer{
     
 }
+
+/* ShowProduct Page Style */
+
+.ShowProductContainer{
+    gap: 1rem;
+}
+
+.ShowProductHeader{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ShowProductHeader h1{
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.ShowProductHeader button{
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ShowProductDetailsContainer{
+    display: flex;
+    justify-content: space-evenly;
+    padding-bottom: 2rem;
+}
+
+.ShowProductLeftContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 50%;
+}
+
+.ShowProductImage{
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+}
+
+.GraphContainer{
+    border: 1px solid var(--primary-color);
+    padding: 1rem 1rem 1rem 1rem;
+    border-radius: 8px;
+    background-color: var(--third-color);
+}
+
+.ShowProductRightContainer{
+    border: 1px solid var(--primary-color);
+    width: 50%;
+    border-radius: 8px;
+    padding: 1rem 0rem;
+}
+
+.ShowProductRightContainer h2{
+    padding: 0 1rem 0.5rem 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.ShowProductRightContent{
+    padding: 1rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-radius: 0 0 8px 8px;
+    background-color: var(--primary-color);
+    color: var(--text-primary-color);
+}
