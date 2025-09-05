@@ -21,6 +21,7 @@ import Process from "../services/Process";
 // utility: transform process object → FormPage format
 const transformProcess = (process) => {
   return {
+    id: process._id,
     process: process.process,
     header: process.headers,
     value: process.data?.map((row) =>
@@ -38,7 +39,7 @@ function DepartmentPage() {
   const departments = useSelector((state) => state.department.departments);
 
   const { loading, handleGetAllDepartments } = Department();
-  const { handleGetProcessbyDepartmentId } = Process();
+  const { handleGetProcessbyDepartmentId, handleAddData  } = Process();
 
   const { department } = useParams(); // department comes from the URL
 
@@ -82,10 +83,9 @@ function DepartmentPage() {
   }, [selectedProcess, processes]);
 
   const handleAddDataSave = (data) => {
-    console.log("New Data Added:", data);
-    // Here you can push it to FormPage or call API to save
+    const processId = selectedProcessObject.id;
+    handleAddData({items: data, id: processId});
   };
-
 
   if (loading) {
     return <Loading />;
@@ -112,15 +112,19 @@ function DepartmentPage() {
       )}
 
       {/* Show the selected process name */}
-      <h1>{selectedProcess}</h1>
-      <div className="AddDataContainer">
-        <button
-          className="AddDataButton IconButtonStyle"
-          onClick={() => setShowAddData(true)}
-        >
-          Add Data
-        </button>
-      </div>
+      {selectedProcess && 
+        <div className="SelectedProcessContainer">
+          <h1>{selectedProcess}</h1>
+          <div className="AddDataContainer">
+            <button
+              className="AddDataButton IconButtonStyle"
+              onClick={() => setShowAddData(true)}
+            >
+              Add Data
+            </button>
+          </div>
+        </div>
+      }
 
       {/* Render AddData modal */}
       {showAddData && (

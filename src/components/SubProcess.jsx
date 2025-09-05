@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -10,18 +11,26 @@ import {
 // importing components
 import FormPage from "./FormPage";
 import Loading from "../hooks/Loading";
+import AddData from "../hooks/AddData";
 
 // importing assests
 import ProductImage from "../assets/ProductImage.jpg";
 
 // importing styles
 import '../styles/subprocess.css'
+import Process from "../services/Process";
 
 function SubProcess({ isOpen, onClose, data, loading }) {
+  const [showAddData, setShowAddData] = useState(false);
+  const { handleAddData } = Process();
+  
   if (!data?.nestedProcess) return null;
+
+  console.log(data);
 
   // Transform the nested process for FormPage
   const nested = {
+    id: data.nestedProcess._id,
     process: data.nestedProcess.process,
     header: data.nestedProcess.headers,
     value: data.nestedProcess.data.map((row) =>
@@ -31,6 +40,12 @@ function SubProcess({ isOpen, onClose, data, loading }) {
         process: cell.process || null,
       }))
     ),
+  };
+
+  const handleAddDataSave = (data) => {
+    const processId = nested.id;
+    console.log(data, processId)
+    handleAddData({ items: data, id: processId });
   };
 
   switch (nested.process) {
@@ -85,8 +100,28 @@ function SubProcess({ isOpen, onClose, data, loading }) {
             <ModalCloseButton />
             <ModalBody>
               { loading 
-                  ? <Loading /> : 
-                  <FormPage process={nested} />
+                  ? <Loading /> :
+                  <div>
+                    <div className="AddDataContainer">
+                      <button 
+                        className="AddDataButton AddDataContainer"
+                        onClick={() => setShowAddData(true)}
+                      >
+                        Add Data
+                      </button>
+                      {/* Render AddData modal */}
+                      {showAddData && (
+                        <AddData
+                          headers={nested.header || []}
+                          IndicationText="Add New Data"
+                          isOpen={showAddData}
+                          onClose={() => setShowAddData(false)}
+                          onSave={handleAddDataSave}
+                        />
+                      )}
+                    </div>
+                    <FormPage process={nested} />
+                  </div>
               }
             </ModalBody>
           </ModalContent>

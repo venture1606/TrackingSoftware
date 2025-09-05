@@ -101,92 +101,88 @@ function FormPage({ process }) {
   };
 
   return (
-    <div className="FormPageEntireContainer">
-      
-      <div
-        className="FormPageContainer"
-        style={{ overflowX: "auto", maxWidth: "100%" }}
-      >
-        
-        <Table size="sm" variant="simple">
-          <Thead className="TableHeader">
-            <Tr>
-              {process && process.header?.length > 0 ? (
-                <>
-                  {process.header.map((col, idx) => (
-                    <Th key={idx} className="TableHeaderContent">
-                      {col}
-                    </Th>
-                  ))}
-                  <Th className="TableHeaderContent">Action</Th>
-                </>
-              ) : (
-                <Th className="TableHeaderContent">No Process Selected</Th>
-              )}
-            </Tr>
-          </Thead>
-
-          <Tbody className="TableBody">
-            {rows && rows.length > 0 ? (
-              rows.map((row, rowIdx) => (
-                <Tr key={rowIdx}>
-                  {row.map((cell, cellIdx) => (
-                    <Td key={cellIdx} className="RowsField">
-                      {cell.value?.startsWith("processId -") ? (
-                        <Button
-                          size="sm"
-                          colorScheme="blue"
-                          onClick={() =>
-                            handleCellButtonClick(row, rowIdx, cellIdx)
-                          }
-                        >
-                          Update
-                        </Button>
-                      ) : (
-                        cell.value
-                      )}
-                    </Td>
-                  ))}
-
-                  <Td className="RowsField">
-                    <Button
-                      size="sm"
-                      className="IconButtonStyle"
-                      onClick={() => handleEditClick(rowIdx)}
-                    >
-                      Edit
-                    </Button>
-                  </Td>
-                </Tr>
-              ))
+    <div
+      className="FormPageContainer"
+      style={{ overflowX: "auto", maxWidth: "100%" }}
+    >  
+      <Table size="sm" variant="simple">
+        <Thead className="TableHeader">
+          <Tr>
+            {process && process.header?.length > 0 ? (
+              <>
+                {process.header.map((col, idx) => (
+                  <Th key={idx} className="TableHeaderContent">
+                    {col}
+                  </Th>
+                ))}
+                <Th className="TableHeaderContent">Action</Th>
+              </>
             ) : (
-              <Tr>
-                <Td colSpan={(process?.header?.length || 1) + 1}>No Data</Td>
-              </Tr>
+              <Th className="TableHeaderContent">No Process Selected</Th>
             )}
-          </Tbody>
-        </Table>
+          </Tr>
+        </Thead>
 
-        {/* SubProcess Modal */}
-        <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
+        <Tbody className="TableBody">
+          {rows && rows.length > 0 ? (
+            rows.map((row, rowIdx) => (
+              <Tr key={rowIdx}>
+                {row.map((cell, cellIdx) => (
+                  <Td key={cellIdx} className="RowsField">
+                    {cell.value?.startsWith("processId -") ? (
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        onClick={() =>
+                          handleCellButtonClick(row, rowIdx, cellIdx)
+                        }
+                      >
+                        Update
+                      </Button>
+                    ) : (
+                      cell.value
+                    )}
+                  </Td>
+                ))}
 
-        {/* FormDialog Modal */}
-        {isFormOpen && (
-          <FormDialog
-            IndicationText="Edit Row"
-            FormArray={process.header.map((col) => ({
-              label: col,
-              key: col,
-            }))}
-            handleSubmit={handleFormSubmit}
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            initialData={formInitialData}
-            loading={loading}
-          />
-        )}
-      </div>
-    </div>
+                <Td className="RowsField">
+                  <Button
+                    size="sm"
+                    className="IconButtonStyle"
+                    onClick={() => handleEditClick(rowIdx)}
+                  >
+                    Edit
+                  </Button>
+                </Td>
+              </Tr>
+            ))
+          ) : (
+            <Tr>
+              <Td colSpan={(process?.header?.length || 1) + 1}>No Data</Td>
+            </Tr>
+          )}
+        </Tbody>
+      </Table>
+
+      {/* SubProcess Modal */}
+      <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
+
+      {/* FormDialog Modal */}
+      {isFormOpen && (
+        <FormDialog
+          IndicationText="Edit Row"
+          FormArray={process.header.map((col) => ({
+            label: col,
+            key: col,
+          }))}
+          handleSubmit={handleFormSubmit}
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          initialData={formInitialData}
+          loading={loading}
+        />
+      )}
+    </div>      
   );
 }
 

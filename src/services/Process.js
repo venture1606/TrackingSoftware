@@ -83,11 +83,34 @@ function Process() {
         }
     }
 
+    const handleAddData = async ({ items, id }) => {
+        setLoading(true);
+        try {
+            const payload = { items };
+            const response = await axios.post(`${URL}/data/${id}`, payload, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            console.log('Added data:', response.data.process);
+        } catch (error) {
+            console.error("Error adding data:", error);
+            dispatch(setMessage({
+                status: 'error',
+                description: 'Failed to add data.',
+                message: error.message
+            }));
+        } finally {
+            setLoading(false);
+        }
+    };
+
   return {
     loading,
     handlegetAllProcess,
     handleGetSingleProcess,
-    handleGetProcessbyDepartmentId
+    handleGetProcessbyDepartmentId,
+    handleAddData
   } 
 }
 
