@@ -1,0 +1,36 @@
+.ProductValidationReportContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    height: 100%;
+}
+
+.ProductValidationReportContainer h2{
+    font-size: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.ProductValidationReportContent{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.ProductValidationReportDetails{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ProductValidationReportImage{
+    width: 200px;
+    height: 200px;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    object-fit: cover;
+}

@@ -10,7 +10,7 @@ function Department() {
     const departments = useSelector((state) => state.department.departments);
     const dispatch = useDispatch();
 
-    const URL = 'http://localhost:3008/api/v1/department';
+    const URL = 'https://adl-server.onrender.com/api/v1/department';
 
     const handleGetAllDepartments = async () => {
         if (departments.length > 0) return;

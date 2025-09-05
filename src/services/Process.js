@@ -6,7 +6,7 @@ import { setMessage } from '../redux/slices/common';
 
 function Process() {
 
-    const URL = 'http://localhost:3008/api/v1/process';
+    const URL = 'https://adl-server.onrender.com/api/v1/process';
 
     const [ loading, setLoading ] = useState(false);
     const dispatch = useDispatch();

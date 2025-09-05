@@ -4,6 +4,9 @@ import { useSelector } from "react-redux";
 
 // importing components
 import FormPage from "../components/FormPage";
+import Loading from "../hooks/Loading";
+import FormDialog from "../hooks/FormDialog";
+import AddData from "../hooks/AddData";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -19,7 +22,7 @@ import Process from "../services/Process";
 const transformProcess = (process) => {
   return {
     process: process.process,
-    header: process.headers, // ✅ API uses `headers` not `header`
+    header: process.headers,
     value: process.data?.map((row) =>
       row.items.map((cell) => ({
         key: cell.key,
@@ -34,14 +37,15 @@ function DepartmentPage() {
   const navigate = useNavigate();
   const departments = useSelector((state) => state.department.departments);
 
-  const { handleGetAllDepartments } = Department();
+  const { loading, handleGetAllDepartments } = Department();
   const { handleGetProcessbyDepartmentId } = Process();
 
   const { department } = useParams(); // department comes from the URL
 
   const [selectedProcess, setSelectedProcess] = useState("");
   const [selectedProcessObject, setSelectedProcessObject] = useState(null);
-  const [processes, setProcesses] = useState([]); // store fetched processes
+  const [processes, setProcesses] = useState([]); 
+  const [showAddData, setShowAddData] = useState(false);
 
   // Find the current department
   const currentDepartment = departments.find(
@@ -77,6 +81,16 @@ function DepartmentPage() {
     }
   }, [selectedProcess, processes]);
 
+  const handleAddDataSave = (data) => {
+    console.log("New Data Added:", data);
+    // Here you can push it to FormPage or call API to save
+  };
+
+
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <div className="AppRightContainer DepartmentPageContainer">
       {/* Dropdown for processes */}
@@ -99,6 +113,25 @@ function DepartmentPage() {
 
       {/* Show the selected process name */}
       <h1>{selectedProcess}</h1>
+      <div className="AddDataContainer">
+        <button
+          className="AddDataButton IconButtonStyle"
+          onClick={() => setShowAddData(true)}
+        >
+          Add Data
+        </button>
+      </div>
+
+      {/* Render AddData modal */}
+      {showAddData && (
+        <AddData
+          headers={selectedProcessObject?.header || []}
+          IndicationText="Add New Data"
+          isOpen={showAddData}
+          onClose={() => setShowAddData(false)}
+          onSave={handleAddDataSave}
+        />
+      )}
 
       {/* Render the FormPage with the matched process */}
       {selectedProcess && 
