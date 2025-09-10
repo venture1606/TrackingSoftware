@@ -68,7 +68,7 @@ function Process() {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 },
             });
-            console.log(response.data.data)
+
             return response.data.data;
 
         } catch (error) {
@@ -83,16 +83,19 @@ function Process() {
         }
     }
 
-    const handleAddData = async ({ items, id }) => {
+    const handleAddData = async ({ items, id, rowDataId }) => {
         setLoading(true);
+        console.log(rowDataId)
         try {
-            const payload = { items };
+            const payload = { items, rowDataId };
             const response = await axios.post(`${URL}/data/${id}`, payload, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
-            console.log('Added data:', response.data.process);
+
+            return response.data.process;
+            
         } catch (error) {
             console.error("Error adding data:", error);
             dispatch(setMessage({
@@ -105,12 +108,64 @@ function Process() {
         }
     };
 
+    const handleUpdateData = async ({ rowId, items, id }) => {
+        setLoading(true);
+        try {
+            const payload = { items, rowId };
+            const response = await axios.put(`${URL}/data/${id}`, payload, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data.data;
+        } catch (error) {
+            console.error("Error updating data:", error);
+            dispatch(setMessage({
+                status: 'error',
+                description: 'Failed to update data.',
+                message: error.message
+            }));
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const handleDeleteData = async ({ rowId, id }) => {
+        setLoading(true);
+        try {
+            const response = await axios.delete(`${URL}/data/${id}`, {
+                data: { rowId },
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            dispatch(setMessage({
+                status: 'success',
+                description: 'Data deleted successfully',
+                message: 'Deleted'
+            }));
+
+        } catch (error) {
+            console.error("Error deleting data:", error);
+            dispatch(setMessage({
+                status: 'error',
+                description: 'Failed to delete data.',
+                message: error.message
+            }));
+        } finally {
+            setLoading(false);
+        }
+    }
+
   return {
     loading,
     handlegetAllProcess,
     handleGetSingleProcess,
     handleGetProcessbyDepartmentId,
-    handleAddData
+    handleAddData,
+    handleUpdateData,
+    handleDeleteData
   } 
 }
 

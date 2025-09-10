@@ -21,7 +21,7 @@ import FormDialog from "../hooks/FormDialog";
 import "../styles/departmentpage.css";
 
 function FormPage({ process }) {
-  const { loading, handleGetSingleProcess } = Process();
+  const { loading, handleGetSingleProcess, handleUpdateData, handleDeleteData } = Process();
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -62,22 +62,29 @@ function FormPage({ process }) {
   // When Edit is clicked
   const handleEditClick = (rowIdx) => {
     setFormRowIdx(rowIdx);
+    console.log(getRowData(rows[rowIdx]));
     setFormInitialData(getRowData(rows[rowIdx]));
     setIsFormOpen(true);
   };
 
-  // When FormDialog saves
-  const handleFormSubmit = (data) => {
+  const handleDeleteRow = (rowIdx) => {
     const updatedRows = [...rows];
-    if (formRowIdx !== null) {
-      // Editing existing row
-      updatedRows[formRowIdx] = objectToRow(data, rows[formRowIdx]);
-    } else {
-      // Adding new row
-      const newRow = process.header.map((col) => ({ value: data[col] || "" }));
-      updatedRows.push(newRow);
-    }
+    handleDeleteData({ rowId: process.rowIds[rowIdx], id: process.id });
+    updatedRows.splice(rowIdx, 1);
+    setRows(updatedRows);
+  };
 
+  // When FormDialog saves
+  const handleFormSubmit = async (data) => {
+    const updatedRows = [...rows];
+    // Editing existing row
+    updatedRows[formRowIdx] = objectToRow(data, rows[formRowIdx]);
+    console.log(updatedRows[formRowIdx], rows[formRowIdx], formRowIdx);
+    const response = await handleUpdateData({ 
+      rowId: process.rowIds[formRowIdx], 
+      items: updatedRows[formRowIdx], 
+      id: process.id 
+    });
     console.log(updatedRows);
     setRows(updatedRows);
     setIsFormOpen(false);
@@ -87,15 +94,17 @@ function FormPage({ process }) {
   // When process button inside a cell is clicked
   const handleCellButtonClick = async (row, rowIdx, cellIdx) => {
     const cell = row[cellIdx];
+    const rowDataId = process.rowIds[rowIdx];
+    console.log(rowDataId)
     let id = cell.value.split("processId -")[1]?.trim();
-    cell.process = await handleGetSingleProcess(id);
-    console.log(cell.process);
+    const response = await handleGetSingleProcess(id);
     setPopupData({
       parentProcess: process.process,
       row,
       rowIdx,
       cellIdx,
-      nestedProcess: cell.process || null,
+      nestedProcess: response || null,
+      rowDataId,
     });
     onOpen();
   };
@@ -116,6 +125,7 @@ function FormPage({ process }) {
                   </Th>
                 ))}
                 <Th className="TableHeaderContent">Action</Th>
+                <Th className="TableHeaderContent">Delete</Th>
               </>
             ) : (
               <Th className="TableHeaderContent">No Process Selected</Th>
@@ -154,6 +164,16 @@ function FormPage({ process }) {
                     Edit
                   </Button>
                 </Td>
+                <Td className="RowsField">
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    className="IconButtonStyle"
+                    onClick={() => handleDeleteRow(rowIdx)}
+                  >
+                    Delete
+                  </Button>
+                </Td>
               </Tr>
             ))
           ) : (
@@ -175,11 +195,12 @@ function FormPage({ process }) {
             label: col,
             key: col,
           }))}
-          handleSubmit={handleFormSubmit}
+          handleSubmit={(data) => handleFormSubmit(data)}
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           initialData={formInitialData}
           loading={loading}
+          mode="form"
         />
       )}
     </div>      

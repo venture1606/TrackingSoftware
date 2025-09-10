@@ -228,7 +228,6 @@
       "value": [
         "NPD Register",
         "Product List",
-        
         "Product Success Rate",
         "Product Sample List"
       ],
@@ -751,7 +750,24 @@
       "data": []
     },
     {
-      "process": "Process Control Rate"
+      "process": "Process Control Plan",
+      "header": [
+        "PROCESS NO.",
+        "PART NO",
+        "PART NAME",
+        "PROCESS DESCRIPTION",
+        "MACHINES",
+        "NO.",
+        "PROCESS",
+        "TOOLS",
+        "PRODUCT & SPECIFICATION",
+        "MESUREMENT",
+        "QUALITY",
+        "FREQUENCY",
+        "CONTROL METHOD",
+        "REACTION PLAN"
+      ],
+      "data": []
     },
     {
       "process": "Certificate Renewal",
@@ -786,21 +802,6 @@
       "data": []
     },
     {
-      "process": "Audit Score",
-      "header": [
-        "DEPARTMENT",
-        "DESIGN",
-        "QUALITY",
-        "MANUFACTURING",
-        "MAINTENANCE",
-        "PURCHASE",
-        "STORES",
-        "SALES ",
-        "HR"
-      ],
-      "data": []
-    },
-    {
       "process": "Continous Improvement",
       "header": [
         "IMP. NO",
@@ -830,78 +831,369 @@
       "data": []
     },
     {
-      "process": "Machine History Card"
+      "process": "Machine History Card",
+      "header": [
+        "DATE",
+        "MACHINE NAME",
+        "PROBLEM",
+        "PHENOMENON",
+        "WORK CARRIED OUT",
+        "SPARE CONSUMED",
+        "BD / PM",
+        "START TIME",
+        "END TIME",
+        "DONE BY",
+        "STATUS",
+        "SERVICE REPORT"
+      ]
     },
     {
-      "process": "Preventive Maintenance"
+      "process": "Preventive Maintenance",
+      "header": [
+        "MACHINE ID",
+        "MACHINE NAME",
+        "PLAN",
+        "ACTUAL",
+        "STATUS",
+        "REPORT",
+        "NEXT SCHEDULE"
+      ]
     },
     {
-      "process": "KWH Monitoring"
+      "process": "KWH Monitoring",
+      "header": [
+        "SL",
+        "DATE",
+        "P.F",
+        "KWH",
+        "KWH/DAY"
+      ]
     }
   ],
   "SalesProcess": [
     {
-      "process": "Customer List"
+      "process": "Customer List",
+      "header": [
+        "VENDOR CODE",
+        "CUSTOMER NAME ",
+        "LOCATION",
+        "SALES PERSON ",
+        "STATUS ",
+        "APPLICATION ",
+        "CUSTOMERS REQUIREMENT "
+      ]
     },
     {
-      "process": "Field Visit Report"
+      "process": "Field Visit Report",
+      "header": [
+        "DATE",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "NAME",
+        "STATUS"
+      ]
     },
     {
-      "process": "Quotation List"
+      "process": "Quotation List",
+      "header": [
+        "DATE",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION ",
+        "DESCRIPTION ",
+        "QTY",
+        "UNITS ",
+        "NPD FORM",
+        "QUOTATION  DATE ",
+        "QUOTATION NO",
+        "STATUS"
+      ]
     },
     {
-      "process": "Order List"
+      "process": "Order List",
+      "header": [
+        "DATE",
+        "QUOTE NO",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION ",
+        "DESCRIPTION ",
+        "QTY",
+        "UNITS ",
+        "VALUE",
+        "ORDER   DATE ",
+        "PO NO",
+        "LEAD TIME",
+        "INVOICE NO",
+        "DELIVER QTY",
+        "PENDING QTY",
+        "DELIVERY DATE",
+        "GRN",
+        "PAYMENT"
+      ]
     },
     {
-      "process": "Product Sample Register"
+      "process": "Product Sample Register",
+      "header": [
+        "DATE",
+        "SAMPLES FROM ",
+        "DESCRIPTION",
+        "DC NO",
+        "STATUS"
+      ]
     },
     {
-      "process": "Customer Trail"
+      "process": "Customer Trail",
+      "header": [
+        "DATE",
+        "CUSTOMER",
+        "LOCATION",
+        "MACHINE",
+        "USER NAME",
+        "PART DETAILS",
+        "RESPONSIBLE",
+        "TRIAL PERIOD",
+        "STATUS"
+      ]
     }
   ],
   "PurchaseProcess": [
     {
-      "process": "Production Plan"
+      "process": "Production Plan",
+      "header": [
+        "PART N0",
+        "PART NAME",
+        "QTY",
+        "STATUS"
+      ]
     },
     {
-      "process": "Purchase Items"
+      "process": "Pending Purchase Items",
+      "header": [
+        "PO NO",
+        "VENDOR",
+        "ITEM NAME",
+        "QTY",
+        "STATUS"
+      ]
     },
     {
-      "process": "Pending Plan Items"
+      "process": "Pending Plan Items",
+      "header": [
+        "PO NO",
+        "PLAN",
+        "ITEM NAME",
+        "QTY",
+        "STATUS"
+      ]
     },
     {
-      "process": "Item List"
+      "process": "Item List",
+      "header": [
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "BUFFER STOCK",
+        "PRICE"
+      ]
     },
     {
-      "process": "Vendor List"
+      "process": "Vendor List",
+      "header": [
+        "VENDOR CODE",
+        "VENDOR NAME",
+        "ITEM CATEGORY",
+        "GRADE",
+        "CONATACT DETAILS",
+        "GST",
+        "EVALUATE",
+        "SUPPLIER QUALITY RATIO"
+      ]
     },
     {
-      "process": "Procurement Register"
+      "process": "Procurement Register",
+      "header": [
+        "DATE",
+        "PL NO",
+        "PART NO",
+        "PART NAME",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "QTY",
+        "UNITS ",
+        "VENDOR NAME",
+        "VALUE",
+        "PO NO",
+        "LEAD TIME",
+        "INWARD",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Inward",
+      "header": [
+        "INVOICE NO",
+        "DELIVER DATE",
+        "QTY",
+        "QUALITY INSPECTION ",
+        "DEFECT QTY ",
+        "PENDING QTY",
+        "PAYMENT"
+      ]
     }
   ],
   "StoresProcess": [
     {
-      "process": "Stock Register"
+      "process": "Stock Register",
+      "header": [
+        "DATE",
+        "IN / OUT",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "VENDOR / CUSTOMER",
+        "QTY",
+        "DOC &REPORT NO"
+      ]
     },
     {
-      "process": "Stock Data"
+      "process": "Stock Data",
+      "header": [
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "IN ",
+        "OUT",
+        "STOCK"
+      ]
     },
     {
-      "process": "Stock Adjustment"
+      "process": "Stock Adjustment",
+      "header": [
+        "ITEM CODE",
+        "ITEM NAME",
+        "STOCK",
+        "PHYSICAL STOCK",
+        "UPDATED STOCK"
+      ]
     }
   ],
   "HumanResourcesProcess": [
     {
-      "process": "Employee History"
+      "process": "Employee History",
+      "header": [
+        "NAME",
+        "ID NO.",
+        "FATHER’S NAME",
+        "DATE OF BIRTH",
+        "DEPARTMENT",
+        "DESIGNATION",
+        "QUALIFICATION",
+        "MOBILE NO",
+        "DATE OF JOINING",
+        "RESIDENTIAL ADDRESS"
+      ]
     },
     {
       "process": "Attendance Register"
     },
     {
-      "process": "Training Schedule"
+      "process": "Training Schedule",
+      "header": [
+        "TRAINEE ",
+        "TOPICS",
+        "PLAN",
+        "ACTUAL",
+        "STATUS",
+        "REPORT"
+      ]
     },
     {
       "process": "Safety Follow Ups"
+    }
+  ],
+  "DefaultHeaderAndProcessId": [
+    {
+      "tableHeader": "MASTER",
+      "processId": "DD/R/008"
+    },
+    {
+      "tableHeader": "VALIDATION",
+      "processId": "DD/R/014"
+    },
+    {
+      "tableHeader": "PROTO",
+      "processId": "DD/R/012"
+    },
+    {
+      "tableHeader": "TECHINICAL SPECIFICATION",
+      "processId": "DD/R/003"
+    },
+    {
+      "tableHeader": "BOM",
+      "processId": "DD/R/002"
+    },
+    {
+      "tableHeader": "PROCESS CONTROL PLAN",
+      "processId": "QA/R/009"
+    },
+    {
+      "tableHeader": "REVISION CONTROL",
+      "processId": "DD/R/005"
+    },
+    {
+      "tableHeader": "DRAWING CONTROL",
+      "processId": "DD/R/004"
+    }
+  ],
+  "DefaultTemplateForProtoProcess": [
+    {
+      "key": "PRODUCT STUDY",
+      "value": "Red",
+      "process": "value"
+    },
+    {
+      "key": "DRAWING DEVELOPMENT",
+      "value": "Red",
+      "process": "value"
+    },
+    {
+      "key": "ASSEMBLY VERIFICATION",
+      "value": "Red",
+      "process": "value"
+    },
+    {
+      "key": "ANALYSIS",
+      "value": "Red",
+      "process": "value"
+    },
+    {
+      "key": "BOM",
+      "value": "Red",
+      "process": "value"
+    },
+    {
+        "key": "PRODUCTION PLAN",
+        "value": "Red",
+        "process": "value"
+    },
+    {
+        "key": "VALIDATION",
+        "value": "Red",
+        "process": "value"
+    },
+    {
+        "key": "MASTER PIECE",
+        "value": "Red",
+        "process": "value"
+    },
+    {
+        "key": "ADD TO PRODUCT LIST",
+        "value": "Red",
+        "process": "value"
     }
   ]
 }

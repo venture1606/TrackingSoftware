@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { useSelector } from "react-redux"
 
 // importing components
@@ -22,37 +22,67 @@ function Products() {
     handleGetAllProducts()
   }, [])
 
-  // ✅ Schema-based form config
-  let FormArray = [
-    { key: "name", label: "Name" },
-    { key: "description", label: "Description" },
-    { key: "partNo", label: "Part No" },
-    { key: "series", label: "Series" },
-    { key: "image", label: "Image" },
-    { key: "portSize", label: "Port Size" },
-    { key: "bodySize", label: "Body Size" },
-    { key: "material", label: "Material" },
-    { key: "standard", label: "Standard" },
-    { key: "operatingPressure", label: "Operating Pressure" },
-    { key: "pressureDrop", label: "Pressure Drop" },
-    { key: "ratedFlow", label: "Rated Flow" },
-    { key: "sealingMaterial", label: "Sealing Material" },
-    { key: "suggestedFlow", label: "Suggested Flow" },
-    { key: "temperature", label: "Temperature" },
-  ]
+  // ✅ Memoize form schema so it doesn’t re-create on every render
+  const FormArray = useMemo(
+    () => [
+      { key: "name", label: "Name" },
+      { key: "description", label: "Description" },
+      { key: "partNo", label: "Part No" },
+      { key: "series", label: "Series" },
+      { key: "image", label: "Image" },
+      { key: "portSize", label: "Port Size" },
+      { key: "bodySize", label: "Body Size" },
+      { key: "material", label: "Material" },
+      { key: "standard", label: "Standard" },
+      { key: "operatingPressure", label: "Operating Pressure" },
+      { key: "pressureDrop", label: "Pressure Drop" },
+      { key: "ratedFlow", label: "Rated Flow" },
+      { key: "sealingMaterial", label: "Sealing Material" },
+      { key: "suggestedFlow", label: "Suggested Flow" },
+      { key: "temperature", label: "Temperature" },
+    ],
+    []
+  )
 
-  let SelectArray = [
-    {
-      key: "status",
-      label: "Status",
-      options: [
-        "Waiting for order",
-        "Order confirm",
-        "Under progress",
-        "Supplied to customer",
-      ],
-    },
-  ]
+  const SelectArray = useMemo(
+    () => [
+      {
+        key: "status",
+        label: "Status",
+        options: [
+          "Waiting for order",
+          "Order confirm",
+          "Under progress",
+          "Supplied to customer",
+        ],
+      },
+    ],
+    []
+  )
+
+  // ✅ Initial empty values for form
+  const initialFormData = useMemo(
+    () => ({
+      name: "",
+      description: "",
+      partNo: "",
+      series: "",
+      image: "",
+      portSize: "",
+      bodySize: "",
+      material: "",
+      standard: "",
+      operatingPressure: "",
+      pressureDrop: "",
+      ratedFlow: "",
+      sealingMaterial: "",
+      suggestedFlow: "",
+      temperature: "",
+      status: "",
+      graphRows: [], // empty graph data
+    }),
+    []
+  )
 
   // ✅ handle product creation
   const handleFormSubmit = (data) => {
@@ -78,9 +108,11 @@ function Products() {
           IndicationText="Add New Product"
           FormArray={FormArray}
           SelectArray={SelectArray}
+          initialData={initialFormData}   // ✅ stable initial data
           handleSubmit={handleFormSubmit}
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
+          mode="create-graph"
         />
       )}
 

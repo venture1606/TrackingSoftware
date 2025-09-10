@@ -5,7 +5,9 @@ const departmentSlice = createSlice({
   initialState: {
     departments: [],
     process: '',
-    subProcess: {}
+    subProcess: {},
+    tableData: {},
+    mainTableData: {},
   },
   reducers: {
     setProcess: (state, action) => {
@@ -16,14 +18,22 @@ const departmentSlice = createSlice({
     },
     setDepartments: (state, action) => {
       state.departments = action.payload;
-    }
+    },
+    setTableData: (state, action) => {
+      state.tableData = action.payload;
+    },
+    setMainTableData: (state, action) => {
+      state.mainTableData = action.payload;
+    },
   },
 });
 
 export const { 
   setProcess, 
   setSubProcess,
-  setDepartments
+  setDepartments,
+  setTableData,
+  setMainTableData
 } = departmentSlice.actions;
 
 export default departmentSlice.reducer;

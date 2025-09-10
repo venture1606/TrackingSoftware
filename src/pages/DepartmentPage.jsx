@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 
 // importing components
 import FormPage from "../components/FormPage";
@@ -17,6 +17,7 @@ import ItemsData from "../utils/ItemsData.json";
 // importing API's
 import Department from "../services/Department";
 import Process from "../services/Process";
+import { setMainTableData } from "../redux/slices/department";
 
 // utility: transform process object → FormPage format
 const transformProcess = (process) => {
@@ -31,12 +32,15 @@ const transformProcess = (process) => {
         process: cell.process || null,
       }))
     ) || [],
+    rowIds: process.data?.map((row) => row._id) || [],
+    rowDataIds: process.data?.map((row) => row.rowDataId) || [],
   };
 };
 
 function DepartmentPage() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const departments = useSelector((state) => state.department.departments);
+  const mainTableData = useSelector((state) => state.department.mainTableData);
 
   const { loading, handleGetAllDepartments } = Department();
   const { handleGetProcessbyDepartmentId, handleAddData  } = Process();
@@ -44,7 +48,6 @@ function DepartmentPage() {
   const { department } = useParams(); // department comes from the URL
 
   const [selectedProcess, setSelectedProcess] = useState("");
-  const [selectedProcessObject, setSelectedProcessObject] = useState(null);
   const [processes, setProcesses] = useState([]); 
   const [showAddData, setShowAddData] = useState(false);
 
@@ -68,23 +71,25 @@ function DepartmentPage() {
     };
     fetchProcesses();
     setSelectedProcess("");
-    setSelectedProcessObject(null);
+    dispatch(setMainTableData(null));
   }, [currentDepartment, department]);
 
   // Update selected process object whenever user picks a process
   useEffect(() => {
-    setSelectedProcessObject(null);
+    dispatch(setMainTableData(null));
     if (selectedProcess && processes.length > 0) {
       const found = processes.find((p) => p.process === selectedProcess);
-      setSelectedProcessObject(found ? transformProcess(found) : null);
+      dispatch(setMainTableData(found ? transformProcess(found) : null))
     } else {
-      setSelectedProcessObject(null);
+      dispatch(setMainTableData(null))
     }
   }, [selectedProcess, processes]);
 
-  const handleAddDataSave = (data) => {
-    const processId = selectedProcessObject.id;
-    handleAddData({items: data, id: processId});
+
+  const handleAddDataSave = async (data) => {
+    const processId = mainTableData.id;
+    const response = await handleAddData({items: data, id: processId});
+    dispatch(setMainTableData(transformProcess(response)));
   };
 
   if (loading) {
@@ -129,7 +134,7 @@ function DepartmentPage() {
       {/* Render AddData modal */}
       {showAddData && (
         <AddData
-          headers={selectedProcessObject?.header || []}
+          headers={mainTableData?.header || []}
           IndicationText="Add New Data"
           isOpen={showAddData}
           onClose={() => setShowAddData(false)}
@@ -141,7 +146,7 @@ function DepartmentPage() {
       {selectedProcess && 
         <FormPage
           key={selectedProcess}
-          process={selectedProcessObject}
+          process={mainTableData}
         />
       }
     </div>

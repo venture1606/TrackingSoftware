@@ -9,30 +9,44 @@ import {
   ModalCloseButton,
   Button,
   Input,
-  Select,
   Flex,
   Stack,
+  Text,
 } from "@chakra-ui/react";
 
-function AddData({ IndicationText = "Add Data", headers = [], isOpen, onClose, onSave }) {
+import ItemsData from "../utils/ItemsData";
+
+function AddData({
+  IndicationText = "Add Data",
+  headers = [],
+  isOpen,
+  onClose,
+  onSave,
+}) {
+  const { DefaultHeaderAndProcessId } = ItemsData;
   const initialRef = useRef(null);
 
-  // initialize state whenever headers change
   const [formData, setFormData] = useState([]);
 
+  // Initialize formData whenever headers change
   useEffect(() => {
-    setFormData(headers.map((key) => ({ key, value: "", process: "value" })));
-  }, [headers]);
+    const mappedData = headers.map((key) => {
+      const match = DefaultHeaderAndProcessId.find(
+        (item) => item.tableHeader === key
+      );
+
+      if (match) {
+        return { key, value: match.processId, process: "processId" };
+      }
+      return { key, value: "", process: "value" };
+    });
+
+    setFormData(mappedData);
+  }, [headers, DefaultHeaderAndProcessId]);
 
   const handleValueChange = (index, val) => {
     const newData = [...formData];
     newData[index].value = val;
-    setFormData(newData);
-  };
-
-  const handleProcessChange = (index, val) => {
-    const newData = [...formData];
-    newData[index].process = val;
     setFormData(newData);
   };
 
@@ -53,30 +67,33 @@ function AddData({ IndicationText = "Add Data", headers = [], isOpen, onClose, o
       <ModalContent>
         <ModalHeader>{IndicationText}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody pb={6}>
+        <ModalBody pb={4}>
           <Stack spacing={4}>
             {formData.map((field, idx) => (
-              <Flex key={idx} gap={2} align="center">
+              <Flex key={idx} gap={3} align="center">
+                {/* Key column */}
                 <Input
                   value={field.key}
                   isReadOnly
-                  width="150px"
+                  width="200px"
                   placeholder="Key"
                 />
-                <Input
-                  ref={idx === 0 ? initialRef : null}
-                  value={field.value}
-                  placeholder={`${field.process === "value" ? "Value" : "Type the processId"}`}
-                  onChange={(e) => handleValueChange(idx, e.target.value)}
-                />
-                <Select
-                  value={field.process}
-                  onChange={(e) => handleProcessChange(idx, e.target.value)}
-                  width="150px"
-                >
-                  <option value="value">Value</option>
-                  <option value="processId">Process</option>
-                </Select>
+
+                {/* If processId → show read-only text, else → editable input */}
+                {field.process === "processId" ? (
+                  <Input
+                    value={field.value}
+                    isReadOnly
+                    placeholder="ProcessId"
+                  />
+                ) : (
+                  <Input
+                    ref={idx === 0 ? initialRef : null}
+                    value={field.value}
+                    placeholder="Value"
+                    onChange={(e) => handleValueChange(idx, e.target.value)}
+                  />
+                )}
               </Flex>
             ))}
           </Stack>

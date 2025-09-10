@@ -112,6 +112,8 @@
     display: flex;
     justify-content: end;
     text-align: end;
+    margin-left: auto;
+    margin-right: 0.1rem;
 }
 
 .AddDataButton{

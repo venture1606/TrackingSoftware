@@ -96,10 +96,11 @@ function Product() {
     }
   };
 
-  const handleAddGraphData = async ({ newData, id }) => {
+  const handleAddGraphData = async ({ newData }) => {
+    console.log(newData)
     setLoading(true);
     try {
-        const response = await axios.post(`${URL}/graph/${id}`, newData, {
+        const response = await axios.post(`${URL}/graph/${newData._id}`, {graph: newData.graph}, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
