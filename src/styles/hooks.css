@@ -10,3 +10,51 @@
 .LoadingContainer span{
     text-align: center;
 }
+
+.UserDetailsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+
+.UserDetailsHeader {
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--primary-color);
+  padding:0 0 6px 0;
+  margin: 0 0 8px 0;
+}
+
+.UserDetailRow {
+  display: flex;
+  gap: 0.4rem;
+  padding: 4px 0;
+}
+
+.UserDetailLabel {
+  font-weight: 600;
+  color: var(--third-color);
+}
+
+.UserDetailValue {
+  color: var(--text-secondary-color);
+  font-weight: 600;
+}
+
+.UserAccessList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.UserAccessItem {
+  background: var(--primary-color);
+  color: var(--text-primary-color);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}

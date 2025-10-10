@@ -15,13 +15,14 @@ function Dashboard() {
     <div className='AppRightContainer DashboardContainer'>
       <h1>Dashboard</h1>
       {/* write the code to print the ProductCard for 10 times */}
-      <div className='ProductListContainer'>
+      {/* <div className='ProductListContainer'>
         {
           Products.map((product, index) => (
             <ProductListCard key={index} product={product} />
           ))
         }
-      </div>
+      </div> */}
+      <p>Right now it is empty</p>
     </div>
   )
 }

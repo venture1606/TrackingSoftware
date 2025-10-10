@@ -3,11 +3,13 @@ import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { setMessage } from '../redux/slices/common'
-import { setToken, setUserDetails, setLogin } from '../redux/slices/auth'
+import { setToken, setUserDetails, setLogin, setAllUsers } from '../redux/slices/auth'
 
 function Auth() {
 
   const URL = 'https://adl-server.onrender.com/api/v1/user'
+  const userDetails = useSelector((state) => state.auth.userDetails);
+  const allUsers = useSelector((state) => state.auth.allUsers);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ function Auth() {
       dispatch(setMessage({ 
         status: 'success', 
         description: 'Account Registered Successfully', 
-        message: 'Created' 
+        message: `Welcome ${user.userName}` 
       }));
 
     } catch (error) {
@@ -63,7 +65,7 @@ function Auth() {
         dispatch(setMessage({
             status: 'success', 
             description: 'Logged In Succesfully',
-            message: `Welcome ${user.firstName}`
+            message: `Welcome ${user.userName}`
         }));
         
         navigate('/');
@@ -94,7 +96,7 @@ function Auth() {
         dispatch(setMessage({ 
             status: 'success', 
             description: 'Logged Out Successfully', 
-            message: 'Goodbye' 
+            message: `${userDetails.userName} Goodbye` 
         }));
         
         dispatch(setLogin(false));
@@ -138,11 +140,31 @@ function Auth() {
     }
   }
 
+  const handleGetAllUser = async () => {
+    setLoading(true);
+    if (allUsers.length > 0) return;
+    try {
+      const response = await axios.get(`${URL}/all`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      dispatch(setAllUsers(response.data.result));
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     handleRegister,
     handleLogin,
     handleLogout,
     handleForgotPassword,
+    handleGetAllUser,
     loading,
   }
 }

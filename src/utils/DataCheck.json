@@ -1877,5 +1877,1116 @@
     }
     ]
     }
-    ]
+    ],
+    "Products": [
+    {
+      "id": 1,
+      "name": "Hydraulic Motor",
+      "status": "Available",
+      "partNo": "HM-001",
+      "series": "HM-100",
+      "description": "A high-performance hydraulic motor",
+      "image": "https://example.com/images/hydraulic_motor.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 2,
+      "name": "Electric Motor",
+      "status": "Building",
+      "partNo": "EM-001",
+      "series": "EM-100",
+      "description": "A high-performance electric motor",
+      "image": "https://example.com/images/electric_motor.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 3,
+      "name": "Hydraulic Pump",
+      "status": "Available",
+      "partNo": "HP-001",
+      "series": "HP-100",
+      "description": "A high-performance hydraulic pump",
+      "image": "https://example.com/images/hydraulic_pump.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 4,
+      "name": "Electric Pump",
+      "status": "Checking",
+      "partNo": "EP-001",
+      "series": "EP-100",
+      "description": "A high-performance electric pump",
+      "image": "https://example.com/images/electric_pump.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 5,
+      "name": "Electric Actuator",
+      "status": "Available",
+      "partNo": "EA-001",
+      "series": "EA-100",
+      "description": "A high-performance electric actuator",
+      "image": "https://example.com/images/electric_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 6,
+      "name": "Hydraulic Cylinder",
+      "status": "Available",
+      "partNo": "HC-001",
+      "series": "HC-100",
+      "description": "A high-performance hydraulic cylinder",
+      "image": "https://example.com/images/hydraulic_cylinder.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 7,
+      "name": "Electric Cylinder",
+      "status": "Available",
+      "partNo": "EC-001",
+      "series": "EC-100",
+      "description": "A high-performance electric cylinder",
+      "image": "https://example.com/images/electric_cylinder.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 8,
+      "name": "Hydraulic Actuator",
+      "status": "Available",
+      "partNo": "HA-001",
+      "series": "HA-100",
+      "description": "A high-performance hydraulic actuator",
+      "image": "https://example.com/images/hydraulic_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 9,
+      "name": "Electric Actuator",
+      "status": "Available",
+      "partNo": "EA-001",
+      "series": "EA-100",
+      "description": "A high-performance electric actuator",
+      "image": "https://example.com/images/electric_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C"
+    },
+    {
+      "id": 10,
+      "name": "Hydraulic Actuator",
+      "status": "Available",
+      "partNo": "HA-001",
+      "series": "HA-100",
+      "description": "A high-performance hydraulic actuator",
+      "image": "https://example.com/images/hydraulic_actuator.jpg",
+      "portSize": "1/2 inch",
+      "bodySize": "100 mm",
+      "material": "Aluminum",
+      "standard": "ISO 9001",
+      "operatingPressure": "3000 PSI",
+      "pressureDrop": "100 PSI",
+      "ratedFlow": "25 GPM",
+      "sealingMaterial": "Nitrile",
+      "suggestedFlow": "30 GPM",
+      "temperature": "80°C",
+      "graph": [
+        {
+          "name": "pressureDrop",
+          "data": [3000, 2900, 2800, 2700, 2600]
+        },
+        {
+          "name": "LPA",
+          "data": [25, 24, 23, 22, 21]
+        }
+      ]
+    }
+  ],
+  "SubDepartments": [
+    {
+      "key": "Design",
+      "value": [
+        "NPD Register",
+        "Product List",
+        "Product Success Rate",
+        "Product Sample List"
+      ],
+      "subprocess":[
+        "Product Validation Report",
+        "Master Piece",
+        "Product Drawing Control",
+        "Bill of Materials - BOM",
+        "Revision Control",
+        "Product Revision"
+      ]
+    },
+    {
+      "key": "Manufacturing",
+      "value": [
+        "Request Slip",
+        "Production Planning Control",
+        "Production Report",
+        "Rejection Report",
+        "Rework Report",
+        "Dispatch",
+        "Shift Schedule"
+      ]
+    },
+    {
+      "key": "Quality",
+      "value": [
+        "Instruments",
+        "Calibration Report",
+        "Incoming Inspection",
+        "Customer Complient Register",
+        "Process Control Rate",
+        "Certificate Renewal",
+        "Quality Audits",
+        "Continous Improvement"
+      ]
+    },
+    {
+      "key": "Maintenance",
+      "value": [
+        "Machine List",
+        "Machine History Card",
+        "Preventive Maintenance",
+        "KWH Monitoring"
+      ]
+    },
+    {
+      "key": "Sales",
+      "value": [
+        "Customer List",
+        "Field Visit Report",
+        "Quotation List",
+        "Order List",
+        "Product Sample Register",
+        "Customer Trail"
+      ]
+    },
+    {
+      "key": "Purchase",
+      "value": [
+        "Production Plan",
+        "Purchase Items",
+        "Pending Plan Items",
+        "Item List",
+        "Vendor List",
+        "Procurement Register"
+      ]
+    },
+    {
+      "key": "Stores",
+      "value": [
+        "Store Register",
+        "Stock Data",
+        "Stock Adjustment"
+      ]
+    },
+    {
+      "key": "Human Resources",
+      "value": [
+        "Employee History",
+        "Attendance Register",
+        "Training Schedule",
+        "Safety Follow Ups"
+      ]
+    }
+  ],
+  "DesignProcess":[
+    {
+      "process": "NPD Register",
+      "processId":"AB123",
+      "header": [
+        "NO",
+        "BY",
+        "FROM",
+        "DATE",
+        "PART",
+        "SPEC",
+        "QTY",
+        "REVIEW DATE",
+        "REVIEW BY",
+        "STATUS",
+        "UPLOAD",
+        "PROTO",
+        "VALIDATION",
+        "MASTER"
+      ],
+      "data": [
+        [
+          { "key": "NO", "value": "1" },
+          { "key": "BY", "value": "John Doe" },
+          { "key": "FROM", "value": "Design Team" },
+          { "key": "DATE", "value": "2023-01-01" },
+          { "key": "PART", "value": "Part A" },
+          { "key": "SPEC", "value": "Specification A" },
+          { "key": "QTY", "value": "100" },
+          { "key": "REVIEW DATE", "value": "2023-01-10" },
+          { "key": "REVIEW BY", "value": "Jane Smith" },
+          { "key": "STATUS", "value": "In Progress" },
+          { "key": "UPLOAD", "value": "File.pdf" },
+          { "key": "PROTO", "value": "Prototype 1" },
+          { "key": "VALIDATION", "value": "Validated" },
+          { "key": "MASTER", "value": "processId", 
+            "process":  {
+              "process": "Master Piece",
+              "header": [
+                "SL.NO",
+                "PART",
+                "SERIES ",
+                "PART NO",
+                "PART NAME",
+                "SPECIFICATION",
+                "MASTER PIECE",
+                "REMARK"
+              ],
+              "data": [
+                [
+                  { "key": "SL.NO", "value": "1" },
+                  { "key": "PART", "value": "Part A" },
+                  { "key": "SERIES ", "value": "Series 1" },
+                  { "key": "PART NO", "value": "PA-001" },
+                  { "key": "PART NAME", "value": "Part A Name" },
+                  { "key": "SPECIFICATION", "value": "Spec A" },
+                  { "key": "MASTER PIECE", "value": "Master Piece A" },
+                  { "key": "REMARK", "value": "No remarks" }
+                ],
+                [
+                  { "key": "SL.NO", "value": "2" },
+                  { "key": "PART", "value": "Part B" },
+                  { "key": "SERIES ", "value": "Series 1" },
+                  { "key": "PART NO", "value": "PB-001" },
+                  { "key": "PART NAME", "value": "Part B Name" },
+                  { "key": "SPECIFICATION", "value": "Spec B" },
+                  { "key": "MASTER PIECE", "value": "Master Piece B" },
+                  { "key": "REMARK", "value": "Urgent" }
+                ]
+              ]
+              } }
+        ]
+      ]
+    },
+    {
+      "process": "Product Validation Report",
+      "header": [
+        "SL.NO",
+                "TEST NAME",
+                "APPARATUS",
+                "EVIDENCE",
+                "IMAGE",
+                "RESULT"
+      ],
+      "data": [
+        [
+          { "key": "SL.NO", "value": "1" },
+          { "key": "TEST NAME", "value": "Test 1" },
+          { "key": "APPARATUS", "value": "Apparatus 1" },
+          { "key": "EVIDENCE", "value": "Evidence 1" },
+          { "key": "IMAGE", "value": "Image 1" },
+          { "key": "RESULT", "value": "Pass" }
+        ]
+      ]
+    },
+    {
+      "process": "Master Piece",
+      "header": [
+        "SL.NO",
+        "PART",
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "SPECIFICATION",
+        "MASTER PIECE",
+        "REMARK"
+      ],
+      "data": [
+        [
+          { "key": "SL.NO", "value": "1" },
+          { "key": "PART", "value": "Part A" },
+          { "key": "SERIES ", "value": "Series 1" },
+          { "key": "PART NO", "value": "PA-001" },
+          { "key": "PART NAME", "value": "Part A Name" },
+          { "key": "SPECIFICATION", "value": "Spec A" },
+          { "key": "MASTER PIECE", "value": "Master Piece A" },
+          { "key": "REMARK", "value": "No remarks" }
+        ],
+        [
+          { "key": "SL.NO", "value": "2" },
+          { "key": "PART", "value": "Part B" },
+          { "key": "SERIES ", "value": "Series 1" },
+          { "key": "PART NO", "value": "PB-001" },
+          { "key": "PART NAME", "value": "Part B Name" },
+          { "key": "SPECIFICATION", "value": "Spec B" },
+          { "key": "MASTER PIECE", "value": "Master Piece B" },
+          { "key": "REMARK", "value": "Urgent" }
+        ]
+      ]
+    },
+    {
+      "process": "Product List",
+      "header": [
+        "DATE",
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "REV NO",
+        "TECHINICAL SPECIFICATION",
+        "BOM",
+        "DRAWING CONROL",
+        "REVISION CONTROL",
+        "PROCESS CONTROL PLAN"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Drawing Control",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "DRAWING NO",
+        "UPDATED REV NO",
+        "CONTROL COPY",
+        "VERIFIED COPY",
+        "PHOTO COPY",
+        "REJECT COPY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Bill of Materials - BOM",
+      "header": [
+        "SERIES",
+        "PART NO",
+        "PARTS NAME",
+        "DRW NO",
+        "CODE",
+        "REV NO",
+        "ITEM CODE",
+        "GRADE",
+        "ITEM NAME",
+        "QTY",
+        "UNITS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Revision Control",
+      "header": [
+        "DATE",
+        "SERIES",
+        "PART NO",
+        "DEPARTMENT",
+        "PROBLEM DESCRIPTION",
+        "PART REV NO ",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "RC STATUS",
+      "processId": "DD/R/005A",
+      "headers": [
+          "SUB PART NO",
+          "SUB PART NAME",
+          "DRAWING NO",
+          "REV NO",
+          "ACTION TAKEN",
+          "UPDATED DATE",
+          "SUB PART  REV NO",
+          "PREPARED BY",
+          "CHECKED BY"
+      ],
+      "department": "68b4658c379f943edd4062c8"
+    },
+    {
+      "process": "Update",
+      "header": [
+        "SUB PART NO",
+        "SUB PART NAME",
+        "DRAWING NO",
+        "REV NO",
+        "ACTION TAKEN",
+        "UPDATED DATE",
+        "SUB PART  REV NO",
+        "PREPARED BY",
+        "CHECKED BY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Revision",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "DRAWING NO",
+        "CODE",
+        "REVISION"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Success Rate",
+      "header": [
+        "SERIES ",
+        "PART NO",
+        "PART NAME",
+        "QTY SOLD",
+        "QTY RETURNED",
+        "SUCCESS RATE"
+      ],
+      "data": []
+    },
+    {
+      "process": "Product Sample List",
+      "header": [
+        "S.NO",
+        "ENQ. NO",
+        "PART",
+        "MAKE",
+        "MODEL",
+        "MATERIAL",
+        "SPECIFICATION",
+        "QTY",
+        "IMAGE"
+      ],
+      "data": []
+    }
+  ],
+  "ManufacturingProcess": [
+    {
+      "process": "Request Slip",
+      "header": [
+        "DATE",
+        "DEPARTMENTS",
+        "ITEM CATEGORY",
+        "PART NO",
+        "PART NAME",
+        "ITEM NAME",
+        "QTY",
+        "UNITS",
+        "APPROVED BY",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Production Planning Control",
+      "header": [
+        "PLAN NO",
+        "DATE",
+        "CUSTOMER NAME",
+        "PART NO",
+        "PART NAME",
+        "DESCRIPTION ",
+        "GRADE",
+        "PLAN QTY",
+        "RM",
+        "INCOMING INSPECTION",
+        "MACHINE",
+        "OUT PROCESS",
+        "ASSEMBLY",
+        "STOCK QTY"
+      ],
+      "data": []
+    },
+    {
+      "process": "Production Report",
+      "header":[
+        "DATE",
+        "SHIFT",
+        "MACHINE",
+        "START TIME",
+        "END TIME",
+        "SETTING",
+        "PART NO",
+        "PART NAME",
+        "OPT. NAME",
+        "PROGRAM NO",
+        "CYCLE TIME",
+        "PLAN ",
+        "ACTUAL ",
+        "REJECT",
+        "BREAK HOUR",
+        "OPERATED BY",
+        "INCHARGE",
+        "OEE",
+        "PLAN NO",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Rejection Report",
+      "header": [
+        "DATE",
+        "SHIFT",
+        "STAGE",
+        "PART NO",
+        "PART NAME",
+        "PROBLEM DESCRIPTION",
+        "REJECT QTY",
+        "REJECT STAGE",
+        "INSPECT BY",
+        "ACTION TAKEN"
+      ],
+      "data": []
+    },
+    {
+      "process": "Rework Report",
+      "header": [
+        "PART NO",
+        "PART NAME",
+        "PROBLEM DESCRIPTION",
+        "REWORK QTY",
+        "REJECT STAGE",
+        "ACTION PLAN",
+        "VERIFIED BY",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Dispatch",
+      "header": [
+        "DATE",
+        "SERIES",
+        "PART NO",
+        "PART NAME",
+        "BATCH",
+        "DISPATCHQTY",
+        "DESCRIPTION",
+        "DC NO"
+      ],
+      "data": []
+    },
+    {
+      "process": "Shift Schedule",
+      "header": [
+        "DATE",
+        "STAGE",
+        "EMPLOYEE NAME",
+        "1 SHIFT",
+        "2 SHIFT",
+        "3 SHIFT",
+        "GENERAL SHIFT"
+      ],
+      "data": []
+    }
+  ],
+  "QualityProcess":[
+    {
+      "process": "Instruments",
+      "header": [
+        "INT NO",
+        "MAKE",
+        "INSTRUMENT NAME",
+        "SIZE / RANGES",
+        "CALIBRATION",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Calibration Report",
+      "header": [
+        "SL NO",
+        "INSTRUMENT NO",
+        "MAKE",
+        "INSTRUMENT NAME",
+        "LOCATION",
+        "SIZE / RANGES",
+        "CALIBRATION DONE DATE",
+        "CALIBRATION DUE DATE",
+        "NEXT SCHEDULE",
+        "CALIBRATION CERTIFICATE NO / DATE",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Incoming Inspection",
+      "header": [
+        "PART NO",
+        "PART NAME",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "QTY",
+        "UNITS ",
+        "VENDOR NAME",
+        "INVOICE NO",
+        "DELIVER DATE",
+        "QTY",
+        "QUALITY INSPECTION ",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Customer Complient Register", 
+      "header": [
+        "DATE",
+        "PART NO",
+        "PART NAME",
+        "BATCH NO",
+        "DISPATCH DATE",
+        "INVOICE NO",
+        "CUSTOMER NAME",
+        "FAILED QTY",
+        "NATURE OF PROBLEM",
+        "UNDER WARANTY",
+        "ACTION PLAN",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Process Control Plan",
+      "header": [
+        "PROCESS NO.",
+        "PART NO",
+        "PART NAME",
+        "PROCESS DESCRIPTION",
+        "MACHINES",
+        "NO.",
+        "PROCESS",
+        "TOOLS",
+        "PRODUCT & SPECIFICATION",
+        "MESUREMENT",
+        "QUALITY",
+        "FREQUENCY",
+        "CONTROL METHOD",
+        "REACTION PLAN"
+      ],
+      "data": []
+    },
+    {
+      "process": "Certificate Renewal",
+      "header": [
+        "SL.NO",
+        "DEPARTMENT",
+        "CERTIFICATE NAME",
+        "CATEGORY",
+        "CERTIFICATE NO ",
+        "ISSUE DATE",
+        "EXPIRY DATE",
+        "NEXT RENEVAL",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Quality Audits",
+      "header": [
+        "DATE",
+        "AUDITEE",
+        "DEPARTMENT",
+        "QUESTIONNAIRE",
+        "EVIDENCE",
+        "FINDINGS",
+        "SCORE",
+        "RESPONSIBLE",
+        "ACTION PLAN",
+        "TARGET",
+        "STATUS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Continous Improvement",
+      "header": [
+        "IMP. NO",
+        "DATE",
+        "NATURE OF PROBLEM",
+        "IMPROVEMENT DESCRIPTION",
+        "AREA",
+        "OWNER",
+        "TEAM",
+        "STATUS"
+      ],
+      "data": []
+    }
+  ],
+  "MaintenanceProcess": [
+    {
+      "process": "Machine List",
+      "header": [
+        "SL NO",
+        "MACHINE ID",
+        "MACHINE NAME",
+        "MAKE",
+        "MODEL ",
+        "COMMISIONING DATE",
+        "REMARKS"
+      ],
+      "data": []
+    },
+    {
+      "process": "Machine History Card",
+      "header": [
+        "DATE",
+        "MACHINE NAME",
+        "PROBLEM",
+        "PHENOMENON",
+        "WORK CARRIED OUT",
+        "SPARE CONSUMED",
+        "BD / PM",
+        "START TIME",
+        "END TIME",
+        "DONE BY",
+        "STATUS",
+        "SERVICE REPORT"
+      ]
+    },
+    {
+      "process": "Preventive Maintenance",
+      "header": [
+        "MACHINE ID",
+        "MACHINE NAME",
+        "PLAN",
+        "ACTUAL",
+        "STATUS",
+        "REPORT",
+        "NEXT SCHEDULE"
+      ]
+    },
+    {
+      "process": "KWH Monitoring",
+      "header": [
+        "SL",
+        "DATE",
+        "P.F",
+        "KWH",
+        "KWH/DAY"
+      ]
+    }
+  ],
+  "SalesProcess": [
+    {
+      "process": "Customer List",
+      "header": [
+        "VENDOR CODE",
+        "CUSTOMER NAME ",
+        "LOCATION",
+        "SALES PERSON ",
+        "STATUS ",
+        "APPLICATION ",
+        "CUSTOMERS REQUIREMENT "
+      ]
+    },
+    {
+      "process": "Field Visit Report",
+      "header": [
+        "DATE",
+        "CUSTOMER NAME",
+        "LOCATION",
+        "NAME",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Quotation List",
+      "header": [
+        "DATE",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION ",
+        "DESCRIPTION ",
+        "QTY",
+        "UNITS ",
+        "NPD FORM",
+        "QUOTATION  DATE ",
+        "QUOTATION NO",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Order List",
+      "header": [
+        "DATE",
+        "QUOTE NO",
+        "ENQ BY",
+        "CUSTOMER NAME",
+        "LOCATION ",
+        "DESCRIPTION ",
+        "QTY",
+        "UNITS ",
+        "VALUE",
+        "ORDER   DATE ",
+        "PO NO",
+        "LEAD TIME",
+        "INVOICE NO",
+        "DELIVER QTY",
+        "PENDING QTY",
+        "DELIVERY DATE",
+        "GRN",
+        "PAYMENT"
+      ]
+    },
+    {
+      "process": "Product Sample Register",
+      "header": [
+        "DATE",
+        "SAMPLES FROM ",
+        "DESCRIPTION",
+        "DC NO",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Customer Trail",
+      "header": [
+        "DATE",
+        "CUSTOMER",
+        "LOCATION",
+        "MACHINE",
+        "USER NAME",
+        "PART DETAILS",
+        "RESPONSIBLE",
+        "TRIAL PERIOD",
+        "STATUS"
+      ]
+    }
+  ],
+  "PurchaseProcess": [
+    {
+      "process": "Production Plan",
+      "header": [
+        "PART N0",
+        "PART NAME",
+        "QTY",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Pending Purchase Items",
+      "header": [
+        "PO NO",
+        "VENDOR",
+        "ITEM NAME",
+        "QTY",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Pending Plan Items",
+      "header": [
+        "PO NO",
+        "PLAN",
+        "ITEM NAME",
+        "QTY",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Item List",
+      "header": [
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "BUFFER STOCK",
+        "PRICE"
+      ]
+    },
+    {
+      "process": "Vendor List",
+      "header": [
+        "VENDOR CODE",
+        "VENDOR NAME",
+        "ITEM CATEGORY",
+        "GRADE",
+        "CONATACT DETAILS",
+        "GST",
+        "EVALUATE",
+        "SUPPLIER QUALITY RATIO"
+      ]
+    },
+    {
+      "process": "Procurement Register",
+      "header": [
+        "DATE",
+        "PL NO",
+        "PART NO",
+        "PART NAME",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "GRADE",
+        "QTY",
+        "UNITS ",
+        "VENDOR NAME",
+        "VALUE",
+        "PO NO",
+        "LEAD TIME",
+        "INWARD",
+        "STATUS"
+      ]
+    },
+    {
+      "process": "Inward",
+      "header": [
+        "INVOICE NO",
+        "DELIVER DATE",
+        "QTY",
+        "QUALITY INSPECTION ",
+        "DEFECT QTY ",
+        "PENDING QTY",
+        "PAYMENT"
+      ]
+    }
+  ],
+  "StoresProcess": [
+    {
+      "process": "Stock Register",
+      "header": [
+        "DATE",
+        "IN / OUT",
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "VENDOR / CUSTOMER",
+        "QTY",
+        "DOC &REPORT NO"
+      ]
+    },
+    {
+      "process": "Stock Data",
+      "header": [
+        "ITEM CATEGORY",
+        "ITEM CODE",
+        "ITEM NAME",
+        "IN ",
+        "OUT",
+        "STOCK"
+      ]
+    },
+    {
+      "process": "Stock Adjustment",
+      "header": [
+        "ITEM CODE",
+        "ITEM NAME",
+        "STOCK",
+        "PHYSICAL STOCK",
+        "UPDATED STOCK"
+      ]
+    }
+  ],
+  "HumanResourcesProcess": [
+    {
+      "process": "Employee History",
+      "header": [
+        "NAME",
+        "ID NO.",
+        "FATHER’S NAME",
+        "DATE OF BIRTH",
+        "DEPARTMENT",
+        "DESIGNATION",
+        "QUALIFICATION",
+        "MOBILE NO",
+        "DATE OF JOINING",
+        "RESIDENTIAL ADDRESS"
+      ]
+    },
+    {
+      "process": "Attendance Register"
+    },
+    {
+      "process": "Training Schedule",
+      "header": [
+        "TRAINEE ",
+        "TOPICS",
+        "PLAN",
+        "ACTUAL",
+        "STATUS",
+        "REPORT"
+      ]
+    },
+    {
+      "process": "Safety Follow Ups"
+    }
+  ]
 }

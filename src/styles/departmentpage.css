@@ -83,16 +83,32 @@
 .TableBody{
     padding: 1rem;
     overflow-y: auto;
+    align-items: center;
 }
 
 .TableHeaderContent {
+    text-align: center !important;
     padding: 1rem !important;
     font-size: 0.8rem !important;
     white-space: nowrap;
 }
 
+/* .TableHeaderContent {
+    padding: 0.7rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap;
+}
+
 .RowsField{
     white-space: nowrap;
+    padding: 0.5rem !important;
+    font-size: 0.6rem !important;
+} */
+
+.RowsField{
+    white-space: nowrap;
+    align-items: center;
+    text-align: center !important;
 }
 
 .SelectedRowField{
@@ -118,7 +134,7 @@
 
 .AddDataButton{
     color: var(--text-primary-color);
-    width: 100px;
+    width: max(100px, fit-content);
     background-color: var(--primary-color);
     border-radius: 8px;
     padding: 0.5rem 1rem;

@@ -17,7 +17,6 @@ function Product() {
     try {
       // Fetch products from API
       const response = await axios.get(`${URL}/all`);
-    //   console.log(response.data.data)
       dispatch(setProducts(response.data.data));
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -46,7 +45,6 @@ function Product() {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         });
-        console.log(response.data);
 
         dispatch(setMessage({ 
             status: 'success', 
@@ -97,7 +95,6 @@ function Product() {
   };
 
   const handleAddGraphData = async ({ newData }) => {
-    console.log(newData)
     setLoading(true);
     try {
         const response = await axios.post(`${URL}/graph/${newData._id}`, {graph: newData.graph}, {

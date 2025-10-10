@@ -14,14 +14,12 @@ import {
   FormLabel,
   Select,
   Flex,
+  Checkbox,
+  CheckboxGroup
 } from "@chakra-ui/react"
+import { useSelector } from "react-redux"
 
-/**
- * mode:
- *  - "form"         → normal fields only (no graph)
- *  - "create-graph" → X/Y axis + rows (graph creation)
- *  - "edit-graph"   → edit existing series (graph editing)
- */
+import ItemsData from "../utils/ItemsData"
 
 function FormDialog({
   IndicationText,
@@ -34,13 +32,16 @@ function FormDialog({
   initialData = {},
   mode = "form",
 }) {
-  const initialRef = useRef(null)
+  const initialRef = useRef(null);
+  const detailingProducts = useSelector((state) => state.department.detailingProducts);
 
-  // state for regular form fields
+  const { 
+    DefaultSelectProcess, ArrayValuesProcess, 
+    SelectOptionsArray, ImageUploadArray, DateFieldsArray
+  } = ItemsData;
+
   const [formValues, setFormValues] = useState(initialData)
   const [selectValues, setSelectValues] = useState({})
-
-  // state for graph editing
   const [graphData, setGraphData] = useState(
     graphFormArray
       ? graphFormArray.map((g) => ({
@@ -50,83 +51,93 @@ function FormDialog({
       : []
   )
 
-  // reset form values if initialData changes
+  // Reset on initialData change
   useEffect(() => {
     setFormValues(initialData)
   }, [initialData])
 
   useEffect(() => {
-    // prefill selectValues from initialData if keys match
     if (SelectArray) {
-      const initialSelects = {};
+      const initialSelects = {}
       SelectArray.forEach(field => {
         if (initialData[field.key] !== undefined) {
-          initialSelects[field.key] = initialData[field.key];
+          initialSelects[field.key] = initialData[field.key]
         }
-      });
-      setSelectValues(initialSelects);
+      })
+      setSelectValues(initialSelects)
     }
-  }, [initialData, SelectArray]);
+  }, [initialData, SelectArray])
 
-
-  const handleInputChange = (field, value) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }))
+  const handleInputChange = (field, value, subIndex = null) => {
+    setFormValues((prev) => {
+      if (subIndex !== null && Array.isArray(prev[field])) {
+        const updated = [...prev[field]]
+        updated[subIndex] = value
+        return { ...prev, [field]: updated }
+      }
+      return { ...prev, [field]: value }
+    })
   }
 
   const handleSelectChange = (field, value) => {
     setSelectValues((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleGraphChange = (seriesIndex, dataIndex, value) => {
-    setGraphData((prev) =>
-      prev.map((s, i) =>
-        i === seriesIndex
-          ? {
-              ...s,
-              data: s.data.map((d, j) =>
-                j === dataIndex ? Number(value) : d
-              ),
-            }
-          : s
-      )
-    )
+  // Array helpers
+  const handleAddArrayInput = (field) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [field]: [...(prev[field] || []), ""],
+    }))
   }
 
-  const addGraphRow = () => {
-    setGraphData((prev) =>
-      prev.map((s) => ({
-        ...s,
-        data: [...s.data, ""],
-      }))
-    )
+  const handleRemoveArrayInput = (field, subIndex) => {
+    setFormValues((prev) => {
+      const updated = [...(prev[field] || [])]
+      updated.splice(subIndex, 1)
+      if (updated.length === 0) updated.push("")
+      return { ...prev, [field]: updated }
+    })
   }
 
   const handleSave = () => {
-    let data
+  let data;
 
-    if (mode === "edit-graph") {
-      data = { ...formValues, ...selectValues, graph: graphData }
-    } else if (mode === "create-graph") {
-      const rows = formValues.graphRows || []
-      const xValues = rows.map((r) => r.x)
-      const yValues = rows.map((r) => r.y)
+  if (mode === "edit-graph") {
+    data = { ...formValues, ...selectValues, graph: graphData };
+  } else if (mode === "create-graph") {
+    const rows = formValues.graphRows || [];
+    const xValues = rows.map((r) => r.x);
+    const yValues = rows.map((r) => r.y);
 
-      data = {
-        ...formValues,
-        ...selectValues,
-        graph: [
-          { name: formValues.xAxis || "X", data: xValues },
-          { name: formValues.yAxis || "Y", data: yValues },
-        ],
+    data = {
+      ...formValues,
+      ...selectValues,
+      graph: [
+        { name: formValues.xAxis || "X", data: xValues },
+        { name: formValues.yAxis || "Y", data: yValues },
+      ],
+    };
+  } else {
+    // ✅ Default mode: turn object into items[]
+    const merged = { ...formValues, ...selectValues };
+    const items = Object.keys(merged).map((key) => {
+      const value = merged[key];
+
+      // unwrap image object { file, previewUrl }
+      if (value?.file) {
+        return { key, value: value.file };
       }
-    } else {
-      // mode === "form"
-      data = { ...formValues, ...selectValues }
-    }
+      return { key, value };
+    });
 
-    handleSubmit(data)
-    onClose()
+    data = items;
   }
+
+  handleSubmit(data);
+  onClose();
+};
+
 
   return (
     <Modal
@@ -135,7 +146,10 @@ function FormDialog({
       onClose={onClose}
       scrollBehavior="inside"
       size="4xl"
-      maxH="70vh" overflowY="auto"
+      maxH="70vh"
+      overflowY="auto"
+      closeOnOverlayClick={false}
+      closeOnEsc={false}
     >
       <ModalOverlay />
       <ModalContent>
@@ -143,7 +157,7 @@ function FormDialog({
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack gap="4">
-            {/* ✅ Render select dropdowns */}
+            {/* Select dropdowns from SelectArray */}
             {SelectArray &&
               SelectArray.map((field, index) => (
                 <FormControl key={index}>
@@ -164,134 +178,141 @@ function FormDialog({
                 </FormControl>
               ))}
 
-            {/* ✅ Render text inputs */}
+            {/* Form fields */}
             {FormArray &&
-              FormArray.map((field, index) => (
-                <FormControl key={index}>
-                  <FormLabel>{field.label}</FormLabel>
-                  <Input
-                    ref={index === 0 ? initialRef : null}
-                    placeholder={field.label}
-                    value={formValues[field.key] || ""}
-                    type={
-                      typeof formValues[field.key] === "string" &&
-                      formValues[field.key].startsWith("processId -")
-                        ? "password"
-                        : "text"
-                    }
-                    readOnly={
-                      typeof formValues[field.key] === "string" &&
-                      formValues[field.key].startsWith("processId -")
-                    }
-                    onChange={(e) => handleInputChange(field.key, e.target.value)}
-                  />
-                </FormControl>
-              ))}
+              FormArray.map((field, index) => {
+                const selectMatch = SelectOptionsArray.find(
+                  (item) => item.key === field.key
+                );
 
-            {/* ✅ Graph Sections */}
-            {mode === "edit-graph" && (
-              <Stack>
-                <FormLabel>Graph Data</FormLabel>
-                {graphData[0]?.data.map((_, rowIndex) => (
-                  <Flex key={rowIndex} gap={4}>
-                    {graphData.map((series, seriesIndex) => (
-                      <FormControl key={seriesIndex}>
-                        <FormLabel>
-                          {series.name} (Row {rowIndex + 1})
-                        </FormLabel>
+                return (
+                  <FormControl key={index}>
+                    <FormLabel>{field.label}</FormLabel>
+
+                    {DefaultSelectProcess.includes(field.key) ? (
+                      // ✅ Checkbox group
+                      <CheckboxGroup
+                        value={formValues["DETAILING PRODUCT"] || []}
+                        onChange={(selectedRowIds) =>
+                          handleInputChange("DETAILING PRODUCT", selectedRowIds)
+                        }
+                      >
+                        <Stack direction="row" wrap="wrap">
+                          {detailingProducts?.value?.map((row, i) => {
+                            const code = row.find((f) => f.key === "CODE")?.value;
+                            const rowId = detailingProducts.rowIds[i];
+                            return (
+                              <Checkbox key={rowId} value={rowId}>
+                                {code}
+                              </Checkbox>
+                            );
+                          })}
+                        </Stack>
+                      </CheckboxGroup>
+                    ) : ArrayValuesProcess.includes(field.key) ? (
+                      // ✅ Array inputs
+                      <Stack spacing={2}>
+                        {(formValues[field.key] || [""]).map((val, subIdx) => (
+                          <Flex key={subIdx} gap={2} align="center">
+                            <Input
+                              value={val}
+                              placeholder={`Enter ${field.label}`}
+                              onChange={(e) =>
+                                handleInputChange(field.key, e.target.value, subIdx)
+                              }
+                            />
+                            <Button
+                              size="sm"
+                              colorScheme="red"
+                              onClick={() => handleRemoveArrayInput(field.key, subIdx)}
+                            >
+                              Remove
+                            </Button>
+                            {subIdx === (formValues[field.key]?.length || 1) - 1 && (
+                              <Button
+                                size="sm"
+                                colorScheme="green"
+                                onClick={() => handleAddArrayInput(field.key)}
+                              >
+                                + Add
+                              </Button>
+                            )}
+                          </Flex>
+                        ))}
+                      </Stack>
+                    ) : selectMatch ? (
+                      // ✅ Dropdown
+                      <Select
+                        placeholder={`Select ${field.label}`}
+                        value={formValues[field.key] || ""}
+                        onChange={(e) => handleInputChange(field.key, e.target.value)}
+                      >
+                        {selectMatch.value.map((opt, i) => (
+                          <option key={i} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : DateFieldsArray.includes(field.key) ? (
+                      // ✅ Date field
+                      <Input
+                        type="date"
+                        value={formValues[field.key] || ""}
+                        onChange={(e) => handleInputChange(field.key, e.target.value)}
+                      />
+                    ) : ImageUploadArray.includes(field.key) ? (
+                      // ✅ Image upload with thumbnail preview
+                      <Stack spacing={3}>
                         <Input
-                          type="number"
-                          value={series.data[rowIndex]}
-                          onChange={(e) =>
-                            handleGraphChange(
-                              seriesIndex,
-                              rowIndex,
-                              e.target.value
-                            )
-                          }
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            if (file) {
+                              const previewUrl = URL.createObjectURL(file);
+                              handleInputChange(field.key, { file, previewUrl });
+                            } else {
+                              handleInputChange(field.key, null);
+                            }
+                          }}
                         />
-                      </FormControl>
-                    ))}
-                  </Flex>
-                ))}
-                <Button mt={2} onClick={addGraphRow}>
-                  + Add Row
-                </Button>
-              </Stack>
-            )}
-
-            {mode === "create-graph" && (
-              <Stack>
-                <FormControl>
-                  <FormLabel>X-Axis Name</FormLabel>
-                  <Input
-                    placeholder="Enter X-Axis name"
-                    value={formValues.xAxis || ""}
-                    onChange={(e) =>
-                      handleInputChange("xAxis", e.target.value)
-                    }
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Y-Axis Name</FormLabel>
-                  <Input
-                    placeholder="Enter Y-Axis name"
-                    value={formValues.yAxis || ""}
-                    onChange={(e) =>
-                      handleInputChange("yAxis", e.target.value)
-                    }
-                  />
-                </FormControl>
-
-                <FormLabel mt={4}>Graph Data</FormLabel>
-                {formValues.graphRows?.map((row, index) => (
-                  <Flex key={index} gap={4}>
-                    <FormControl>
-                      <FormLabel>
-                        {formValues.xAxis || "X"} (Row {index + 1})
-                      </FormLabel>
+                        {formValues[field.key]?.previewUrl && (
+                          <img
+                            src={formValues[field.key].previewUrl}
+                            alt="Preview"
+                            style={{
+                              width: "120px",
+                              height: "120px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                              border: "1px solid #ccc",
+                            }}
+                          />
+                        )}
+                      </Stack>
+                    ) : (
+                      // ✅ Default input
                       <Input
-                        type="number"
-                        value={row.x}
-                        onChange={(e) => {
-                          const newRows = [...formValues.graphRows]
-                          newRows[index].x = Number(e.target.value)
-                          handleInputChange("graphRows", newRows)
-                        }}
+                        ref={index === 0 ? initialRef : null}
+                        placeholder={field.label}
+                        value={formValues[field.key] || ""}
+                        type={
+                          typeof formValues[field.key] === "string" &&
+                          formValues[field.key].startsWith("processId -")
+                            ? "password"
+                            : "text"
+                        }
+                        readOnly={
+                          typeof formValues[field.key] === "string" &&
+                          formValues[field.key].startsWith("processId -")
+                        }
+                        onChange={(e) => handleInputChange(field.key, e.target.value)}
                       />
-                    </FormControl>
+                    )}
+                  </FormControl>
+                );
+              })}
 
-                    <FormControl>
-                      <FormLabel>
-                        {formValues.yAxis || "Y"} (Row {index + 1})
-                      </FormLabel>
-                      <Input
-                        type="number"
-                        value={row.y}
-                        onChange={(e) => {
-                          const newRows = [...formValues.graphRows]
-                          newRows[index].y = Number(e.target.value)
-                          handleInputChange("graphRows", newRows)
-                        }}
-                      />
-                    </FormControl>
-                  </Flex>
-                ))}
-
-                <Button
-                  mt={2}
-                  onClick={() => {
-                    const newRows = formValues.graphRows
-                      ? [...formValues.graphRows, { x: "", y: "" }]
-                      : [{ x: "", y: "" }]
-                    handleInputChange("graphRows", newRows)
-                  }}
-                >
-                  + Add Row
-                </Button>
-              </Stack>
-            )}
           </Stack>
         </ModalBody>
 

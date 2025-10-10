@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react/dist/iconify.js';
 import { useDispatch } from 'react-redux';
 
 // importing slicer
-import { setProcess } from '../redux/slices/department';
+// import { setProcess } from '../redux/slices/department';
 
 // importing the datas
 import ItemsData from '../utils/ItemsData';
@@ -20,7 +20,7 @@ function SideBar() {
   const [activeItem, setActiveItem] = useState(null);
 
   const handleDepartment = (dept) => {
-    dispatch(setProcess(dept.toLowerCase()));
+    // dispatch(setProcess(dept.toLowerCase()));
     navigate(`/department/${dept.toLowerCase()}`);
   }
 

@@ -5,6 +5,7 @@ const initialState = {
   userDetails: JSON.parse(localStorage.getItem('user')) || null,
   token: localStorage.getItem('token') || null,
   notifications: [],
+  allUsers: [],
 };
 
 const authSlice = createSlice({
@@ -31,6 +32,9 @@ const authSlice = createSlice({
       localStorage.removeItem('user');
       localStorage.setItem('isLoggedIn', 'false');
     },
+    setAllUsers: (state, action) => {
+      state.allUsers = action.payload;
+    },
   },
 });
 
@@ -38,7 +42,8 @@ export const {
   setLogin, 
   setToken, 
   setUserDetails, 
-  setLogout 
+  setLogout,
+  setAllUsers
 } = authSlice.actions;
 
 export default authSlice.reducer;

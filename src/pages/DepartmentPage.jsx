@@ -5,8 +5,8 @@ import { useSelector, useDispatch } from "react-redux";
 // importing components
 import FormPage from "../components/FormPage";
 import Loading from "../hooks/Loading";
-import FormDialog from "../hooks/FormDialog";
 import AddData from "../hooks/AddData";
+import DepartmentDashboard from "./DepartmentDashboard";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -17,10 +17,11 @@ import ItemsData from "../utils/ItemsData.json";
 // importing API's
 import Department from "../services/Department";
 import Process from "../services/Process";
-import { setMainTableData } from "../redux/slices/department";
+import { setMainTableData, setProcess } from "../redux/slices/department";
 
 // utility: transform process object → FormPage format
 const transformProcess = (process) => {
+  if (!process || typeof process !== "object") return null;
   return {
     id: process._id,
     process: process.process,
@@ -39,11 +40,12 @@ const transformProcess = (process) => {
 
 function DepartmentPage() {
   const dispatch = useDispatch();
+  const process = useSelector((state) => state.department.process);
   const departments = useSelector((state) => state.department.departments);
   const mainTableData = useSelector((state) => state.department.mainTableData);
 
   const { loading, handleGetAllDepartments } = Department();
-  const { handleGetProcessbyDepartmentId, handleAddData  } = Process();
+  const { handleGetProcessbyDepartmentId, handleAddData } = Process();
 
   const { department } = useParams(); // department comes from the URL
 
@@ -67,6 +69,7 @@ function DepartmentPage() {
       if (currentDepartment?._id) {
         const data = await handleGetProcessbyDepartmentId(currentDepartment._id);
         setProcesses(data);
+        dispatch(setProcess(data));
       }
     };
     fetchProcesses();
@@ -88,6 +91,7 @@ function DepartmentPage() {
 
   const handleAddDataSave = async (data) => {
     const processId = mainTableData.id;
+    console.log(data, processId);
     const response = await handleAddData({items: data, id: processId});
     dispatch(setMainTableData(transformProcess(response)));
   };
@@ -149,6 +153,7 @@ function DepartmentPage() {
           process={mainTableData}
         />
       }
+      {!selectedProcess && <DepartmentDashboard Content={currentDepartment?.name || ""} />}
     </div>
   );
 }

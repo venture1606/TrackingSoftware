@@ -8,23 +8,36 @@ import {
   Td,
   Button,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
 
 // Importing API
 import Process from "../services/Process";
 
 // importing components
+import Loading from "../hooks/Loading";
 import SubProcess from "./SubProcess"; // modal for nested process
 import FormDialog from "../hooks/FormDialog";
 
 // importing styles
 import "../styles/departmentpage.css";
 
-function FormPage({ process }) {
+import ItemsData from "../utils/ItemsData.json";
+
+function FormPage({ process, isView = false }) {
   const { loading, handleGetSingleProcess, handleUpdateData, handleDeleteData } = Process();
+
+  const { ArrayValuesProcess, DefaultSelectProcess, ImageUploadArray } = ItemsData;
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
+  const [imagePopupUrl, setImagePopupUrl] = useState(null);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -41,7 +54,6 @@ function FormPage({ process }) {
       setRows([]); // clear rows when process changes
     }
   }, [process]);
-
 
   // Convert row to object keyed by column names
   const getRowData = (row) => {
@@ -62,7 +74,6 @@ function FormPage({ process }) {
   // When Edit is clicked
   const handleEditClick = (rowIdx) => {
     setFormRowIdx(rowIdx);
-    console.log(getRowData(rows[rowIdx]));
     setFormInitialData(getRowData(rows[rowIdx]));
     setIsFormOpen(true);
   };
@@ -75,29 +86,45 @@ function FormPage({ process }) {
   };
 
   // When FormDialog saves
-  const handleFormSubmit = async (data) => {
-    const updatedRows = [...rows];
-    // Editing existing row
-    updatedRows[formRowIdx] = objectToRow(data, rows[formRowIdx]);
-    console.log(updatedRows[formRowIdx], rows[formRowIdx], formRowIdx);
-    const response = await handleUpdateData({ 
-      rowId: process.rowIds[formRowIdx], 
-      items: updatedRows[formRowIdx], 
-      id: process.id 
-    });
-    console.log(updatedRows);
-    setRows(updatedRows);
-    setIsFormOpen(false);
-    setFormRowIdx(null);
-  };
+  // When FormDialog saves
+const handleFormSubmit = async (items) => {
+  const updatedRows = [...rows];
+
+  // ✅ Send directly to backend
+  await handleUpdateData({
+    rowId: process.rowIds[formRowIdx],
+    items,  // already normalized { key, value }
+    id: process.id,
+  });
+
+  // ✅ Convert items[] back into row format for UI
+  updatedRows[formRowIdx] = objectToRow(
+    Object.fromEntries(items.map((i) => [i.key, i.value])),
+    rows[formRowIdx]
+  );
+
+  setRows(updatedRows);
+  setIsFormOpen(false);
+  setFormRowIdx(null);
+};
+
+
 
   // When process button inside a cell is clicked
-  const handleCellButtonClick = async (row, rowIdx, cellIdx) => {
+  const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
     const cell = row[cellIdx];
     const rowDataId = process.rowIds[rowIdx];
-    console.log(rowDataId)
-    let id = cell.value.split("processId -")[1]?.trim();
+
+    let id;
+
+    if (cell.key === 'DETAILING PRODUCT') {
+      id = process.id;
+    } else {
+      id = cell.value.split("processId -")[1]?.trim();
+    }
+    
     const response = await handleGetSingleProcess(id);
+    
     setPopupData({
       parentProcess: process.process,
       row,
@@ -109,12 +136,59 @@ function FormPage({ process }) {
     onOpen();
   };
 
+  // Render Image Popup
+  const renderImagePopUp = () => {
+    if (!imagePopupUrl) return null;
+
+    // Determine if the value is a File object or a string URL
+    const isFileObject = typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
+
+    // If it's a File, create a temporary object URL
+    const imageSrc = isFileObject
+      ? URL.createObjectURL(imagePopupUrl)
+      : imagePopupUrl;
+
+    return (
+      <Modal isOpen={!!imagePopupUrl} onClose={() => setImagePopupUrl(null)} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Uploaded Image</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt="Uploaded"
+                style={{ width: "100%", borderRadius: "8px" }}
+              />
+            ) : (
+              "Please reload to see the image"
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              onClick={() => {
+                // Clean up the created object URL to prevent memory leaks
+                if (isFileObject) URL.revokeObjectURL(imageSrc);
+                setImagePopupUrl(null);
+              }}
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  };
+
+
   return (
     <div
       className="FormPageContainer"
       style={{ overflowX: "auto", maxWidth: "100%" }}
     >  
-      <Table size="sm" variant="simple">
+      <Table size="sm" showColumnBorder stickyHeader>
         <Thead className="TableHeader">
           <Tr>
             {process && process.header?.length > 0 ? (
@@ -124,8 +198,8 @@ function FormPage({ process }) {
                     {col}
                   </Th>
                 ))}
-                <Th className="TableHeaderContent">Action</Th>
-                <Th className="TableHeaderContent">Delete</Th>
+                {!isView && <Th className="TableHeaderContent">Action</Th>}
+                {!isView && <Th className="TableHeaderContent">Delete</Th>}
               </>
             ) : (
               <Th className="TableHeaderContent">No Process Selected</Th>
@@ -137,48 +211,90 @@ function FormPage({ process }) {
           {rows && rows.length > 0 ? (
             rows.map((row, rowIdx) => (
               <Tr key={rowIdx}>
-                {row.map((cell, cellIdx) => (
-                  <Td key={cellIdx} className="RowsField">
-                    {cell.value?.startsWith("processId -") ? (
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        onClick={() =>
-                          handleCellButtonClick(row, rowIdx, cellIdx)
-                        }
-                      >
-                        Update
-                      </Button>
-                    ) : (
-                      cell.value
-                    )}
-                  </Td>
-                ))}
+                {row.map((cell, cellIdx) => {
+                  if (ArrayValuesProcess.includes(cell.key) && Array.isArray(cell.value)) {
+                    return (
+                      <Td key={cellIdx} className="RowsField">
+                        {cell.value.map((rev, revIdx) => (
+                          <span key={revIdx}>{rev} </span>
+                        ))}
+                      </Td>
+                    );
+                  }
 
-                <Td className="RowsField">
-                  <Button
-                    size="sm"
-                    className="IconButtonStyle"
-                    onClick={() => handleEditClick(rowIdx)}
-                  >
-                    Edit
-                  </Button>
-                </Td>
-                <Td className="RowsField">
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    className="IconButtonStyle"
-                    onClick={() => handleDeleteRow(rowIdx)}
-                  >
-                    Delete
-                  </Button>
-                </Td>
+                  // 🔹 Image Upload handling
+                  if (ImageUploadArray.includes(cell.key) && cell.value) {
+                    return (
+                      <Td key={cellIdx} className="RowsField">
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() => setImagePopupUrl(cell.value)}
+                        >
+                          View
+                        </Button>
+                      </Td>
+                    );
+                  }
+
+                  return (
+                    <Td key={cellIdx} className="RowsField">
+                      {cell?.process === "multiSelect" ||
+                      cell.value?.startsWith("processId -") ? (
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() =>
+                            handleCellButtonClick(row, rowIdx, cellIdx, cell.key)
+                          }
+                        >
+                          {DefaultSelectProcess.includes(cell.key) ? "View" : "Update"}
+                        </Button>
+                      ) : (
+                        ["Red", "Green", "Orange"].includes(cell.value) 
+                          ?  <Td className="RowsField ProtoStatusIndicationRow">
+                                <div
+                                  className="ProtoStatusIndication"
+                                  style={{ backgroundColor: cell.value.toLowerCase() }}
+                                ></div>
+                                {cell.value === "Orange" && <span>In Progress</span>}
+                                {cell.value === "Green" && <span>Completed</span>}
+                                {cell.value === "Red" && <span>Pending</span>}
+                              </Td> 
+                          : cell.value
+                      )}
+                    </Td>
+                  );
+                })}
+
+                {!isView && (
+                  <Td className="RowsField">
+                    <Button
+                      size="sm"
+                      className="IconButtonStyle"
+                      onClick={() => handleEditClick(rowIdx)}
+                    >
+                      Edit
+                    </Button>
+                  </Td>
+                )}
+                {!isView && (
+                  <Td className="RowsField">
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      className="IconButtonStyle"
+                      onClick={() => handleDeleteRow(rowIdx)}
+                    >
+                      Delete
+                    </Button>
+                  </Td>
+                )}
               </Tr>
             ))
           ) : (
             <Tr>
-              <Td colSpan={(process?.header?.length || 1) + 1}>No Data</Td>
+              <Td colSpan={(process?.header?.length || 1) + 2}>No Data</Td>
             </Tr>
           )}
         </Tbody>
@@ -203,6 +319,10 @@ function FormPage({ process }) {
           mode="form"
         />
       )}
+
+      {/* Image Popup */}
+      {renderImagePopUp()}
+      {loading && <Loading />}
     </div>      
   );
 }

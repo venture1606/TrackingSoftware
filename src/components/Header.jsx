@@ -1,5 +1,10 @@
 import React from 'react'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+
+// Importing Component
+import DetailsPopOver from '../hooks/DetailsPopOver'
 
 // Importing API's
 import Auth from '../services/Auth'
@@ -12,12 +17,14 @@ import Logo from '../assets/logo.jpg'
 
 function Header() {
 
+  const navigate = useNavigate();
+
   const { handleLogout } = Auth();
+  const userDetails = useSelector((state) => state.auth.userDetails);
 
   const handleLogoutClick = () => {
     handleLogout();
-    console.log('Logout Clicked');
-  }
+  };
 
   return (
     <nav className="HeaderContainer">
@@ -26,9 +33,10 @@ function Header() {
       </div>
       <div className='HeaderRightContainer'>
         <div className='HeaderUserDetails'>
-          <span className='HeaderUserName'>John Doe</span>
-          <Icon icon={"mynaui:user"} className="HeaderIcon" />
+          <DetailsPopOver DetailsContent={userDetails} />
+          <span className='HeaderUserName'>{userDetails?.userName}</span>
         </div>
+        <Icon icon={"eos-icons:admin-outlined"} className="HeaderIcon" onClick={() => navigate("/admin")}/>
         <Icon icon={"uil:exit"} className="HeaderIcon" onClick={handleLogoutClick}/>
       </div>
     </nav>

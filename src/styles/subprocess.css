@@ -54,3 +54,247 @@
     margin-left: auto;
     margin-right: 1.5rem;
 }
+
+.ProtoStatusIndicationRow{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ProtoStatusIndication{
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+}
+
+.TechnicalSpecificationContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.TechnicalSpecificationCardsContainer{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1rem;
+}
+
+.TechnicalSpecificationCard{
+    padding: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+}
+
+.renderBOMContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.Gap{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Break Hour Container */
+.BreakHourContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 15px;
+}
+
+/* Add Data Button Alignment */
+.BreakHourAddDataContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+/* Card Grid */
+.BreakHourCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  gap: 20px;
+}
+
+/* Single Break Hour Card */
+.BreakHourCard {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 15px 20px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease-in-out;
+}
+
+.BreakHourCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* Card Header */
+.BreakHourCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.BreakHourCardHeader h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+/* Action Buttons */
+.BreakHourActions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Card Content (fields grid) */
+.BreakHourCardContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+/* Each field as a mini-card */
+.BreakHourFieldCard {
+  background: #f9fafb;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  transition: background 0.2s ease;
+}
+
+.BreakHourFieldCard:hover {
+  background: #edf2f7;
+}
+
+.BreakHourFieldCard strong {
+  font-size: 12px;
+  color: #2d3748;
+}
+
+.BreakHourFieldCard span {
+  font-size: 13px;
+  color: #4a5568;
+  word-break: break-word;
+}
+.ContinousImprovementCard {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--primary-color);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ContinousImprovementCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.ContinousImprovementHeaderContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f9fafc;
+  border-radius: 6px;
+}
+
+.ContinousImprovementHeader {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.ContinousImprovementHeader strong {
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.ImprovementSection {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fdfdfd;
+}
+
+.ImprovementSection strong {
+  flex: 0 0 20%;
+  color: #444;
+  font-weight: 600;
+}
+
+.ImprovementSection span,
+.ImprovementSection div {
+  flex: 1;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.ImprovementSectionImage {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-around;
+  margin: 1rem 0;
+}
+
+.BeforeImage,
+.AfterImage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px dashed var(--primary-color);
+  border-radius: 8px;
+  background: #f9f9ff;
+  flex: 1;
+}
+
+.BeforeImage strong,
+.AfterImage strong {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+}
+
+.BeforeImage img,
+.AfterImage img {
+  max-width: 220px;
+  max-height: 180px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  transition: transform 0.2s ease;
+}
+
+.BeforeImage img:hover,
+.AfterImage img:hover {
+  transform: scale(1.05);
+}
+
+.ImprovementActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
