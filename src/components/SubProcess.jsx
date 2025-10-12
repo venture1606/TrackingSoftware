@@ -61,9 +61,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const [protoFormIdx, setProtoFormIdx] = useState(null);
   const [formInitialData, setFormInitialData] = useState({});
   const [selectArray, setSelectArray] = useState([]);
-  const [bomProducts, setBomProducts] = useState(null);
-  const [productBom, setProductBom] = useState(null);
-  
+  const [bomProducts, setBomProducts] = useState(null);  
 
   // ------------------------
   // Helper: format process data
@@ -149,6 +147,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   // handle add data
   const handleAddDataSave = async (newData) => {
+    console.log(nested)
     const response = await handleAddData({
       items: newData,
       id: nested.id,

@@ -210,12 +210,11 @@ function FormDialog({
                         }
                       >
                         <Stack direction="row" wrap="wrap">
-                          {detailingProducts?.value?.map((row, i) => {
-                            const code = row.find((f) => f.key === "SUB PARTS")?.value;
-                            const rowId = detailingProducts.rowIds[i];
+                          {detailingProducts?.data?.map((row) => {
+                            const subPartLabel = row.items.find((item) => item.key === "SUB PARTS")?.value;
                             return (
-                              <Checkbox key={rowId} value={rowId}>
-                                {code}
+                              <Checkbox key={row._id} value={row._id}>
+                                {subPartLabel}
                               </Checkbox>
                             );
                           })}

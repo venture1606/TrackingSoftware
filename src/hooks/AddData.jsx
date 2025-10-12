@@ -44,22 +44,25 @@ function AddData({
 
   // Build options from detailingProducts (CODE → rowId)
   useEffect(() => {
-    if (detailingProducts?.value && detailingProducts?.rowIds) {
-      const codesWithRowIds = detailingProducts.value
-        .map((row, idx) => {
-          const codeObj = row.find((item) => item.key === "SUB PARTS");
-          return codeObj
-            ? { label: codeObj.value, value: detailingProducts.rowIds[idx] }
-            : null;
-        })
-        .filter(Boolean);
+  if (detailingProducts?.data?.length) {
+    const codesWithRowIds = detailingProducts.data
+      .map((row) => {
+        // Find the SUB PARTS object in each row's items
+        const subPart = row.items.find((item) => item.key === "SUB PARTS");
+        return subPart
+          ? { label: subPart.value, value: row._id }
+          : null;
+      })
+      .filter(Boolean); // remove nulls
 
-      setOptions((prev) => ({
-        ...prev,
-        "DETAILING PRODUCT": codesWithRowIds,
-      }));
-    }
-  }, [detailingProducts]);
+    setOptions((prev) => ({
+      ...prev,
+      "DETAILING PRODUCT": codesWithRowIds,
+    }));
+  }
+}, [detailingProducts]);
+
+console.log(options)
 
   // Initialize formData whenever headers change
   useEffect(() => {
@@ -154,6 +157,7 @@ function AddData({
       return field;
     });
 
+    console.log(items);
     onSave && onSave(items); // parent handles API formatting
     onClose();
   };
@@ -189,17 +193,18 @@ function AddData({
                   <Input value={field.value} isReadOnly placeholder="ProcessId" />
                 ) : field.process === "multiSelect" ? (
                   <CheckboxGroup
-                    value={field.value}
-                    onChange={(val) => handleValueChange(idx, val)}
-                  >
-                    <Stack direction="row">
-                      {(options[field.key] || []).map((opt, i) => (
-                        <Checkbox key={i} value={opt.value}>
-                          {opt.label}
-                        </Checkbox>
-                      ))}
-                    </Stack>
-                  </CheckboxGroup>
+  value={field.value} // stores selected rowIds
+  onChange={(selectedValues) => handleValueChange(idx, selectedValues)}
+>
+  <Stack direction="row" wrap="wrap">
+    {(options[field.key] || []).map((opt, i) => (
+      <Checkbox key={i} value={opt.value}>
+        {opt.label}
+      </Checkbox>
+    ))}
+  </Stack>
+</CheckboxGroup>
+
                 ) : field.process === "arrayInput" ? (
                   <Stack spacing={2} flex="1">
                     {field.value.map((val, subIdx) => (
