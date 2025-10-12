@@ -45,7 +45,7 @@ function DepartmentPage() {
   const mainTableData = useSelector((state) => state.department.mainTableData);
 
   const { loading, handleGetAllDepartments } = Department();
-  const { handleGetProcessbyDepartmentId, handleAddData, loading: processLoading } = Process();
+  const { handleGetProcessbyDepartmentId, handleSearchSelectOptions, handleAddData, loading: processLoading } = Process();
 
   const { department } = useParams(); // department comes from the URL
 
@@ -61,6 +61,7 @@ function DepartmentPage() {
   // Fetch departments initially
   useEffect(() => {
     handleGetAllDepartments();
+    handleSearchSelectOptions();
   }, []);
 
   // Fetch processes for current department from API

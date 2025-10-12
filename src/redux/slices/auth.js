@@ -6,6 +6,7 @@ const initialState = {
   token: localStorage.getItem('token') || null,
   notifications: [],
   allUsers: [],
+  SelectOptionsArray: []
 };
 
 const authSlice = createSlice({
@@ -35,6 +36,9 @@ const authSlice = createSlice({
     setAllUsers: (state, action) => {
       state.allUsers = action.payload;
     },
+    setSelectOptionsArray: (state, action) => {
+      state.SelectOptionsArray = action.payload;
+    },
   },
 });
 
@@ -43,7 +47,8 @@ export const {
   setToken, 
   setUserDetails, 
   setLogout,
-  setAllUsers
+  setAllUsers,
+  setSelectOptionsArray
 } = authSlice.actions;
 
 export default authSlice.reducer;

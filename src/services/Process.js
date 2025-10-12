@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import { setMessage } from '../redux/slices/common';
 import { setAllProcesses } from '../redux/slices/department';
+import { setSelectOptionsArray } from '../redux/slices/auth';
 
 function Process() {
 
@@ -195,7 +196,6 @@ function Process() {
     }
     };
 
-
     const handleDeleteData = async ({ rowId, id }) => {
         setLoading(true);
         try {
@@ -224,6 +224,65 @@ function Process() {
         }
     }
 
+    const handleSearchSelectOptions = async () => {
+        const response = await axios.get(`${URL}/search`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const dynamicOptions = response.data.data; // [{ key: 'partNo', value: [...] }, ...]
+        
+        // Your existing hardcoded array
+        const selectOptionsArray = [
+            { key: "MOVE TO", value: ["Scrap", "Rework"] },
+            { key: "ACTION PLAN STATUS", value: ["OPEN", "CLOSED"] },
+            { key: "ACTION TAKEN", value: ["YES", "NO"] },
+            { key: "RM", value: ["Orange", "Red", "Green"] },
+            { key: "INCOMING INSPECTION", value: ["Orange", "Red", "Green"] },
+            { key: "MACHINE", value: ["Orange", "Red", "Green"] },
+            { key: "OUT PROCESS", value: ["Orange", "Red", "Green"] },
+            { key: "ASSEMBLY", value: ["Orange", "Red", "Green"] },
+            { key: "PR-STATUS", value: ["Under Process", "Completed", "Next Setting"] },
+            { key: "CALIBRATION", value: ["DONE", "DUE"] },
+            { key: "INSTRUMENTS-STATUS", value: ["Using", "Not Using"] },
+            { key: "INSPECTION-STATUS", value: ["Okay", "Not Okay"] },
+            { key: "DIMENSION", value: ["Okay", "Not Okay"] },
+            { key: "DEFECT FOUND", value: ["Yes", "No"] },
+            { key: "SHORT QUANITY", value: ["Yes", "No"] },
+            { key: "ITEM CHANGED", value: ["Yes", "No"] },
+            { key: "REPORT RECEIVED", value: ["Yes", "No"] },
+            { key: "CCR STATUS", value: ["OPEN", "CLOSED"] },
+            { key: "QL STATUS", value: ["OPEN", "ORDER"] },
+            { key: "PSR STATUS", value: ["OPEN", "CLOSED"] },
+            { key: "TRIAL STATUS", value: ["WAITING FOR ORDER", "ORDER CONFIRMED", "PRODUCT FAILED"] },
+            { key: "PR STATUS", value: ["PENDING", "INSPECTION", "PAYMENT CLOSED"] },
+            { key: "QC QUALITY INSPECTION", value: ["YES", "NO"] },
+            { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
+            { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
+            { key: "NPD STATUS", value: ["Not Feasible", "Waiting For Order", "Order Confirmed", "Under Process", "Supplied to Customer"] }
+        ];
+
+        // Merge dynamic values into the hardcoded array
+        dynamicOptions.forEach(dynamicItem => {
+            const existing = selectOptionsArray.find(opt => opt.key.toLowerCase() === dynamicItem.key.toLowerCase());
+            if (existing) {
+                // merge unique values only
+                dynamicItem.value.forEach(val => {
+                    if (!existing.value.includes(val)) {
+                        existing.value.push(val);
+                    }
+                });
+            } else {
+                // add new key if it doesn't exist
+                selectOptionsArray.push(dynamicItem);
+            }
+        });
+
+        dispatch(setSelectOptionsArray(selectOptionsArray));
+    };
+
+
   return {
     loading,
     handlegetAllProcess,
@@ -231,7 +290,8 @@ function Process() {
     handleGetProcessbyDepartmentId,
     handleAddData,
     handleUpdateData,
-    handleDeleteData
+    handleDeleteData,
+    handleSearchSelectOptions
   } 
 }
 

@@ -34,10 +34,10 @@ function FormDialog({
 }) {
   const initialRef = useRef(null);
   const detailingProducts = useSelector((state) => state.department.detailingProducts);
+  const SelectOptionsArray = useSelector((state) => state.auth.SelectOptionsArray) || ItemsData.SelectOptionsArray;
 
   const { 
-    DefaultSelectProcess, ArrayValuesProcess, 
-    SelectOptionsArray, ImageUploadArray, DateFieldsArray
+    DefaultSelectProcess, ArrayValuesProcess, ImageUploadArray, DateFieldsArray
   } = ItemsData;
 
   const [formValues, setFormValues] = useState(initialData)

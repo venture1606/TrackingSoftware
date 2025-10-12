@@ -27,12 +27,12 @@ function AddData({
   onSave,
 }) {
   const detailingProducts = useSelector((state) => state.department.detailingProducts);
+  const SelectOptionsArray = useSelector((state) => state.auth.SelectOptionsArray) || ItemsData.SelectOptionsArray;
 
   const {
     DefaultHeaderAndProcessId,
     DefaultSelectProcess,
     ArrayValuesProcess,
-    SelectOptionsArray,
     DateFieldsArray,      // ✅ added
     ImageUploadArray,     // ✅ added
   } = ItemsData;
