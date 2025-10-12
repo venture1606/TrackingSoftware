@@ -16,6 +16,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@chakra-ui/react";
+import { useDispatch, useSelector } from "react-redux";
 
 // Importing API
 import Process from "../services/Process";
@@ -29,15 +30,21 @@ import FormDialog from "../hooks/FormDialog";
 import "../styles/departmentpage.css";
 
 import ItemsData from "../utils/ItemsData.json";
+import { setDetailingProducts } from "../redux/slices/department";
 
 function FormPage({ process, isView = false }) {
   const { loading, handleGetSingleProcess, handleUpdateData, handleDeleteData } = Process();
 
-  const { ArrayValuesProcess, DefaultSelectProcess, ImageUploadArray } = ItemsData;
+  const { ArrayValuesProcess, DefaultSelectProcess, ImageUploadArray, ShownArray } = ItemsData;
+
+  const dispatch = useDispatch();
+  const detailingProducts = useSelector((state) => state.department.detailingProducts);
+  const stateProcess = useSelector((state) => state.department.process);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
   const [imagePopupUrl, setImagePopupUrl] = useState(null);
+  const [rowIds, setRowIds] = useState([]);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -50,12 +57,24 @@ function FormPage({ process, isView = false }) {
   useEffect(() => {
     if (process?.value && process?.header) {
       setRows(process.value);
+      setRowIds(process.rowIds || []);
     } else {
-      setRows([]); // clear rows when process changes
+      setRows([]);
+      setRowIds([]);
+    }
+
+    if (process !== null && process?.process === "Products" && stateProcess !== null) {
+      const fetchDetailingProducts = async () => {
+        let object = stateProcess.find((item) => item.process === "Bill of Materials - BOM");
+        if (object) {
+          const response = await handleGetSingleProcess(object.id);
+          dispatch(setDetailingProducts(response));
+        }
+      };
+      fetchDetailingProducts();
     }
   }, [process]);
 
-  // Convert row to object keyed by column names
   const getRowData = (row) => {
     const obj = {};
     process.header.forEach((col, idx) => {
@@ -64,14 +83,12 @@ function FormPage({ process, isView = false }) {
     return obj;
   };
 
-  // Convert back to row format (array of { value })
   const objectToRow = (data, oldRow) =>
     process.header.map((col, idx) => ({
       ...oldRow[idx],
       value: data[col] || "",
     }));
 
-  // When Edit is clicked
   const handleEditClick = (rowIdx) => {
     setFormRowIdx(rowIdx);
     setFormInitialData(getRowData(rows[rowIdx]));
@@ -80,51 +97,48 @@ function FormPage({ process, isView = false }) {
 
   const handleDeleteRow = (rowIdx) => {
     const updatedRows = [...rows];
-    handleDeleteData({ rowId: process.rowIds[rowIdx], id: process.id });
+    const updatedRowIds = [...rowIds];
+
+    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id });
+
+    // ✅ Remove both the row and its corresponding ID
     updatedRows.splice(rowIdx, 1);
+    updatedRowIds.splice(rowIdx, 1);
+
+    // ✅ Update both arrays to keep indexes in sync
     setRows(updatedRows);
+    setRowIds(updatedRowIds);
   };
 
-  // When FormDialog saves
-  // When FormDialog saves
-const handleFormSubmit = async (items) => {
-  const updatedRows = [...rows];
+  const handleFormSubmit = async (items) => {
+    const updatedRows = [...rows];
+    await handleUpdateData({
+      rowId: rowIds[formRowIdx],
+      items,
+      id: process.id,
+    });
+    updatedRows[formRowIdx] = objectToRow(
+      Object.fromEntries(items.map((i) => [i.key, i.value])),
+      rows[formRowIdx]
+    );
+    setRows(updatedRows);
+    setIsFormOpen(false);
+    setFormRowIdx(null);
+  };
 
-  // ✅ Send directly to backend
-  await handleUpdateData({
-    rowId: process.rowIds[formRowIdx],
-    items,  // already normalized { key, value }
-    id: process.id,
-  });
-
-  // ✅ Convert items[] back into row format for UI
-  updatedRows[formRowIdx] = objectToRow(
-    Object.fromEntries(items.map((i) => [i.key, i.value])),
-    rows[formRowIdx]
-  );
-
-  setRows(updatedRows);
-  setIsFormOpen(false);
-  setFormRowIdx(null);
-};
-
-
-
-  // When process button inside a cell is clicked
   const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
     const cell = row[cellIdx];
-    const rowDataId = process.rowIds[rowIdx];
+    const rowDataId = rowIds[rowIdx];
 
     let id;
-
-    if (cell.key === 'DETAILING PRODUCT') {
+    if (cell.key === "DETAILING PRODUCT") {
       id = process.id;
     } else {
       id = cell.value.split("processId -")[1]?.trim();
     }
-    
+
     const response = await handleGetSingleProcess(id);
-    
+
     setPopupData({
       parentProcess: process.process,
       row,
@@ -136,17 +150,11 @@ const handleFormSubmit = async (items) => {
     onOpen();
   };
 
-  // Render Image Popup
   const renderImagePopUp = () => {
     if (!imagePopupUrl) return null;
 
-    // Determine if the value is a File object or a string URL
     const isFileObject = typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
-
-    // If it's a File, create a temporary object URL
-    const imageSrc = isFileObject
-      ? URL.createObjectURL(imagePopupUrl)
-      : imagePopupUrl;
+    const imageSrc = isFileObject ? URL.createObjectURL(imagePopupUrl) : imagePopupUrl;
 
     return (
       <Modal isOpen={!!imagePopupUrl} onClose={() => setImagePopupUrl(null)} size="xl">
@@ -156,11 +164,7 @@ const handleFormSubmit = async (items) => {
           <ModalCloseButton />
           <ModalBody>
             {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt="Uploaded"
-                style={{ width: "100%", borderRadius: "8px" }}
-              />
+              <img src={imageSrc} alt="Uploaded" style={{ width: "100%", borderRadius: "8px" }} />
             ) : (
               "Please reload to see the image"
             )}
@@ -169,7 +173,6 @@ const handleFormSubmit = async (items) => {
             <Button
               colorScheme="blue"
               onClick={() => {
-                // Clean up the created object URL to prevent memory leaks
                 if (isFileObject) URL.revokeObjectURL(imageSrc);
                 setImagePopupUrl(null);
               }}
@@ -182,12 +185,8 @@ const handleFormSubmit = async (items) => {
     );
   };
 
-
   return (
-    <div
-      className="FormPageContainer"
-      style={{ overflowX: "auto", maxWidth: "100%" }}
-    >  
+    <div className="FormPageContainer" style={{ overflowX: "auto", maxWidth: "100%" }}>
       <Table size="sm" showColumnBorder stickyHeader>
         <Thead className="TableHeader">
           <Tr>
@@ -212,11 +211,77 @@ const handleFormSubmit = async (items) => {
             rows.map((row, rowIdx) => (
               <Tr key={rowIdx}>
                 {row.map((cell, cellIdx) => {
+                  // 🧩 Detailing Product Display Logic
+                  if (cell.key === "DETAILING PRODUCT" && Array.isArray(cell.value)) {
+                    // Gather all BOM rows first
+                    const bomRows = cell.value
+                      .map((bomId) => detailingProducts?.data?.find((d) => d._id === bomId))
+                      .filter(Boolean); // remove undefined rows
+
+                    if (bomRows.length === 0) {
+                      return (
+                        <Td key={cellIdx} className="RowsField">
+                          No data available
+                        </Td>
+                      );
+                    }
+
+                    return (
+                      <Td key={cellIdx} className="RowsField">
+                        <div className="FormPageContainer">
+                          <Table size="xs">
+                            <Thead className="TableHeader">
+                              <Tr>
+                                {detailingProducts?.headers?.map(
+                                  (header, hIdx) =>
+                                    ShownArray.includes(header) && (
+                                      <Th key={hIdx} className="TableHeaderContent">
+                                        {header}
+                                      </Th>
+                                    )
+                                )}
+                              </Tr>
+                            </Thead>
+                            <Tbody className="TableBody">
+                              {bomRows.map((bomRow, idx) => (
+                                <Tr key={idx} className="RowsField">
+                                  {detailingProducts?.headers?.map((header, hIdx) => {
+                                    if (!ShownArray.includes(header)) return null;
+                                    const item = bomRow.items.find((i) => i.key === header);
+                                    return (
+                                      <Td key={hIdx} className="RowsField" style={{padding: "12px"}}>
+                                        {item?.value || "-"}
+                                      </Td>
+                                    );
+                                  })}
+                                </Tr>
+                              ))}
+                            </Tbody>
+                          </Table>
+                        </div>
+                      </Td>
+                    );
+                  }
+
+
+                  // ⚙️ Existing array display logic (keep intact)
                   if (ArrayValuesProcess.includes(cell.key) && Array.isArray(cell.value)) {
                     return (
                       <Td key={cellIdx} className="RowsField">
                         {cell.value.map((rev, revIdx) => (
-                          <span key={revIdx}>{rev} </span>
+                          <span
+                            key={revIdx}
+                            style={{
+                              margin: "0 4px",
+                              border: "1px solid black",
+                              padding: "8px",
+                              backgroundColor:
+                                revIdx === cell.value.length - 1 ? "green" : "transparent",
+                              color: revIdx === cell.value.length - 1 ? "white" : "black",
+                            }}
+                          >
+                            {rev}
+                          </span>
                         ))}
                       </Td>
                     );
@@ -250,18 +315,18 @@ const handleFormSubmit = async (items) => {
                         >
                           {DefaultSelectProcess.includes(cell.key) ? "View" : "Update"}
                         </Button>
+                      ) : ["Red", "Green", "Orange"].includes(cell.value) ? (
+                        <Td className="RowsField ProtoStatusIndicationRow">
+                          <div
+                            className="ProtoStatusIndication"
+                            style={{ backgroundColor: cell.value.toLowerCase() }}
+                          ></div>
+                          {cell.value === "Orange" && <span>In Progress</span>}
+                          {cell.value === "Green" && <span>Completed</span>}
+                          {cell.value === "Red" && <span>Pending</span>}
+                        </Td>
                       ) : (
-                        ["Red", "Green", "Orange"].includes(cell.value) 
-                          ?  <Td className="RowsField ProtoStatusIndicationRow">
-                                <div
-                                  className="ProtoStatusIndication"
-                                  style={{ backgroundColor: cell.value.toLowerCase() }}
-                                ></div>
-                                {cell.value === "Orange" && <span>In Progress</span>}
-                                {cell.value === "Green" && <span>Completed</span>}
-                                {cell.value === "Red" && <span>Pending</span>}
-                              </Td> 
-                          : cell.value
+                        cell.value
                       )}
                     </Td>
                   );
@@ -300,10 +365,8 @@ const handleFormSubmit = async (items) => {
         </Tbody>
       </Table>
 
-      {/* SubProcess Modal */}
       <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
 
-      {/* FormDialog Modal */}
       {isFormOpen && (
         <FormDialog
           IndicationText="Edit Row"
@@ -320,10 +383,9 @@ const handleFormSubmit = async (items) => {
         />
       )}
 
-      {/* Image Popup */}
       {renderImagePopUp()}
       {loading && <Loading />}
-    </div>      
+    </div>
   );
 }
 

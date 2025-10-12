@@ -41,6 +41,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     handleUpdateData,
     handleDeleteData,
     handleGetSingleProcess,
+    loading: processLoading,
   } = Process();
   const { DefaultTemplateForProtoProcess } = ItemsData;
   const dispatch = useDispatch();
@@ -50,6 +51,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   const [nested, setNested] = useState(null);
   const [rows, setRows] = useState([]);
+  const [rowIds, setRowIds] = useState([]);
   const [showAddData, setShowAddData] = useState(false);
   const [showBOMAddData, setShowBOMAddData] = useState(false);
 
@@ -94,12 +96,14 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     if (!data?.nestedProcess) {
       setNested(null);
       setRows([]);
+      setRowIds([]);
       return;
     }
     const formatted = formatProcessData(data.nestedProcess, data.rowDataId);
 
     setNested(formatted);
     setRows(formatted.value);
+    setRowIds(formatted.rowIds);
   }, [data]);
 
   const handleBomProducts = async () => {
@@ -124,43 +128,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       handleBomProducts();
     }
   }, [nested]);
-
-  useEffect(() => {
-    if (nested?.process === "Products" && detailingProducts?.rowIds?.length > 0) {
-          const fetchBomForProduct = () => {
-        // Find the "DETAILING PRODUCT" entry in data.row
-        const detailingEntry = data.row.find((item) => item.key === "DETAILING PRODUCT");
-
-        if (!detailingEntry || !Array.isArray(detailingEntry.value)) {
-          console.warn("No detailing products found in data.row");
-          return;
-        }
-
-        // Extract selected IDs from data
-        const selectedIds = detailingEntry.value;
-
-        // Loop through and pick matching BOM rows
-        const matchedBom = selectedIds.map((id) => {
-          const index = detailingProducts.rowIds.indexOf(id);
-          if (index !== -1) {
-            return detailingProducts.value[index]; // store the corresponding row
-          }
-          return null; // no match
-        }).filter(Boolean); // remove nulls
-
-        // Store formatted BOM
-        setProductBom({
-          key: "DETAILING PRODUCT",
-          value: selectedIds, // keep original IDs
-          process: "multiSelect",
-          matchedBom // add BOM rows if you want them alongside
-        });
-      };
-
-      fetchBomForProduct();
-
-    }
-  }, [nested, detailingProducts]);
 
   if (!nested) return null;
 
@@ -267,18 +234,30 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   // delete button
   const handleDeleteRow = async (rowIdx) => {
-    await handleDeleteData({ rowId: nested.rowIds[rowIdx], id: nested.id });
+    try {
+      const rowIdToDelete = rowIds[rowIdx];
+      if (!rowIdToDelete) return;
 
-    // remove locally
-    const updated = [...rows];
-    updated.splice(rowIdx, 1);
+      // 🔥 Call backend delete API
+      await handleDeleteData({ rowId: rowIdToDelete, id: nested.id });
 
-    setRows(updated);
-    setNested((prev) => ({
-      ...prev,
-      value: updated,
-      rowIds: prev.rowIds.filter((_, idx) => idx !== rowIdx),
-    }));
+      // 🔄 Remove row + ID locally
+      const updatedRows = [...rows];
+      const updatedRowIds = [...rowIds];
+      updatedRows.splice(rowIdx, 1);
+      updatedRowIds.splice(rowIdx, 1);
+
+      // ✅ Update both states to stay aligned
+      setRows(updatedRows);
+      setRowIds(updatedRowIds);
+      setNested((prev) => ({
+        ...prev,
+        value: updatedRows,
+        rowIds: updatedRowIds,
+      }));
+    } catch (error) {
+      console.error("Failed to delete row:", error);
+    }
   };
 
   // submit form
@@ -286,17 +265,22 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     let updatedRows = [...rows];
 
     if (nested.process === "NPD Proto Model") {
+      const selectedValue =
+        Array.isArray(data) && data[0]?.key === "value"
+          ? data[0]?.value
+          : data.value ?? "";
+
       updatedRows[formRowIdx] = [...updatedRows[formRowIdx]];
       updatedRows[formRowIdx][protoFormIdx] = {
         ...updatedRows[formRowIdx][protoFormIdx],
-        value: data.value,
+        value: selectedValue,
       };
     } else {
       updatedRows[formRowIdx] = objectToRow(data, rows[formRowIdx]);
     }
 
     await handleUpdateData({
-      rowId: nested.rowIds[formRowIdx],
+      rowId: rowIds[formRowIdx],
       items: updatedRows[formRowIdx],
       id: nested.id,
     });
@@ -408,7 +392,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   <Td className="RowsField ProtoStatusIndicationRow">
                     <div
                       className="ProtoStatusIndication"
-                      style={{ backgroundColor: cell.value.toLowerCase() }}
+                      style={{ backgroundColor: (typeof cell.value === "string" && cell.value ? cell.value.toLowerCase() : "transparent" )}}
                     ></div>
                     {cell.value === "Orange" && <span>In Progress</span>}
                     {cell.value === "Green" && <span>Completed</span>}
@@ -545,42 +529,14 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             />
           )}
         </div>
-        {bomProducts && <FormPage process={bomProducts} isView={isView} />}
+        {bomProducts ? (
+    <FormPage process={bomProducts} isView={isView} />
+  ) : (
+    <p>No BOM data found</p>
+  )}
       </div>
     </div>
   );
-
-  const renderBOMProducts = () => {
-    if (!productBom || !productBom.matchedBom) {
-      return <p>No BOM products found</p>;
-    }
-
-    // Grab headers dynamically from the first matched row
-    const headers = productBom.matchedBom[0]?.map((cell) => cell.key) || [];
-
-    return (
-      <div style={{ overflowX: "auto" }} className="FormPageContainer">
-        <Table size="sm" showColumnBorder stickyHeader>
-          <Thead className="TableHeader">
-            <Tr>
-              {headers.map((header, idx) => (
-                <Th key={idx} className="TableHeaderContent">{header}</Th>
-              ))}
-            </Tr>
-          </Thead>
-          <Tbody className="TableBody">
-            {productBom.matchedBom.map((row, rowIndex) => (
-              <Tr key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <Td key={cellIndex} className="RowsField">{cell.value}</Td>
-                ))}
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </div>
-    );
-  };
 
   const renderBreakHour = () => (
     <div className="BreakHourContainer">
@@ -773,7 +729,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     );
   };
 
-
   const renderDefault = () => (
     <div className='Gap'>
       <div className="AddDataContainer">
@@ -816,7 +771,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           <ModalHeader>{nested.process}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {loading ? (
+            {loading || processLoading ? (
               <Loading />
             ) : (
               <>
@@ -826,14 +781,12 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                 {nested.process === "Technical Specification" &&
                   renderTechnicalSpecification()}
                 {nested.process === "Bill of Materials - BOM" && renderBOM()}
-                {nested.process === "Products" && renderBOMProducts()}
                 {nested.process === "Break Hour" && renderBreakHour()}
                 {nested.process === "Continous Improvement Status" && renderContinousImrovementStatus()}
                 {nested.process !== "Product Validation Report" &&
                   nested.process !== "Bill of Materials - BOM" &&
                   nested.process !== "NPD Proto Model" &&
                   nested.process !== "Technical Specification" &&
-                  nested.process !== "Products" &&
                   nested.process !== "Break Hour" &&
                   nested.process !== "Continous Improvement Status" &&
                   renderDefault()}

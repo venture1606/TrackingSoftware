@@ -101,42 +101,54 @@ function FormDialog({
   }
 
   const handleSave = () => {
-  let data;
+    let data;
 
-  if (mode === "edit-graph") {
-    data = { ...formValues, ...selectValues, graph: graphData };
-  } else if (mode === "create-graph") {
-    const rows = formValues.graphRows || [];
-    const xValues = rows.map((r) => r.x);
-    const yValues = rows.map((r) => r.y);
+    if (mode === "edit-graph") {
+      data = { ...formValues, ...selectValues, graph: graphData };
+    } else if (mode === "create-graph") {
+      const rows = formValues.graphRows || [];
+      const xValues = rows.map((r) => r.x);
+      const yValues = rows.map((r) => r.y);
 
-    data = {
-      ...formValues,
-      ...selectValues,
-      graph: [
-        { name: formValues.xAxis || "X", data: xValues },
-        { name: formValues.yAxis || "Y", data: yValues },
-      ],
-    };
-  } else {
-    // ✅ Default mode: turn object into items[]
-    const merged = { ...formValues, ...selectValues };
-    const items = Object.keys(merged).map((key) => {
-      const value = merged[key];
+      data = {
+        ...formValues,
+        ...selectValues,
+        graph: [
+          { name: formValues.xAxis || "X", data: xValues },
+          { name: formValues.yAxis || "Y", data: yValues },
+        ],
+      };
+    } else {
+      // ✅ Default form mode
+      const merged = { ...formValues, ...selectValues };
 
-      // unwrap image object { file, previewUrl }
-      if (value?.file) {
-        return { key, value: value.file };
-      }
-      return { key, value };
-    });
+      const items = Object.keys(merged).map((key) => {
+        const value = merged[key];
 
-    data = items;
-  }
+        // Determine process type
+        let process = "value";
 
-  handleSubmit(data);
-  onClose();
-};
+        if (DefaultSelectProcess.includes(key)) {
+          process = "multiSelect";
+        } else if (SelectArray?.some((s) => s.key === key)) {
+          process = "select";
+        } else if (ImageUploadArray.includes(key)) {
+          process = "image";
+        }
+
+        // unwrap image file if needed
+        const finalValue = value?.file ? value.file : value;
+
+        return { key, value: finalValue, process };
+      });
+
+      data = items;
+    }
+
+    handleSubmit(data);
+    onClose();
+  };
+
 
 
   return (
@@ -199,7 +211,7 @@ function FormDialog({
                       >
                         <Stack direction="row" wrap="wrap">
                           {detailingProducts?.value?.map((row, i) => {
-                            const code = row.find((f) => f.key === "CODE")?.value;
+                            const code = row.find((f) => f.key === "SUB PARTS")?.value;
                             const rowId = detailingProducts.rowIds[i];
                             return (
                               <Checkbox key={rowId} value={rowId}>
@@ -212,7 +224,7 @@ function FormDialog({
                     ) : ArrayValuesProcess.includes(field.key) ? (
                       // ✅ Array inputs
                       <Stack spacing={2}>
-                        {(formValues[field.key] || [""]).map((val, subIdx) => (
+                        {(Array.isArray(formValues[field.key]) ? formValues[field.key] : [""]).map((val, subIdx) => (
                           <Flex key={subIdx} gap={2} align="center">
                             <Input
                               value={val}

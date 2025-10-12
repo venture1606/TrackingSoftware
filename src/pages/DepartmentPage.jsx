@@ -45,7 +45,7 @@ function DepartmentPage() {
   const mainTableData = useSelector((state) => state.department.mainTableData);
 
   const { loading, handleGetAllDepartments } = Department();
-  const { handleGetProcessbyDepartmentId, handleAddData } = Process();
+  const { handleGetProcessbyDepartmentId, handleAddData, loading: processLoading } = Process();
 
   const { department } = useParams(); // department comes from the URL
 
@@ -96,7 +96,7 @@ function DepartmentPage() {
     dispatch(setMainTableData(transformProcess(response)));
   };
 
-  if (loading) {
+  if (loading || processLoading) {
     return <Loading />;
   }
 
@@ -151,6 +151,7 @@ function DepartmentPage() {
         <FormPage
           key={selectedProcess}
           process={mainTableData}
+          isView={selectedProcess === "Products"}
         />
       }
       {!selectedProcess && <DepartmentDashboard Content={currentDepartment?.name || ""} />}

@@ -26,9 +26,7 @@ function AddData({
   onClose,
   onSave,
 }) {
-  const detailingProducts = useSelector(
-    (state) => state.department.detailingProducts
-  );
+  const detailingProducts = useSelector((state) => state.department.detailingProducts);
 
   const {
     DefaultHeaderAndProcessId,
@@ -49,7 +47,7 @@ function AddData({
     if (detailingProducts?.value && detailingProducts?.rowIds) {
       const codesWithRowIds = detailingProducts.value
         .map((row, idx) => {
-          const codeObj = row.find((item) => item.key === "CODE");
+          const codeObj = row.find((item) => item.key === "SUB PARTS");
           return codeObj
             ? { label: codeObj.value, value: detailingProducts.rowIds[idx] }
             : null;

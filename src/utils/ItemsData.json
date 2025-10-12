@@ -323,6 +323,23 @@
         "OPEN",
         "CLOSED"
       ]
+    },
+    {
+      "key": "CR STATUS",
+      "value": [
+        "OPEN",
+        "CLOSED"
+      ]
+    },
+    {
+      "key": "NPD STATUS",
+      "value": [
+        "Not Feasible",
+        "Waiting For Order",
+        "Order Confirmed",
+        "Under Process",
+        "Supplied to Customer"
+      ]
     }
   ],
   "ImageUploadArray":[
@@ -332,15 +349,22 @@
     "CALIBRATION CERTIFICATE NO / DATE",
     "ACTION REPORT",
     "NPD FORM",
-    "EVALUATE"
+    "EVALUATE",
+    "IMAGE"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
     "CALIBRATION DUE DATE",
-    "NEXT SCHEDULE",
+    "NEXT SCHEDULE DATE",
     "QUOTATION DATE",
     "ORDER DATE",
     "DATE",
-    "DELIVERY DATE"
+    "DELIVERY DATE",
+    "ISSUE DATE",
+    "EXPIRY DATE",
+    "NEXT RENEVAL"
+  ],
+  "ShownArray": [
+    "ITEM CODE", "ITEM NAME", "GRADE", "QTY", "UNITS"
   ]
 }
