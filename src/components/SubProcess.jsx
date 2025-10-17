@@ -525,14 +525,15 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
               isOpen={showBOMAddData}
               onClose={() => setShowBOMAddData(false)}
               onSave={handleAddDataSaveForBOM}
+              currentBomId={nested?.rowDataId}
             />
           )}
         </div>
         {bomProducts ? (
-    <FormPage process={bomProducts} isView={isView} />
-  ) : (
-    <p>No BOM data found</p>
-  )}
+          <FormPage process={bomProducts} isView={isView} currentBomId={nested?.rowDataId}/>
+        ) : (
+          <p>No BOM data found</p>
+        )}
       </div>
     </div>
   );

@@ -39,6 +39,21 @@ const authSlice = createSlice({
     setSelectOptionsArray: (state, action) => {
       state.SelectOptionsArray = action.payload;
     },
+    updateSelectOptions: (state, action) => {
+      const { key, value } = action.payload;
+
+      const existing = state.SelectOptionsArray.find(
+        (item) => item.key.toLowerCase() === key.toLowerCase()
+      );
+
+      if (existing) {
+        // merge new unique values
+        existing.value = Array.from(new Set([...existing.value, ...value]));
+      } else {
+        // add a new key if it doesn’t exist
+        state.SelectOptionsArray.push({ key, value });
+      }
+    },
   },
 });
 
@@ -48,7 +63,8 @@ export const {
   setUserDetails, 
   setLogout,
   setAllUsers,
-  setSelectOptionsArray
+  setSelectOptionsArray,
+  updateSelectOptions
 } = authSlice.actions;
 
 export default authSlice.reducer;

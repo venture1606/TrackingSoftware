@@ -17,9 +17,10 @@ import {
   Checkbox,
   CheckboxGroup
 } from "@chakra-ui/react"
-import { useSelector } from "react-redux"
+import { useSelector, useDispatch } from "react-redux"
 
 import ItemsData from "../utils/ItemsData"
+import { updateSelectOptions } from "../redux/slices/auth"
 
 function FormDialog({
   IndicationText,
@@ -32,6 +33,9 @@ function FormDialog({
   initialData = {},
   mode = "form",
 }) {
+
+  const dispatch = useDispatch();
+
   const initialRef = useRef(null);
   const detailingProducts = useSelector((state) => state.department.detailingProducts);
   const SelectOptionsArray = useSelector((state) => state.auth.SelectOptionsArray) || ItemsData.SelectOptionsArray;
@@ -252,18 +256,87 @@ function FormDialog({
                         ))}
                       </Stack>
                     ) : selectMatch ? (
-                      // ✅ Dropdown
-                      <Select
-                        placeholder={`Select ${field.label}`}
-                        value={formValues[field.key] || ""}
-                        onChange={(e) => handleInputChange(field.key, e.target.value)}
-                      >
-                        {selectMatch.value.map((opt, i) => (
-                          <option key={i} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </Select>
+                      <Stack spacing={2}>
+                        <Select
+                          placeholder={`Select ${field.label}`}
+                          value={
+                            formValues[field.key] === "Others" ? "Others" : formValues[field.key] || ""
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+
+                            if (val === "Others") {
+                              // keep showing input field
+                              setFormValues((prev) => ({
+                                ...prev,
+                                [field.key]: "Others",
+                                [`${field.key}_other`]: prev[`${field.key}_other`] || "",
+                              }));
+                            } else {
+                              setFormValues((prev) => {
+                                const updated = { ...prev, [field.key]: val };
+                                delete updated[`${field.key}_other`];
+                                return updated;
+                              });
+                            }
+                          }}
+                        >
+                          {(() => {
+                            const options = [...selectMatch.value];
+                            const currentValue = formValues[field.key];
+
+                            // ✅ If editing & current value not in dropdown, add it temporarily
+                            if (currentValue && !options.includes(currentValue) && currentValue !== "Others") {
+                              options.unshift(currentValue);
+                            }
+
+                            // ✅ Always ensure "Others" is at the end
+                            if (!options.includes("Others")) {
+                              options.push("Others");
+                            }
+
+                            return options.map((opt, i) => (
+                              <option key={i} value={opt}>
+                                {opt}
+                              </option>
+                            ));
+                          })()}
+                        </Select>
+
+                        {/* ✅ Show input field when "Others" is selected */}
+                        {formValues[field.key] === "Others" && (
+                          <Input
+                            placeholder={`Enter other ${field.label}`}
+                            value={formValues[`${field.key}_other`] || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFormValues((prev) => ({
+                                ...prev,
+                                [`${field.key}_other`]: val,
+                              }));
+                            }}
+                            onBlur={() => {
+                              const customValue = formValues[`${field.key}_other`]?.trim();
+                              if (customValue) {
+                                setFormValues((prev) => {
+                                  const updated = {
+                                    ...prev,
+                                    [field.key]: customValue,
+                                  };
+                                  delete updated[`${field.key}_other`];
+                                  return updated;
+                                });
+
+                                // ✅ Optionally add new value to Redux SelectOptionsArray
+                                dispatch(updateSelectOptions({
+                                  key: field.key,
+                                  value: [customValue]
+                                }));
+                              }
+                            }}
+                          />
+                        )}
+                      </Stack>
                     ) : DateFieldsArray.includes(field.key) ? (
                       // ✅ Date field
                       <Input

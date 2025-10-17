@@ -32,7 +32,7 @@ import "../styles/departmentpage.css";
 import ItemsData from "../utils/ItemsData.json";
 import { setDetailingProducts } from "../redux/slices/department";
 
-function FormPage({ process, isView = false }) {
+function FormPage({ process, isView = false, currentBomId = null }) {
   const { loading, handleGetSingleProcess, handleUpdateData, handleDeleteData } = Process();
 
   const { ArrayValuesProcess, DefaultSelectProcess, ImageUploadArray, ShownArray } = ItemsData;
@@ -63,17 +63,31 @@ function FormPage({ process, isView = false }) {
       setRowIds([]);
     }
 
-    if (process !== null && process?.process === "Products" && stateProcess !== null) {
+    if (process?.process === "Products" && stateProcess) {
       const fetchDetailingProducts = async () => {
-        let object = stateProcess.find((item) => item.process === "Bill of Materials - BOM");
-        if (object) {
-          const response = await handleGetSingleProcess(object.id);
-          dispatch(setDetailingProducts(response));
+        const bomProcess = stateProcess.find(
+          (item) => item.process === "Bill of Materials - BOM"
+        );
+        if (bomProcess) {
+          const response = await handleGetSingleProcess(bomProcess.id);
+
+          // ✅ Filter detailing products by the current BOM ID
+          const filteredData = currentBomId
+            ? {
+                ...response,
+                data: response?.data?.filter(
+                  (row) => row.rowDataId === currentBomId
+                ),
+              }
+            : response;
+
+          dispatch(setDetailingProducts(filteredData));
         }
       };
       fetchDetailingProducts();
     }
-  }, [process]);
+  }, [process, stateProcess, currentBomId]);
+
 
   const getRowData = (row) => {
     const obj = {};

@@ -232,7 +232,7 @@ function Process() {
         });
 
         const dynamicOptions = response.data.data; // [{ key: 'partNo', value: [...] }, ...]
-        
+
         // Your existing hardcoded array
         const selectOptionsArray = [
             { key: "MOVE TO", value: ["Scrap", "Rework"] },
@@ -263,8 +263,13 @@ function Process() {
             { key: "NPD STATUS", value: ["Not Feasible", "Waiting For Order", "Order Confirmed", "Under Process", "Supplied to Customer"] }
         ];
 
-        // Merge dynamic values into the hardcoded array
+        // ✅ Merge dynamic values into the hardcoded array
         dynamicOptions.forEach(dynamicItem => {
+            // Ensure “Others” is always included
+            if (!dynamicItem.value.includes("Others")) {
+                dynamicItem.value.push("Others");
+            }
+
             const existing = selectOptionsArray.find(opt => opt.key.toLowerCase() === dynamicItem.key.toLowerCase());
             if (existing) {
                 // merge unique values only
@@ -281,7 +286,6 @@ function Process() {
 
         dispatch(setSelectOptionsArray(selectOptionsArray));
     };
-
 
   return {
     loading,
