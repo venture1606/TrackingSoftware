@@ -372,7 +372,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       className="FormPageContainer"
       style={{ overflowX: "auto", maxWidth: "100%" }}
     >
-      <Table size="sm" showColumnBorder stickyHeader>
+      <Table size="sm" showColumnBorder stickyHeader variant="striped">
         <Thead className="TableHeader">
           <Tr>
             <Th className="TableHeaderContent">SL.NO</Th>

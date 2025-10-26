@@ -26,20 +26,23 @@ function AddData({
   isOpen,
   onClose,
   onSave,
-  currentBomId = null
+  currentBomId = null,
 }) {
-
   const dispatch = useDispatch();
 
-  const detailingProducts = useSelector((state) => state.department.detailingProducts);
-  const SelectOptionsArray = useSelector((state) => state.auth.SelectOptionsArray) || ItemsData.SelectOptionsArray;
+  const detailingProducts = useSelector(
+    (state) => state.department.detailingProducts
+  );
+  const SelectOptionsArray =
+    useSelector((state) => state.auth.SelectOptionsArray) ||
+    ItemsData.SelectOptionsArray;
 
   const {
     DefaultHeaderAndProcessId,
     DefaultSelectProcess,
     ArrayValuesProcess,
-    DateFieldsArray,      // ✅ added
-    ImageUploadArray,     // ✅ added
+    DateFieldsArray, // ✅ added
+    ImageUploadArray, // ✅ added
   } = ItemsData;
 
   const initialRef = useRef(null);
@@ -59,9 +62,7 @@ function AddData({
       const codesWithRowIds = filteredProducts
         .map((row) => {
           const subPart = row.items.find((item) => item.key === "SUB PARTS");
-          return subPart
-            ? { label: subPart.value, value: row._id }
-            : null;
+          return subPart ? { label: subPart.value, value: row._id } : null;
         })
         .filter(Boolean);
 
@@ -72,8 +73,7 @@ function AddData({
     }
   }, [detailingProducts, currentBomId]);
 
-
-console.log(options)
+  console.log(options);
 
   // Initialize formData whenever headers change
   useEffect(() => {
@@ -119,9 +119,10 @@ console.log(options)
         // Dropdown select
         const selectMatch = SelectOptionsArray.find((item) => item.key === key);
         if (selectMatch) {
+          const hasRed = selectMatch.value.includes ("Red");
           return {
             key,
-            value: prevField?.value || "",
+            value: prevField?.value || (hasRed ? "Red" : ""),
             process: "select",
             options: selectMatch.value,
           };
@@ -163,7 +164,6 @@ console.log(options)
     ImageUploadArray,
     SelectOptionsArray, // ✅ keep this dependency for updates, but values are preserved now
   ]);
-
 
   // Handle value change
   const handleValueChange = (index, val, subIndex = null) => {
@@ -239,11 +239,17 @@ console.log(options)
 
                 {/* Render based on field type */}
                 {field.process === "processId" ? (
-                  <Input value={field.value} isReadOnly placeholder="ProcessId" />
+                  <Input
+                    value={field.value}
+                    isReadOnly
+                    placeholder="ProcessId"
+                  />
                 ) : field.process === "multiSelect" ? (
                   <CheckboxGroup
                     value={field.value} // stores selected rowIds
-                    onChange={(selectedValues) => handleValueChange(idx, selectedValues)}
+                    onChange={(selectedValues) =>
+                      handleValueChange(idx, selectedValues)
+                    }
                   >
                     <Stack direction="row" wrap="wrap">
                       {(options[field.key] || []).map((opt, i) => (
@@ -284,73 +290,77 @@ console.log(options)
                     ))}
                   </Stack>
                 ) : field.process === "select" ? (
-  <Stack flex="1" spacing={2}>
-    <Select
-      placeholder={`Select ${field.key}`}
-      value={field.value === "Others" ? "Others" : field.value}
-      onChange={(e) => {
-        const val = e.target.value;
-        const newData = [...formData];
+                  <Stack flex="1" spacing={2}>
+                    <Select
+                      placeholder={`Select ${field.key}`}
+                      value={field.value === "Others" ? "Others" : field.value}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const newData = [...formData];
 
-        if (val === "Others") {
-          // Keep showing input for "Others"
-          newData[idx].value = "Others";
-          newData[idx].otherValue = newData[idx].otherValue || "";
-        } else {
-          newData[idx].value = val;
-          delete newData[idx].otherValue;
-        }
+                        if (val === "Others") {
+                          // Keep showing input for "Others"
+                          newData[idx].value = "Others";
+                          newData[idx].otherValue =
+                            newData[idx].otherValue || "";
+                        } else {
+                          newData[idx].value = val;
+                          delete newData[idx].otherValue;
+                        }
 
-        setFormData(newData);
-      }}
-    >
-      {field.options.map((opt, i) => (
-        <option key={i} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </Select>
+                        setFormData(newData);
+                      }}
+                    >
+                      {field.options.map((opt, i) => (
+                        <option key={i} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </Select>
 
-    {/* ✅ Input appears when "Others" is selected */}
-    {field.value === "Others" && (
-      <Input
-        placeholder={`Enter other ${field.key}`}
-        value={field.otherValue || ""}
-        onChange={(e) => {
-          const newData = [...formData];
-          newData[idx].otherValue = e.target.value;
-          setFormData(newData);
-        }}
-        onBlur={() => {
-          const newData = [...formData];
-          const customValue = newData[idx].otherValue?.trim();
+                    {/* ✅ Input appears when "Others" is selected */}
+                    {field.value === "Others" && (
+                      <Input
+                        placeholder={`Enter other ${field.key}`}
+                        value={field.otherValue || ""}
+                        onChange={(e) => {
+                          const newData = [...formData];
+                          newData[idx].otherValue = e.target.value;
+                          setFormData(newData);
+                        }}
+                        onBlur={() => {
+                          const newData = [...formData];
+                          const customValue = newData[idx].otherValue?.trim();
 
-          if (customValue) {
-            // ✅ 1️⃣ Commit the custom value
-            newData[idx].value = customValue;
-            delete newData[idx].otherValue;
-            setFormData(newData);
+                          if (customValue) {
+                            // ✅ 1️⃣ Commit the custom value
+                            newData[idx].value = customValue;
+                            delete newData[idx].otherValue;
+                            setFormData(newData);
 
-            // ✅ 2️⃣ Update the options list locally
-            const updatedOptions = field.options.includes(customValue)
-              ? field.options
-              : [...field.options, customValue];
+                            // ✅ 2️⃣ Update the options list locally
+                            const updatedOptions = field.options.includes(
+                              customValue
+                            )
+                              ? field.options
+                              : [...field.options, customValue];
 
-            newData[idx].options = updatedOptions;
-            setFormData([...newData]);
+                            newData[idx].options = updatedOptions;
+                            setFormData([...newData]);
 
-            // ✅ 3️⃣ Optionally update global Redux SelectOptionsArray
-            dispatch(updateSelectOptions({
-              key: field.key,
-              value: updatedOptions
-            }));
-          }
-        }}
-      />
-    )}
-  </Stack>
-) : field.process === "date" ? (
-
+                            // ✅ 3️⃣ Optionally update global Redux SelectOptionsArray
+                            dispatch(
+                              updateSelectOptions({
+                                key: field.key,
+                                value: updatedOptions,
+                              })
+                            );
+                          }
+                        }}
+                      />
+                    )}
+                  </Stack>
+                ) : field.process === "date" ? (
                   <Input
                     type="date"
                     value={field.value}

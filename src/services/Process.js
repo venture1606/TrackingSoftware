@@ -238,7 +238,7 @@ function Process() {
             { key: "MOVE TO", value: ["Scrap", "Rework"] },
             { key: "ACTION PLAN STATUS", value: ["OPEN", "CLOSED"] },
             { key: "ACTION TAKEN", value: ["YES", "NO"] },
-            { key: "RM", value: ["Orange", "Red", "Green"] },
+            { key: "RM", value: ["Blue", "Orange", "Red", "Green"] },
             { key: "INCOMING INSPECTION", value: ["Orange", "Red", "Green"] },
             { key: "MACHINE", value: ["Orange", "Red", "Green"] },
             { key: "OUT PROCESS", value: ["Orange", "Red", "Green"] },

@@ -127,6 +127,7 @@
 .AddDataContainer{
     display: flex;
     justify-content: end;
+    gap: 1rem;
     text-align: end;
     margin-left: auto;
     margin-right: 0.1rem;

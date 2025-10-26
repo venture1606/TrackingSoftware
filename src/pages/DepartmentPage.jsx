@@ -26,15 +26,60 @@ const transformProcess = (process) => {
     id: process._id,
     process: process.process,
     header: process.headers,
-    value: process.data?.map((row) =>
-      row.items.map((cell) => ({
-        key: cell.key,
-        value: cell.value,
-        process: cell.process || null,
-      }))
-    ) || [],
+    value:
+      process.data?.map((row) =>
+        row.items.map((cell) => ({
+          key: cell.key,
+          value: cell.value,
+          process: cell.process || null,
+        }))
+      ) || [],
     rowIds: process.data?.map((row) => row._id) || [],
     rowDataIds: process.data?.map((row) => row.rowDataId) || [],
+  };
+};
+
+// ✅ Function to combine rows by ITEM CODE and GRADE
+const combineSimilarRows = (mainTableData) => {
+  if (!mainTableData || !mainTableData.value) return mainTableData;
+
+  const rows = mainTableData.value.map((row) => {
+    const obj = {};
+    row.forEach(({ key, value, process }) => {
+      obj[key] = { value, process };
+    });
+    return obj;
+  });
+
+  const combinedMap = new Map();
+
+  for (const row of rows) {
+    const itemCode = row["ITEM CODE"]?.value || "";
+    const grade = row["GRADE"]?.value || "";
+    const key = `${itemCode}_${grade}`;
+
+    if (!combinedMap.has(key)) {
+      combinedMap.set(key, { ...row });
+    } else {
+      const existing = combinedMap.get(key);
+      const existingQty = Number(existing["QTY"]?.value || 0);
+      const newQty = Number(row["QTY"]?.value || 0);
+      existing["QTY"].value = (existingQty + newQty).toString();
+      combinedMap.set(key, existing);
+    }
+  }
+
+  const mergedValue = Array.from(combinedMap.values()).map((rowObj) =>
+    Object.keys(rowObj).map((k) => ({
+      key: k,
+      value: rowObj[k].value,
+      process: rowObj[k].process,
+    }))
+  );
+
+  return {
+    ...mainTableData,
+    value: mergedValue,
   };
 };
 
@@ -45,30 +90,36 @@ function DepartmentPage() {
   const mainTableData = useSelector((state) => state.department.mainTableData);
 
   const { loading, handleGetAllDepartments } = Department();
-  const { handleGetProcessbyDepartmentId, handleSearchSelectOptions, handleAddData, loading: processLoading } = Process();
+  const {
+    handleGetProcessbyDepartmentId,
+    handleSearchSelectOptions,
+    handleAddData,
+    loading: processLoading,
+  } = Process();
 
-  const { department } = useParams(); // department comes from the URL
+  const { department } = useParams();
 
   const [selectedProcess, setSelectedProcess] = useState("");
-  const [processes, setProcesses] = useState([]); 
+  const [processes, setProcesses] = useState([]);
   const [showAddData, setShowAddData] = useState(false);
+  const [isMerged, setIsMerged] = useState(false);
+  const [originalMainTable, setOriginalMainTable] = useState(null);
 
-  // Find the current department
   const currentDepartment = departments.find(
     (d) => d.name.toLowerCase() === department?.toLowerCase()
   );
 
-  // Fetch departments initially
   useEffect(() => {
     handleGetAllDepartments();
     handleSearchSelectOptions();
   }, []);
 
-  // Fetch processes for current department from API
   useEffect(() => {
     const fetchProcesses = async () => {
       if (currentDepartment?._id) {
-        const data = await handleGetProcessbyDepartmentId(currentDepartment._id);
+        const data = await handleGetProcessbyDepartmentId(
+          currentDepartment._id
+        );
         setProcesses(data);
         dispatch(setProcess(data));
       }
@@ -78,23 +129,46 @@ function DepartmentPage() {
     dispatch(setMainTableData(null));
   }, [currentDepartment, department]);
 
-  // Update selected process object whenever user picks a process
   useEffect(() => {
     dispatch(setMainTableData(null));
+    setIsMerged(false);
+    setOriginalMainTable(null);
     if (selectedProcess && processes.length > 0) {
       const found = processes.find((p) => p.process === selectedProcess);
-      dispatch(setMainTableData(found ? transformProcess(found) : null))
+      dispatch(setMainTableData(found ? transformProcess(found) : null));
     } else {
-      dispatch(setMainTableData(null))
+      dispatch(setMainTableData(null));
     }
   }, [selectedProcess, processes]);
 
-
   const handleAddDataSave = async (data) => {
     const processId = mainTableData.id;
-    console.log(data, processId);
-    const response = await handleAddData({items: data, id: processId});
+    const response = await handleAddData({ items: data, id: processId });
     dispatch(setMainTableData(transformProcess(response)));
+  };
+
+  // ✅ Toggle (Merge / Restore) handler
+  const handleSortMerge = () => {
+    if (!mainTableData) return;
+
+    if (!isMerged) {
+      // 🔹 Store original before merging
+      setOriginalMainTable(mainTableData);
+
+      // 🔹 Merge and update Redux
+      const merged = combineSimilarRows(mainTableData);
+      dispatch(setMainTableData(merged));
+      setIsMerged(true);
+
+      console.log("Merged Procurement Data:", merged);
+    } else {
+      // 🔹 Restore the original main table
+      if (originalMainTable) {
+        dispatch(setMainTableData(originalMainTable));
+        console.log("Restored Original Procurement Data:", originalMainTable);
+      }
+      setIsMerged(false);
+    }
   };
 
   if (loading || processLoading) {
@@ -103,7 +177,6 @@ function DepartmentPage() {
 
   return (
     <div className="AppRightContainer DepartmentPageContainer">
-      {/* Dropdown for processes */}
       {currentDepartment && (
         <div className="ProcessListContainer">
           <select
@@ -113,7 +186,11 @@ function DepartmentPage() {
           >
             <option value="">-- Select Process --</option>
             {currentDepartment.process.map((subProc, index) => (
-              <option key={index} value={subProc} className="ProcessOptionContainer">
+              <option
+                key={index}
+                value={subProc}
+                className="ProcessOptionContainer"
+              >
                 {subProc}
               </option>
             ))}
@@ -121,8 +198,7 @@ function DepartmentPage() {
         </div>
       )}
 
-      {/* Show the selected process name */}
-      {selectedProcess && 
+      {selectedProcess && (
         <div className="SelectedProcessContainer">
           <h1>{selectedProcess}</h1>
           <div className="AddDataContainer">
@@ -132,11 +208,18 @@ function DepartmentPage() {
             >
               Add Data
             </button>
+            {selectedProcess === "Procurement Register" && (
+              <button
+                className="AddDataButton IconButtonStyle"
+                onClick={handleSortMerge}
+              >
+                {isMerged ? "Undo Sort" : "Sort"}
+              </button>
+            )}
           </div>
         </div>
-      }
+      )}
 
-      {/* Render AddData modal */}
       {showAddData && (
         <AddData
           headers={mainTableData?.header || []}
@@ -147,15 +230,17 @@ function DepartmentPage() {
         />
       )}
 
-      {/* Render the FormPage with the matched process */}
-      {selectedProcess && 
+      {selectedProcess && (
         <FormPage
           key={selectedProcess}
           process={mainTableData}
           isView={selectedProcess === "Products"}
         />
-      }
-      {!selectedProcess && <DepartmentDashboard Content={currentDepartment?.name || ""} />}
+      )}
+
+      {!selectedProcess && (
+        <DepartmentDashboard Content={currentDepartment?.name || ""} />
+      )}
     </div>
   );
 }

@@ -45,7 +45,7 @@ function AdminTableView({ DetailsArray, TableContent }) {
             case 'users':
                 return (
                   <div className='FormPageContainer' style={{ overflowX: "auto", maxWidth: "100%" }}>
-                      <Table  size='sm' showColumnBorder stickyHeader>
+                      <Table  size='sm' showColumnBorder stickyHeader variant="striped">
                           <Thead className="TableHeader">
                               <Tr>
                                   { DetailsArray[0].map((item, idx) => (
@@ -88,7 +88,7 @@ function AdminTableView({ DetailsArray, TableContent }) {
                         {/* Render Table if process selected */}
                         {selectedProcess && (
                             <TableContainer mt={4} className='FormPageContainer'>
-                                <Table showColumnBorder stickyHeader size="sm">
+                                <Table showColumnBorder stickyHeader size="sm" variant="striped">
                                     <Thead className='TableHeader'>
                                         <Tr>
                                             {selectedProcess.headers.map((header) => (

@@ -174,7 +174,8 @@
       "value": [
         "Orange",
         "Red",
-        "Green"
+        "Green",
+        "Blue"
       ]
     },
     {
@@ -365,6 +366,6 @@
     "NEXT RENEVAL"
   ],
   "ShownArray": [
-    "ITEM CODE", "ITEM NAME", "GRADE", "QTY", "UNITS"
+    "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
   ]
 }

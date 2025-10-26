@@ -201,7 +201,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
 
   return (
     <div className="FormPageContainer" style={{ overflowX: "auto", maxWidth: "100%" }}>
-      <Table size="sm" showColumnBorder stickyHeader>
+      <Table size="sm" showColumnBorder stickyHeader variant="striped">
         <Thead className="TableHeader">
           <Tr>
             {process && process.header?.length > 0 ? (
@@ -243,7 +243,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                     return (
                       <Td key={cellIdx} className="RowsField">
                         <div className="FormPageContainer">
-                          <Table size="xs">
+                          <Table size="xs" variant="striped">
                             <Thead className="TableHeader">
                               <Tr>
                                 {detailingProducts?.headers?.map(
@@ -329,12 +329,13 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                         >
                           {DefaultSelectProcess.includes(cell.key) ? "View" : "Update"}
                         </Button>
-                      ) : ["Red", "Green", "Orange"].includes(cell.value) ? (
+                      ) : ["Red", "Green", "Orange", "Blue"].includes(cell.value) ? (
                         <Td className="RowsField ProtoStatusIndicationRow">
                           <div
                             className="ProtoStatusIndication"
                             style={{ backgroundColor: cell.value.toLowerCase() }}
                           ></div>
+                          {cell.value === "Blue" && <span>Planning</span>}
                           {cell.value === "Orange" && <span>In Progress</span>}
                           {cell.value === "Green" && <span>Completed</span>}
                           {cell.value === "Red" && <span>Pending</span>}
