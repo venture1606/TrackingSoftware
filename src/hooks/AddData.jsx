@@ -206,7 +206,6 @@ function AddData({
       return field;
     });
 
-    console.log(items);
     onSave && onSave(items); // parent handles API formatting
     onClose();
   };

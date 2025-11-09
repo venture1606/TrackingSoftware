@@ -321,13 +321,13 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                       {cell?.process === "multiSelect" ||
                       cell.value?.startsWith("processId -") ? (
                         <Button
-                          size="sm"
+                          sx={{ width: "55px", fontSize: "12px", height: "30px" }}
                           colorScheme="blue"
                           onClick={() =>
                             handleCellButtonClick(row, rowIdx, cellIdx, cell.key)
                           }
                         >
-                          {DefaultSelectProcess.includes(cell.key) ? "View" : "Update"}
+                          {DefaultSelectProcess.includes(cell.key) ? "View" : (cell.key !== "BREAK HOUR" ? "UPDATE" : "0")}
                         </Button>
                       ) : ["Red", "Green", "Orange", "Blue"].includes(cell.value) ? (
                         <Td className="RowsField ProtoStatusIndicationRow">
@@ -341,7 +341,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                           {cell.value === "Red" && <span>Pending</span>}
                         </Td>
                       ) : (
-                        cell.value
+                        <Td className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`}>{cell.value}</Td>
                       )}
                     </Td>
                   );

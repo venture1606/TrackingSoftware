@@ -256,8 +256,8 @@ function Process() {
             { key: "QL STATUS", value: ["OPEN", "ORDER"] },
             { key: "PSR STATUS", value: ["OPEN", "CLOSED"] },
             { key: "TRIAL STATUS", value: ["WAITING FOR ORDER", "ORDER CONFIRMED", "PRODUCT FAILED"] },
-            { key: "PR STATUS", value: ["PENDING", "INSPECTION", "PAYMENT CLOSED"] },
-            { key: "QC QUALITY INSPECTION", value: ["YES", "NO"] },
+            { key: "PR STATUS", value: ["PENDING", "CLOSED"] },
+            { key: "QC QUALITY INSPECTION", value: ["Move to Inspection", "Inspection Done"] },
             { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
             { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
             { key: "NPD STATUS", value: ["Not Feasible", "Waiting For Order", "Order Confirmed", "Under Process", "Supplied to Customer"] }

@@ -84,6 +84,7 @@
     padding: 1rem;
     overflow-y: auto;
     align-items: center;
+    text-align: center;
 }
 
 .TableHeaderContent {
@@ -106,9 +107,16 @@
 } */
 
 .RowsField{
-    white-space: nowrap;
-    align-items: center;
     text-align: center !important;
+    white-space: nowrap;
+}
+
+.Green{
+    color: #28a745;
+}
+
+.Red{
+    color: #dc3545;
 }
 
 .SelectedRowField{
