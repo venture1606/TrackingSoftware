@@ -46,7 +46,9 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const { DefaultTemplateForProtoProcess } = ItemsData;
   const dispatch = useDispatch();
 
-  const detailingProducts = useSelector((state) => state.department.detailingProducts); 
+  const detailingProducts = useSelector(
+    (state) => state.department.detailingProducts
+  );
   const process = useSelector((state) => state.department.process);
 
   const [nested, setNested] = useState(null);
@@ -61,7 +63,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const [protoFormIdx, setProtoFormIdx] = useState(null);
   const [formInitialData, setFormInitialData] = useState({});
   const [selectArray, setSelectArray] = useState([]);
-  const [bomProducts, setBomProducts] = useState(null);  
+  const [bomProducts, setBomProducts] = useState(null);
 
   // ------------------------
   // Helper: format process data
@@ -119,9 +121,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   };
 
   useEffect(() => {
-    if (
-      nested?.process === "Bill of Materials - BOM"
-    ) {
+    if (nested?.process === "Bill of Materials - BOM") {
       dispatch(setDetailingProducts(nested));
       handleBomProducts();
     }
@@ -143,11 +143,11 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     nested.header.map((col, idx) => ({
       ...oldRow[idx],
       value: data[col] || "",
-  }));
+    }));
 
   // handle add data
   const handleAddDataSave = async (newData) => {
-    console.log(nested)
+    console.log(nested);
     const response = await handleAddData({
       items: newData,
       id: nested.id,
@@ -356,8 +356,8 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             </div>
             <div>
               <img
-                src={ProductImage || row.find((i) => i.key === "IMAGE")?.value}
-                alt={row.find((i) => i.key === "TEST NAME")?.value}
+                src={row.find((i) => i.key === "IMAGE")?.value || ""}
+                alt={row.find((i) => i.key === "TEST NAME")?.value || "Image not found or please upload the image"}
                 className="ProductValidationReportImage"
               />
             </div>
@@ -391,7 +391,12 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   <Td className="RowsField ProtoStatusIndicationRow">
                     <div
                       className="ProtoStatusIndication"
-                      style={{ backgroundColor: (typeof cell.value === "string" && cell.value ? cell.value.toLowerCase() : "transparent" )}}
+                      style={{
+                        backgroundColor:
+                          typeof cell.value === "string" && cell.value
+                            ? cell.value.toLowerCase()
+                            : "transparent",
+                      }}
                     ></div>
                     {cell.value === "Orange" && <span>In Progress</span>}
                     {cell.value === "Green" && <span>Completed</span>}
@@ -530,7 +535,11 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           )}
         </div>
         {bomProducts ? (
-          <FormPage process={bomProducts} isView={isView} currentBomId={nested?.rowDataId}/>
+          <FormPage
+            process={bomProducts}
+            isView={isView}
+            currentBomId={nested?.rowDataId}
+          />
         ) : (
           <p>No BOM data found</p>
         )}
@@ -540,7 +549,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   const renderBreakHour = () => (
     <div className="BreakHourContainer">
-      {!isView && (
+      {false && (
         <div className="BreakHourAddDataContainer">
           <button
             className="AddDataButton"
@@ -561,46 +570,50 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
         />
       )}
 
-      <div className="BreakHourCards">
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className="BreakHourCard">
-            <div className="BreakHourCardHeader">
-              <h3>
-                {row.find((f) => f.key === "BREAK NAME")?.value ||
-                  `Break ${rowIdx + 1}`}
-              </h3>
-              {!isView && (
-                <div className="BreakHourActions">
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    onClick={() => handleEditClick(rowIdx)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
+      {rows.length > 0 ? (
+        <div className="BreakHourCards">
+          {rows.map((row, rowIdx) => (
+            <div key={rowIdx} className="BreakHourCard">
+              <div className="BreakHourCardHeader">
+                <h3>
+                  {row.find((f) => f.key === "BREAK NAME")?.value ||
+                    `Break ${rowIdx + 1}`}
+                </h3>
+                {!isView && (
+                  <div className="BreakHourActions">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={() => handleEditClick(rowIdx)}
+                    >
+                      Edit
+                    </Button>
+                    {/* <Button
                     size="sm"
                     colorScheme="red"
                     onClick={() => handleDeleteRow(rowIdx)}
                   >
                     Delete
-                  </Button>
-                </div>
-              )}
-            </div>
+                  </Button> */}
+                  </div>
+                )}
+              </div>
 
-            {/* Grid layout for fields */}
-            <div className="BreakHourCardContent">
-              {row.map((field, idx) => (
-                <div key={idx} className="BreakHourFieldCard">
-                  <strong>{field.key}</strong>
-                  <span>{field.value}</span>
-                </div>
-              ))}
+              {/* Grid layout for fields */}
+              <div className="BreakHourCardContent">
+                {row.map((field, idx) => (
+                  <div key={idx} className="BreakHourFieldCard">
+                    <strong>{field.key}</strong>
+                    <span>{field.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div>Please add the data in the settings tab</div>
+      )}
     </div>
   );
 
@@ -636,10 +649,18 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
               {/* Action Buttons */}
               {!isView && (
                 <div className="ImprovementActions">
-                  <Button size="sm" colorScheme="blue" onClick={() => handleEditClick(rowIndex)}>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={() => handleEditClick(rowIndex)}
+                  >
                     Edit
                   </Button>
-                  <Button size="sm" colorScheme="red" onClick={() => handleDeleteRow(rowIndex)}>
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => handleDeleteRow(rowIndex)}
+                  >
                     Delete
                   </Button>
                 </div>
@@ -720,8 +741,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                 <strong>HORIZONTAL DEPLOYMENT:</strong>
                 <div>{rowData["HORIZONTAL DEPLOYMENT"]}</div>
               </div>
-
-              
             </div>
           );
         })}
@@ -730,7 +749,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   };
 
   const renderDefault = () => (
-    <div className='Gap'>
+    <div className="Gap">
       <div className="AddDataContainer">
         {!isView && (
           <div className="AddDataContainer">
@@ -782,7 +801,8 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   renderTechnicalSpecification()}
                 {nested.process === "Bill of Materials - BOM" && renderBOM()}
                 {nested.process === "Break Hour" && renderBreakHour()}
-                {nested.process === "Continous Improvement Status" && renderContinousImrovementStatus()}
+                {nested.process === "Continous Improvement Status" &&
+                  renderContinousImrovementStatus()}
                 {nested.process !== "Product Validation Report" &&
                   nested.process !== "Bill of Materials - BOM" &&
                   nested.process !== "NPD Proto Model" &&

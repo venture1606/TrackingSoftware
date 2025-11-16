@@ -41,14 +41,19 @@ function AddData({
     DefaultHeaderAndProcessId,
     DefaultSelectProcess,
     ArrayValuesProcess,
-    DateFieldsArray, // ✅ added
-    ImageUploadArray, // ✅ added
+    DateFieldsArray,
+    ImageUploadArray,
+    noOthers,
+    TimeArrays,
+    NumberFields,
+    MandatoryFields,
   } = ItemsData;
 
   const initialRef = useRef(null);
 
   const [formData, setFormData] = useState([]);
   const [options, setOptions] = useState({});
+  const [errorFields, setErrorFields] = useState([]);
 
   // Build options from detailingProducts (CODE → rowId)
   useEffect(() => {
@@ -72,8 +77,6 @@ function AddData({
       }));
     }
   }, [detailingProducts, currentBomId]);
-
-  console.log(options);
 
   // Initialize formData whenever headers change
   useEffect(() => {
@@ -119,7 +122,7 @@ function AddData({
         // Dropdown select
         const selectMatch = SelectOptionsArray.find((item) => item.key === key);
         if (selectMatch) {
-          const hasRed = selectMatch.value.includes ("Red");
+          const hasRed = selectMatch.value.includes("Red");
           return {
             key,
             value: prevField?.value || (hasRed ? "Red" : ""),
@@ -143,6 +146,22 @@ function AddData({
             key,
             value: prevField?.value || null,
             process: "image",
+          };
+        }
+
+        if (TimeArrays.includes(key)) {
+          return {
+            key,
+            value: prevField?.value || "",
+            process: "time",
+          };
+        }
+
+        if (NumberFields.includes(key)) {
+          return {
+            key,
+            value: prevField?.value || "",
+            process: "number",
           };
         }
 
@@ -174,6 +193,10 @@ function AddData({
       newData[index].value = val;
     }
     setFormData(newData);
+    // Clear error for this field when user starts typing
+    if (errorFields.includes(newData[index].key)) {
+      setErrorFields(errorFields.filter((key) => key !== newData[index].key));
+    }
   };
 
   // Add new input for arrayInput
@@ -195,6 +218,30 @@ function AddData({
 
   // Save handler
   const handleSave = () => {
+    // ✅ Validate mandatory fields
+    const errors = [];
+    for (const field of formData) {
+      if (MandatoryFields.includes(field.key)) {
+        const isEmpty =
+          !field.value ||
+          (Array.isArray(field.value) && field.value.length === 0) ||
+          (Array.isArray(field.value) && field.value.every((v) => !v.trim())) ||
+          (typeof field.value === "string" && !field.value.trim());
+
+        if (isEmpty) {
+          errors.push(field.key);
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      setErrorFields(errors);
+      alert(`The following fields cannot be empty: ${errors.join(", ")}`);
+      return;
+    }
+
+    setErrorFields([]);
+
     // ✅ just send structured items
     const items = formData.map((field) => {
       if (field.process === "image") {
@@ -205,6 +252,8 @@ function AddData({
       }
       return field;
     });
+
+    console.log(items);
 
     onSave && onSave(items); // parent handles API formatting
     onClose();
@@ -242,6 +291,12 @@ function AddData({
                     value={field.value}
                     isReadOnly
                     placeholder="ProcessId"
+                    borderColor={
+                      errorFields.includes(field.key) ? "red.500" : undefined
+                    }
+                    borderWidth={
+                      errorFields.includes(field.key) ? "2px" : undefined
+                    }
                   />
                 ) : field.process === "multiSelect" ? (
                   <CheckboxGroup
@@ -250,7 +305,18 @@ function AddData({
                       handleValueChange(idx, selectedValues)
                     }
                   >
-                    <Stack direction="row" wrap="wrap">
+                    <Stack
+                      direction="row"
+                      wrap="wrap"
+                      borderColor={
+                        errorFields.includes(field.key) ? "red.500" : undefined
+                      }
+                      borderWidth={
+                        errorFields.includes(field.key) ? "2px" : undefined
+                      }
+                      borderRadius="md"
+                      p={errorFields.includes(field.key) ? 2 : 0}
+                    >
                       {(options[field.key] || []).map((opt, i) => (
                         <Checkbox key={i} value={opt.value}>
                           {opt.label}
@@ -267,6 +333,14 @@ function AddData({
                           placeholder="Enter value"
                           onChange={(e) =>
                             handleValueChange(idx, e.target.value, subIdx)
+                          }
+                          borderColor={
+                            errorFields.includes(field.key)
+                              ? "red.500"
+                              : undefined
+                          }
+                          borderWidth={
+                            errorFields.includes(field.key) ? "2px" : undefined
                           }
                         />
                         <Button
@@ -292,14 +366,13 @@ function AddData({
                   <Stack flex="1" spacing={2}>
                     <Select
                       placeholder={`Select ${field.key}`}
-                      value={field.value === "Others" ? "Others" : field.value}
+                      value={field.value === "others" ? "others" : field.value}
                       onChange={(e) => {
                         const val = e.target.value;
                         const newData = [...formData];
 
-                        if (val === "Others") {
-                          // Keep showing input for "Others"
-                          newData[idx].value = "Others";
+                        if (val === "others") {
+                          newData[idx].value = "others";
                           newData[idx].otherValue =
                             newData[idx].otherValue || "";
                         } else {
@@ -309,16 +382,28 @@ function AddData({
 
                         setFormData(newData);
                       }}
+                      borderColor={
+                        errorFields.includes(field.key) ? "red.500" : undefined
+                      }
+                      borderWidth={
+                        errorFields.includes(field.key) ? "2px" : undefined
+                      }
                     >
-                      {field.options.map((opt, i) => (
+                      {/* normal options */}
+                      {field.options.filter(opt => opt.toLowerCase() !== "others").map((opt, i) => (
                         <option key={i} value={opt}>
                           {opt}
                         </option>
                       ))}
+
+                      {/* ONLY add Others when key not in noOthers */}
+                      {!noOthers.includes(field.key) && (
+                        <option value="others">Others</option>
+                      )}
                     </Select>
 
                     {/* ✅ Input appears when "Others" is selected */}
-                    {field.value === "Others" && (
+                    {field.value === "others" && (
                       <Input
                         placeholder={`Enter other ${field.key}`}
                         value={field.otherValue || ""}
@@ -364,6 +449,12 @@ function AddData({
                     type="date"
                     value={field.value}
                     onChange={(e) => handleValueChange(idx, e.target.value)}
+                    borderColor={
+                      errorFields.includes(field.key) ? "red.500" : undefined
+                    }
+                    borderWidth={
+                      errorFields.includes(field.key) ? "2px" : undefined
+                    }
                   />
                 ) : field.process === "image" ? (
                   <Stack spacing={3}>
@@ -379,6 +470,12 @@ function AddData({
                           handleValueChange(idx, null);
                         }
                       }}
+                      borderColor={
+                        errorFields.includes(field.key) ? "red.500" : undefined
+                      }
+                      borderWidth={
+                        errorFields.includes(field.key) ? "2px" : undefined
+                      }
                     />
                     {field.value?.previewUrl && (
                       <Flex align="center" gap={2}>
@@ -403,12 +500,42 @@ function AddData({
                       </Flex>
                     )}
                   </Stack>
+                ) : field.process === "time" ? (
+                  <Input
+                    type="time"
+                    value={field.value}
+                    onChange={(e) => handleValueChange(idx, e.target.value)}
+                    borderColor={
+                      errorFields.includes(field.key) ? "red.500" : undefined
+                    }
+                    borderWidth={
+                      errorFields.includes(field.key) ? "2px" : undefined
+                    }
+                  />
+                ) : field.process === "number" ? (
+                  <Input
+                    type="number"
+                    value={field.value}
+                    onChange={(e) => handleValueChange(idx, e.target.value)}
+                    borderColor={
+                      errorFields.includes(field.key) ? "red.500" : undefined
+                    }
+                    borderWidth={
+                      errorFields.includes(field.key) ? "2px" : undefined
+                    }
+                  />
                 ) : (
                   <Input
                     ref={idx === 0 ? initialRef : null}
                     value={field.value}
                     placeholder="Value"
                     onChange={(e) => handleValueChange(idx, e.target.value)}
+                    borderColor={
+                      errorFields.includes(field.key) ? "red.500" : undefined
+                    }
+                    borderWidth={
+                      errorFields.includes(field.key) ? "2px" : undefined
+                    }
                   />
                 )}
               </Flex>

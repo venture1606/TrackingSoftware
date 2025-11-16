@@ -97,47 +97,47 @@
   "DefaultTemplateForProtoProcess": [
     {
       "key": "PRODUCT STUDY",
-      "value": "Red",
+      "value": "Pending",
       "process": "value"
     },
     {
       "key": "DRAWING DEVELOPMENT",
-      "value": "Red",
+      "value": "Pending",
       "process": "value"
     },
     {
       "key": "ASSEMBLY VERIFICATION",
-      "value": "Red",
+      "value": "Pending",
       "process": "value"
     },
     {
       "key": "ANALYSIS",
-      "value": "Red",
+      "value": "Pending",
       "process": "value"
     },
     {
       "key": "BOM",
-      "value": "Red",
+      "value": "Pending",
       "process": "value"
     },
     {
         "key": "PRODUCTION PLAN",
-        "value": "Red",
+        "value": "Pending",
         "process": "value"
     },
     {
         "key": "VALIDATION",
-        "value": "Red",
+        "value": "Pending",
         "process": "value"
     },
     {
         "key": "MASTER PIECE",
-        "value": "Red",
+        "value": "Pending",
         "process": "value"
     },
     {
         "key": "ADD TO PRODUCT LIST",
-        "value": "Red",
+        "value": "Pending",
         "process": "value"
     }
   ],
@@ -367,5 +367,37 @@
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
+  ],
+  "noOthers":[
+    "QL STATUS",
+    "GRADE",
+    "ITEM-NAME"
+  ],
+  "TimeArrays": [
+    "START TIME",
+    "END TIME"
+  ],
+  "NumberFields":[
+    "QTY",
+    "DELIVER QTY",
+    "PENDING QTY",
+    "LEAD TIME",
+    "CYCLE TIME",
+    "SETTING TIME"
+  ],
+  "MandatoryFields":[
+    "CYCLE TIME",
+    "START TIME",
+    "END TIME",
+    "QTY",
+    "UNITS",
+    "GRADE",
+    "ITEM-NAME"
+  ],
+  "noEditableFields":[
+    "ITEM-NAME",
+    "GRADE",
+    "QTY",
+    "UNITS"
   ]
 }

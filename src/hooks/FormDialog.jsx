@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect } from "react";
 import {
   Button,
   Modal,
@@ -15,12 +15,12 @@ import {
   Select,
   Flex,
   Checkbox,
-  CheckboxGroup
-} from "@chakra-ui/react"
-import { useSelector, useDispatch } from "react-redux"
+  CheckboxGroup,
+} from "@chakra-ui/react";
+import { useSelector, useDispatch } from "react-redux";
 
-import ItemsData from "../utils/ItemsData"
-import { updateSelectOptions } from "../redux/slices/auth"
+import ItemsData from "../utils/ItemsData";
+import { updateSelectOptions } from "../redux/slices/auth";
 
 function FormDialog({
   IndicationText,
@@ -33,19 +33,30 @@ function FormDialog({
   initialData = {},
   mode = "form",
 }) {
-
   const dispatch = useDispatch();
 
   const initialRef = useRef(null);
-  const detailingProducts = useSelector((state) => state.department.detailingProducts);
-  const SelectOptionsArray = useSelector((state) => state.auth.SelectOptionsArray) || ItemsData.SelectOptionsArray;
+  const detailingProducts = useSelector(
+    (state) => state.department.detailingProducts
+  );
+  const SelectOptionsArray =
+    useSelector((state) => state.auth.SelectOptionsArray) ||
+    ItemsData.SelectOptionsArray;
 
-  const { 
-    DefaultSelectProcess, ArrayValuesProcess, ImageUploadArray, DateFieldsArray
+  const {
+    DefaultSelectProcess,
+    ArrayValuesProcess,
+    ImageUploadArray,
+    DateFieldsArray,
+    noOthers,
+    TimeArrays,
+    NumberFields,
+    MandatoryFields,
+    noEditableFields,
   } = ItemsData;
 
-  const [formValues, setFormValues] = useState(initialData)
-  const [selectValues, setSelectValues] = useState({})
+  const [formValues, setFormValues] = useState(initialData);
+  const [selectValues, setSelectValues] = useState({});
   const [graphData, setGraphData] = useState(
     graphFormArray
       ? graphFormArray.map((g) => ({
@@ -53,56 +64,56 @@ function FormDialog({
           data: g.data || [""],
         }))
       : []
-  )
+  );
 
   // Reset on initialData change
   useEffect(() => {
-    setFormValues(initialData)
-  }, [initialData])
+    setFormValues(initialData);
+  }, [initialData]);
 
   useEffect(() => {
     if (SelectArray) {
-      const initialSelects = {}
-      SelectArray.forEach(field => {
+      const initialSelects = {};
+      SelectArray.forEach((field) => {
         if (initialData[field.key] !== undefined) {
-          initialSelects[field.key] = initialData[field.key]
+          initialSelects[field.key] = initialData[field.key];
         }
-      })
-      setSelectValues(initialSelects)
+      });
+      setSelectValues(initialSelects);
     }
-  }, [initialData, SelectArray])
+  }, [initialData, SelectArray]);
 
   const handleInputChange = (field, value, subIndex = null) => {
     setFormValues((prev) => {
       if (subIndex !== null && Array.isArray(prev[field])) {
-        const updated = [...prev[field]]
-        updated[subIndex] = value
-        return { ...prev, [field]: updated }
+        const updated = [...prev[field]];
+        updated[subIndex] = value;
+        return { ...prev, [field]: updated };
       }
-      return { ...prev, [field]: value }
-    })
-  }
+      return { ...prev, [field]: value };
+    });
+  };
 
   const handleSelectChange = (field, value) => {
-    setSelectValues((prev) => ({ ...prev, [field]: value }))
-  }
+    setSelectValues((prev) => ({ ...prev, [field]: value }));
+  };
 
   // Array helpers
   const handleAddArrayInput = (field) => {
     setFormValues((prev) => ({
       ...prev,
       [field]: [...(prev[field] || []), ""],
-    }))
-  }
+    }));
+  };
 
   const handleRemoveArrayInput = (field, subIndex) => {
     setFormValues((prev) => {
-      const updated = [...(prev[field] || [])]
-      updated.splice(subIndex, 1)
-      if (updated.length === 0) updated.push("")
-      return { ...prev, [field]: updated }
-    })
-  }
+      const updated = [...(prev[field] || [])];
+      updated.splice(subIndex, 1);
+      if (updated.length === 0) updated.push("");
+      return { ...prev, [field]: updated };
+    });
+  };
 
   const handleSave = () => {
     let data;
@@ -138,6 +149,14 @@ function FormDialog({
           process = "select";
         } else if (ImageUploadArray.includes(key)) {
           process = "image";
+        } else if (ArrayValuesProcess.includes(key)) {
+          process = "array";
+        } else if (DateFieldsArray.includes(key)) {
+          process = "date";
+        } else if (TimeArrays.includes(key)) {
+          process = "time";
+        } else if (NumberFields.includes(key)) {
+          process = "number";
         }
 
         // unwrap image file if needed
@@ -152,8 +171,6 @@ function FormDialog({
     handleSubmit(data);
     onClose();
   };
-
-
 
   return (
     <Modal
@@ -179,6 +196,7 @@ function FormDialog({
                 <FormControl key={index}>
                   <FormLabel>{field.label}</FormLabel>
                   <Select
+                    isDisabled={noEditableFields.includes(field.key)}
                     placeholder={`Select ${field.label}`}
                     value={selectValues[field.key] || ""}
                     onChange={(e) =>
@@ -208,6 +226,7 @@ function FormDialog({
                     {DefaultSelectProcess.includes(field.key) ? (
                       // ✅ Checkbox group
                       <CheckboxGroup
+                        isDisabled={noEditableFields.includes(field.key)}
                         value={formValues["DETAILING PRODUCT"] || []}
                         onChange={(selectedRowIds) =>
                           handleInputChange("DETAILING PRODUCT", selectedRowIds)
@@ -215,7 +234,9 @@ function FormDialog({
                       >
                         <Stack direction="row" wrap="wrap">
                           {detailingProducts?.data?.map((row) => {
-                            const subPartLabel = row.items.find((item) => item.key === "SUB PARTS")?.value;
+                            const subPartLabel = row.items.find(
+                              (item) => item.key === "SUB PARTS"
+                            )?.value;
                             return (
                               <Checkbox key={row._id} value={row._id}>
                                 {subPartLabel}
@@ -227,23 +248,34 @@ function FormDialog({
                     ) : ArrayValuesProcess.includes(field.key) ? (
                       // ✅ Array inputs
                       <Stack spacing={2}>
-                        {(Array.isArray(formValues[field.key]) ? formValues[field.key] : [""]).map((val, subIdx) => (
+                        {(Array.isArray(formValues[field.key])
+                          ? formValues[field.key]
+                          : [""]
+                        ).map((val, subIdx) => (
                           <Flex key={subIdx} gap={2} align="center">
                             <Input
+                              isDisabled={noEditableFields.includes(field.key)}
                               value={val}
                               placeholder={`Enter ${field.label}`}
                               onChange={(e) =>
-                                handleInputChange(field.key, e.target.value, subIdx)
+                                handleInputChange(
+                                  field.key,
+                                  e.target.value,
+                                  subIdx
+                                )
                               }
                             />
                             <Button
                               size="sm"
                               colorScheme="red"
-                              onClick={() => handleRemoveArrayInput(field.key, subIdx)}
+                              onClick={() =>
+                                handleRemoveArrayInput(field.key, subIdx)
+                              }
                             >
                               Remove
                             </Button>
-                            {subIdx === (formValues[field.key]?.length || 1) - 1 && (
+                            {subIdx ===
+                              (formValues[field.key]?.length || 1) - 1 && (
                               <Button
                                 size="sm"
                                 colorScheme="green"
@@ -258,9 +290,12 @@ function FormDialog({
                     ) : selectMatch ? (
                       <Stack spacing={2}>
                         <Select
+                          isDisabled={noEditableFields.includes(field.key)}
                           placeholder={`Select ${field.label}`}
                           value={
-                            formValues[field.key] === "Others" ? "Others" : formValues[field.key] || ""
+                            formValues[field.key] === "Others"
+                              ? "Others"
+                              : formValues[field.key] || ""
                           }
                           onChange={(e) => {
                             const val = e.target.value;
@@ -270,7 +305,8 @@ function FormDialog({
                               setFormValues((prev) => ({
                                 ...prev,
                                 [field.key]: "Others",
-                                [`${field.key}_other`]: prev[`${field.key}_other`] || "",
+                                [`${field.key}_other`]:
+                                  prev[`${field.key}_other`] || "",
                               }));
                             } else {
                               setFormValues((prev) => {
@@ -286,7 +322,11 @@ function FormDialog({
                             const currentValue = formValues[field.key];
 
                             // ✅ If editing & current value not in dropdown, add it temporarily
-                            if (currentValue && !options.includes(currentValue) && currentValue !== "Others") {
+                            if (
+                              currentValue &&
+                              !options.includes(currentValue) &&
+                              currentValue !== "Others"
+                            ) {
                               options.unshift(currentValue);
                             }
 
@@ -306,6 +346,7 @@ function FormDialog({
                         {/* ✅ Show input field when "Others" is selected */}
                         {formValues[field.key] === "Others" && (
                           <Input
+                            isDisabled={noEditableFields.includes(field.key)}
                             placeholder={`Enter other ${field.label}`}
                             value={formValues[`${field.key}_other`] || ""}
                             onChange={(e) => {
@@ -316,7 +357,8 @@ function FormDialog({
                               }));
                             }}
                             onBlur={() => {
-                              const customValue = formValues[`${field.key}_other`]?.trim();
+                              const customValue =
+                                formValues[`${field.key}_other`]?.trim();
                               if (customValue) {
                                 setFormValues((prev) => {
                                   const updated = {
@@ -328,10 +370,12 @@ function FormDialog({
                                 });
 
                                 // ✅ Optionally add new value to Redux SelectOptionsArray
-                                dispatch(updateSelectOptions({
-                                  key: field.key,
-                                  value: [customValue]
-                                }));
+                                dispatch(
+                                  updateSelectOptions({
+                                    key: field.key,
+                                    value: [customValue],
+                                  })
+                                );
                               }
                             }}
                           />
@@ -340,21 +384,28 @@ function FormDialog({
                     ) : DateFieldsArray.includes(field.key) ? (
                       // ✅ Date field
                       <Input
+                        isDisabled={noEditableFields.includes(field.key)}
                         type="date"
                         value={formValues[field.key] || ""}
-                        onChange={(e) => handleInputChange(field.key, e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(field.key, e.target.value)
+                        }
                       />
                     ) : ImageUploadArray.includes(field.key) ? (
                       // ✅ Image upload with thumbnail preview
                       <Stack spacing={3}>
                         <Input
+                          isDisabled={noEditableFields.includes(field.key)}
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
                             const file = e.target.files?.[0] || null;
                             if (file) {
                               const previewUrl = URL.createObjectURL(file);
-                              handleInputChange(field.key, { file, previewUrl });
+                              handleInputChange(field.key, {
+                                file,
+                                previewUrl,
+                              });
                             } else {
                               handleInputChange(field.key, null);
                             }
@@ -374,9 +425,30 @@ function FormDialog({
                           />
                         )}
                       </Stack>
+                    ) : TimeArrays.includes(field.key) ? (
+                      // ✅ Time field
+                      <Input
+                        isDisabled={noEditableFields.includes(field.key)}
+                        type="time"
+                        value={formValues[field.key] || ""}
+                        onChange={(e) =>
+                          handleInputChange(field.key, e.target.value)
+                        }
+                      />
+                    ) : NumberFields.includes(field.key) ? (
+                      // ✅ Number field
+                      <Input
+                        isDisabled={noEditableFields.includes(field.key)}
+                        type="number"
+                        value={formValues[field.key] || ""}
+                        onChange={(e) =>
+                          handleInputChange(field.key, e.target.value)
+                        }
+                      />
                     ) : (
                       // ✅ Default input
                       <Input
+                        isDisabled={noEditableFields.includes(field.key)}
                         ref={index === 0 ? initialRef : null}
                         placeholder={field.label}
                         value={formValues[field.key] || ""}
@@ -390,13 +462,14 @@ function FormDialog({
                           typeof formValues[field.key] === "string" &&
                           formValues[field.key].startsWith("processId -")
                         }
-                        onChange={(e) => handleInputChange(field.key, e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange(field.key, e.target.value)
+                        }
                       />
                     )}
                   </FormControl>
                 );
               })}
-
           </Stack>
         </ModalBody>
 
@@ -410,7 +483,7 @@ function FormDialog({
         </ModalFooter>
       </ModalContent>
     </Modal>
-  )
+  );
 }
 
-export default FormDialog
+export default FormDialog;

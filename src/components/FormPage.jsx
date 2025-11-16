@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Thead,
@@ -33,18 +33,32 @@ import ItemsData from "../utils/ItemsData.json";
 import { setDetailingProducts } from "../redux/slices/department";
 
 function FormPage({ process, isView = false, currentBomId = null }) {
-  const { loading, handleGetSingleProcess, handleUpdateData, handleDeleteData } = Process();
+  const {
+    loading,
+    handleGetSingleProcess,
+    handleUpdateData,
+    handleDeleteData,
+  } = Process();
 
-  const { ArrayValuesProcess, DefaultSelectProcess, ImageUploadArray, ShownArray } = ItemsData;
+  const {
+    ArrayValuesProcess,
+    DefaultSelectProcess,
+    ImageUploadArray,
+    ShownArray,
+  } = ItemsData;
 
   const dispatch = useDispatch();
-  const detailingProducts = useSelector((state) => state.department.detailingProducts);
+  const detailingProducts = useSelector(
+    (state) => state.department.detailingProducts
+  );
   const stateProcess = useSelector((state) => state.department.process);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
   const [imagePopupUrl, setImagePopupUrl] = useState(null);
   const [rowIds, setRowIds] = useState([]);
+
+  const tableContainerRef = useRef(null);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -53,6 +67,13 @@ function FormPage({ process, isView = false, currentBomId = null }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formRowIdx, setFormRowIdx] = useState(null);
   const [formInitialData, setFormInitialData] = useState({});
+
+  const colorCoordinates = [
+    { label: "In Progress", color: "#ffb176" },
+    { label: "Pending", color: "#ff4545" },
+    { label: "Completed", color: "#92ff89" },
+    { label: "Planning", color: "#89b8ff" },
+  ];
 
   useEffect(() => {
     if (process?.value && process?.header) {
@@ -87,7 +108,6 @@ function FormPage({ process, isView = false, currentBomId = null }) {
       fetchDetailingProducts();
     }
   }, [process, stateProcess, currentBomId]);
-
 
   const getRowData = (row) => {
     const obj = {};
@@ -167,18 +187,29 @@ function FormPage({ process, isView = false, currentBomId = null }) {
   const renderImagePopUp = () => {
     if (!imagePopupUrl) return null;
 
-    const isFileObject = typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
-    const imageSrc = isFileObject ? URL.createObjectURL(imagePopupUrl) : imagePopupUrl;
+    const isFileObject =
+      typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
+    const imageSrc = isFileObject
+      ? URL.createObjectURL(imagePopupUrl)
+      : imagePopupUrl;
 
     return (
-      <Modal isOpen={!!imagePopupUrl} onClose={() => setImagePopupUrl(null)} size="xl">
+      <Modal
+        isOpen={!!imagePopupUrl}
+        onClose={() => setImagePopupUrl(null)}
+        size="xl"
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Uploaded Image</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {imageSrc ? (
-              <img src={imageSrc} alt="Uploaded" style={{ width: "100%", borderRadius: "8px" }} />
+              <img
+                src={imageSrc}
+                alt="Uploaded"
+                style={{ width: "100%", borderRadius: "8px" }}
+              />
             ) : (
               "Please reload to see the image"
             )}
@@ -199,186 +230,283 @@ function FormPage({ process, isView = false, currentBomId = null }) {
     );
   };
 
+  const scrollLeft = () => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
+
   return (
-    <div className="FormPageContainer" style={{ overflowX: "auto", maxWidth: "100%" }}>
-      <Table size="sm" showColumnBorder stickyHeader variant="striped">
-        <Thead className="TableHeader">
-          <Tr>
-            {process && process.header?.length > 0 ? (
-              <>
-                {process.header.map((col, idx) => (
-                  <Th key={idx} className="TableHeaderContent">
-                    {col}
-                  </Th>
-                ))}
-                {!isView && <Th className="TableHeaderContent">Action</Th>}
-                {!isView && <Th className="TableHeaderContent">Delete</Th>}
-              </>
-            ) : (
-              <Th className="TableHeaderContent">No Process Selected</Th>
-            )}
-          </Tr>
-        </Thead>
+    <div style={{ position: "relative" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "10px",
+          marginBottom: "10px",
+        }}
+      >
+        <Button
+          // leftIcon={<ChevronLeftIcon />}
+          colorScheme="blue"
+          size="sm"
+          onClick={scrollLeft}
+        >
+          Left
+        </Button>
+        <Button
+          // rightIcon={<ChevronRightIcon />}
+          colorScheme="blue"
+          size="sm"
+          onClick={scrollRight}
+        >
+          Right
+        </Button>
+      </div>
+      <div
+        ref={tableContainerRef}
+        className="FormPageContainer"
+        style={{ overflowX: "auto", maxWidth: "100%" }}
+      >
+        <Table size="sm" showColumnBorder stickyHeader variant="striped">
+          <Thead className="TableHeader">
+            <Tr>
+              {process && process.header?.length > 0 ? (
+                <>
+                  {process.header.map((col, idx) => (
+                    <Th key={idx} className="TableHeaderContent">
+                      {col}
+                    </Th>
+                  ))}
+                  {!isView && <Th className="TableHeaderContent">Action</Th>}
+                  {!isView && <Th className="TableHeaderContent">Delete</Th>}
+                </>
+              ) : (
+                <Th className="TableHeaderContent">No Process Selected</Th>
+              )}
+            </Tr>
+          </Thead>
 
-        <Tbody className="TableBody">
-          {rows && rows.length > 0 ? (
-            rows.map((row, rowIdx) => (
-              <Tr key={rowIdx}>
-                {row.map((cell, cellIdx) => {
-                  // 🧩 Detailing Product Display Logic
-                  if (cell.key === "DETAILING PRODUCT" && Array.isArray(cell.value)) {
-                    // Gather all BOM rows first
-                    const bomRows = cell.value
-                      .map((bomId) => detailingProducts?.data?.find((d) => d._id === bomId))
-                      .filter(Boolean); // remove undefined rows
+          <Tbody className="TableBody">
+            {rows && rows.length > 0 ? (
+              rows.map((row, rowIdx) => (
+                <Tr key={rowIdx}>
+                  {row.map((cell, cellIdx) => {
+                    // 🧩 Detailing Product Display Logic
+                    if (
+                      cell.key === "DETAILING PRODUCT" &&
+                      Array.isArray(cell.value)
+                    ) {
+                      // Gather all BOM rows first
+                      const bomRows = cell.value
+                        .map((bomId) =>
+                          detailingProducts?.data?.find((d) => d._id === bomId)
+                        )
+                        .filter(Boolean); // remove undefined rows
 
-                    if (bomRows.length === 0) {
+                      if (bomRows.length === 0) {
+                        return (
+                          <Td key={cellIdx} className="RowsField">
+                            No data available
+                          </Td>
+                        );
+                      }
+
                       return (
                         <Td key={cellIdx} className="RowsField">
-                          No data available
+                          <div className="FormPageContainer">
+                            <Table size="xs" variant="striped">
+                              <Thead className="TableHeader">
+                                <Tr>
+                                  {detailingProducts?.headers?.map(
+                                    (header, hIdx) =>
+                                      ShownArray.includes(header) && (
+                                        <Th
+                                          key={hIdx}
+                                          className="TableHeaderContent"
+                                        >
+                                          {header}
+                                        </Th>
+                                      )
+                                  )}
+                                </Tr>
+                              </Thead>
+                              <Tbody className="TableBody">
+                                {bomRows.map((bomRow, idx) => (
+                                  <Tr key={idx} className="RowsField">
+                                    {detailingProducts?.headers?.map(
+                                      (header, hIdx) => {
+                                        if (!ShownArray.includes(header))
+                                          return null;
+                                        const item = bomRow.items.find(
+                                          (i) => i.key === header
+                                        );
+                                        return (
+                                          <Td
+                                            key={hIdx}
+                                            className="RowsField"
+                                            style={{ padding: "12px" }}
+                                          >
+                                            {item?.value || "-"}
+                                          </Td>
+                                        );
+                                      }
+                                    )}
+                                  </Tr>
+                                ))}
+                              </Tbody>
+                            </Table>
+                          </div>
+                        </Td>
+                      );
+                    }
+
+                    // ⚙️ Existing array display logic (keep intact)
+                    if (
+                      ArrayValuesProcess.includes(cell.key) &&
+                      Array.isArray(cell.value)
+                    ) {
+                      return (
+                        <Td key={cellIdx} className="RowsField">
+                          {cell.value.map((rev, revIdx) => (
+                            <span
+                              key={revIdx}
+                              style={{
+                                margin: "0 4px",
+                                border: "1px solid black",
+                                padding: "8px",
+                                backgroundColor:
+                                  revIdx === cell.value.length - 1
+                                    ? "green"
+                                    : "transparent",
+                                color:
+                                  revIdx === cell.value.length - 1
+                                    ? "white"
+                                    : "black",
+                              }}
+                            >
+                              {rev}
+                            </span>
+                          ))}
+                        </Td>
+                      );
+                    }
+
+                    // 🔹 Image Upload handling
+                    if (ImageUploadArray.includes(cell.key) && cell.value) {
+                      return (
+                        <Td key={cellIdx} className="RowsField">
+                          <Button
+                            size="sm"
+                            colorScheme="blue"
+                            onClick={() => setImagePopupUrl(cell.value)}
+                          >
+                            View
+                          </Button>
                         </Td>
                       );
                     }
 
                     return (
                       <Td key={cellIdx} className="RowsField">
-                        <div className="FormPageContainer">
-                          <Table size="xs" variant="striped">
-                            <Thead className="TableHeader">
-                              <Tr>
-                                {detailingProducts?.headers?.map(
-                                  (header, hIdx) =>
-                                    ShownArray.includes(header) && (
-                                      <Th key={hIdx} className="TableHeaderContent">
-                                        {header}
-                                      </Th>
-                                    )
-                                )}
-                              </Tr>
-                            </Thead>
-                            <Tbody className="TableBody">
-                              {bomRows.map((bomRow, idx) => (
-                                <Tr key={idx} className="RowsField">
-                                  {detailingProducts?.headers?.map((header, hIdx) => {
-                                    if (!ShownArray.includes(header)) return null;
-                                    const item = bomRow.items.find((i) => i.key === header);
-                                    return (
-                                      <Td key={hIdx} className="RowsField" style={{padding: "12px"}}>
-                                        {item?.value || "-"}
-                                      </Td>
-                                    );
-                                  })}
-                                </Tr>
-                              ))}
-                            </Tbody>
-                          </Table>
-                        </div>
-                      </Td>
-                    );
-                  }
-
-
-                  // ⚙️ Existing array display logic (keep intact)
-                  if (ArrayValuesProcess.includes(cell.key) && Array.isArray(cell.value)) {
-                    return (
-                      <Td key={cellIdx} className="RowsField">
-                        {cell.value.map((rev, revIdx) => (
-                          <span
-                            key={revIdx}
-                            style={{
-                              margin: "0 4px",
-                              border: "1px solid black",
-                              padding: "8px",
-                              backgroundColor:
-                                revIdx === cell.value.length - 1 ? "green" : "transparent",
-                              color: revIdx === cell.value.length - 1 ? "white" : "black",
+                        {cell?.process === "multiSelect" ||
+                        cell.value?.startsWith("processId -") ? (
+                          <Button
+                            sx={{
+                              width: "55px",
+                              fontSize: "12px",
+                              height: "30px",
                             }}
+                            colorScheme="blue"
+                            onClick={() =>
+                              handleCellButtonClick(
+                                row,
+                                rowIdx,
+                                cellIdx,
+                                cell.key
+                              )
+                            }
                           >
-                            {rev}
-                          </span>
-                        ))}
+                            {DefaultSelectProcess.includes(cell.key)
+                              ? "View"
+                              : cell.key !== "BREAK HOUR"
+                              ? "UPDATE"
+                              : "0"}
+                          </Button>
+                        ) : [
+                            "Planning",
+                            "In Progress",
+                            "Completed",
+                            "Pending",
+                          ].includes(cell.value) ? (
+                          <Td className="RowsField ProtoStatusIndicationRow">
+                            <div
+                              className="ProtoStatusIndication"
+                              style={{
+                                backgroundColor:
+                                  colorCoordinates.find(
+                                    (c) => c.label === cell.value
+                                  )?.color || "gray",
+                              }}
+                            ></div>
+                            <span>{cell.value}</span>
+                          </Td>
+                        ) : (
+                          <Td
+                            className={`RowsField ${
+                              cell.key === "IN"
+                                ? "Green"
+                                : cell.key === "OUT"
+                                ? "Red"
+                                : ""
+                            }`}
+                          >
+                            {cell.value}
+                          </Td>
+                        )}
                       </Td>
                     );
-                  }
+                  })}
 
-                  // 🔹 Image Upload handling
-                  if (ImageUploadArray.includes(cell.key) && cell.value) {
-                    return (
-                      <Td key={cellIdx} className="RowsField">
-                        <Button
-                          size="sm"
-                          colorScheme="blue"
-                          onClick={() => setImagePopupUrl(cell.value)}
-                        >
-                          View
-                        </Button>
-                      </Td>
-                    );
-                  }
-
-                  return (
-                    <Td key={cellIdx} className="RowsField">
-                      {cell?.process === "multiSelect" ||
-                      cell.value?.startsWith("processId -") ? (
-                        <Button
-                          sx={{ width: "55px", fontSize: "12px", height: "30px" }}
-                          colorScheme="blue"
-                          onClick={() =>
-                            handleCellButtonClick(row, rowIdx, cellIdx, cell.key)
-                          }
-                        >
-                          {DefaultSelectProcess.includes(cell.key) ? "View" : (cell.key !== "BREAK HOUR" ? "UPDATE" : "0")}
-                        </Button>
-                      ) : ["Red", "Green", "Orange", "Blue"].includes(cell.value) ? (
-                        <Td className="RowsField ProtoStatusIndicationRow">
-                          <div
-                            className="ProtoStatusIndication"
-                            style={{ backgroundColor: cell.value.toLowerCase() }}
-                          ></div>
-                          {cell.value === "Blue" && <span>Planning</span>}
-                          {cell.value === "Orange" && <span>In Progress</span>}
-                          {cell.value === "Green" && <span>Completed</span>}
-                          {cell.value === "Red" && <span>Pending</span>}
-                        </Td>
-                      ) : (
-                        <Td className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`}>{cell.value}</Td>
-                      )}
+                  {!isView && (
+                    <Td className="RowsField">
+                      <Button
+                        size="sm"
+                        className="IconButtonStyle"
+                        onClick={() => handleEditClick(rowIdx)}
+                      >
+                        Edit
+                      </Button>
                     </Td>
-                  );
-                })}
-
-                {!isView && (
-                  <Td className="RowsField">
-                    <Button
-                      size="sm"
-                      className="IconButtonStyle"
-                      onClick={() => handleEditClick(rowIdx)}
-                    >
-                      Edit
-                    </Button>
-                  </Td>
-                )}
-                {!isView && (
-                  <Td className="RowsField">
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      className="IconButtonStyle"
-                      onClick={() => handleDeleteRow(rowIdx)}
-                    >
-                      Delete
-                    </Button>
-                  </Td>
-                )}
+                  )}
+                  {!isView && (
+                    <Td className="RowsField">
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        className="IconButtonStyle"
+                        onClick={() => handleDeleteRow(rowIdx)}
+                      >
+                        Delete
+                      </Button>
+                    </Td>
+                  )}
+                </Tr>
+              ))
+            ) : (
+              <Tr>
+                <Td colSpan={(process?.header?.length || 1) + 2}>No Data</Td>
               </Tr>
-            ))
-          ) : (
-            <Tr>
-              <Td colSpan={(process?.header?.length || 1) + 2}>No Data</Td>
-            </Tr>
-          )}
-        </Tbody>
-      </Table>
+            )}
+          </Tbody>
+        </Table>
+      </div>
 
       <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
 
