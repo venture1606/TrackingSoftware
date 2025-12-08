@@ -416,14 +416,23 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                     return (
                       <Td key={cellIdx} className="RowsField">
                         {cell?.process === "multiSelect" ||
-                        cell.value?.startsWith("processId -") ? (
+                        (typeof cell.value === "string" &&
+                          cell.value.startsWith("processId -")) ? (
                           <Button
                             sx={{
                               width: "55px",
                               fontSize: "12px",
                               height: "30px",
                             }}
-                            colorScheme="blue"
+                            colorScheme={`${
+                              cell.key === "PROTO"
+                                ? `${
+                                    cell.process !== "value"
+                                      ? `${cell.process}`
+                                      : "red"
+                                  }`
+                                : "blue"
+                            }`}
                             onClick={() =>
                               handleCellButtonClick(
                                 row,
@@ -435,9 +444,11 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                           >
                             {DefaultSelectProcess.includes(cell.key)
                               ? "View"
-                              : cell.key !== "BREAK HOUR"
-                              ? "UPDATE"
-                              : "0"}
+                              : cell.key === "BREAK HOUR"
+                              ? cell.process
+                                ? cell.process
+                                : "0"
+                              : "UPDATE"}
                           </Button>
                         ) : [
                             "Planning",

@@ -383,7 +383,9 @@
     "PENDING QTY",
     "LEAD TIME",
     "CYCLE TIME",
-    "SETTING TIME"
+    "SETTING TIME",
+    "ACTUAL",
+    "REJECT"
   ],
   "MandatoryFields":[
     "CYCLE TIME",

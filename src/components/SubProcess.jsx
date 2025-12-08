@@ -6,6 +6,7 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
+  ModalFooter,
   Table,
   Thead,
   Tbody,
@@ -43,7 +44,8 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     handleGetSingleProcess,
     loading: processLoading,
   } = Process();
-  const { DefaultTemplateForProtoProcess } = ItemsData;
+  const { DefaultTemplateForProtoProcess, ImageUploadArray } = ItemsData;
+  const [imagePopupUrl, setImagePopupUrl] = useState(null);
   const dispatch = useDispatch();
 
   const detailingProducts = useSelector(
@@ -64,6 +66,13 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const [formInitialData, setFormInitialData] = useState({});
   const [selectArray, setSelectArray] = useState([]);
   const [bomProducts, setBomProducts] = useState(null);
+
+  const colorCoordinates = [
+    { label: "In Progress", color: "#ffb176" },
+    { label: "Pending", color: "#ff4545" },
+    { label: "Completed", color: "#92ff89" },
+    { label: "Planning", color: "#89b8ff" },
+  ];
 
   // ------------------------
   // Helper: format process data
@@ -89,6 +98,52 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       rowIds: filteredRows.map((row) => row._id),
       rowDataId,
     };
+  };
+
+  const renderImagePopUp = () => {
+    if (!imagePopupUrl) return null;
+
+    const isFileObject =
+      typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
+    const imageSrc = isFileObject
+      ? URL.createObjectURL(imagePopupUrl)
+      : imagePopupUrl;
+
+    return (
+      <Modal
+        isOpen={!!imagePopupUrl}
+        onClose={() => setImagePopupUrl(null)}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Uploaded Image</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt="Uploaded"
+                style={{ width: "100%", borderRadius: "8px" }}
+              />
+            ) : (
+              "Please reload to see the image"
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              onClick={() => {
+                if (isFileObject) URL.revokeObjectURL(imageSrc);
+                setImagePopupUrl(null);
+              }}
+            >
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
   };
 
   // load nested process
@@ -225,7 +280,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       {
         key: "value",
         label: `${nested.header[colIdx]} Status`,
-        options: ["Orange", "Red", "Green"],
+        options: ["Completed", "In Progress", "Pending"],
       },
     ]);
     setIsFormOpen(true);
@@ -357,7 +412,10 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             <div>
               <img
                 src={row.find((i) => i.key === "IMAGE")?.value || ""}
-                alt={row.find((i) => i.key === "TEST NAME")?.value || "Image not found or please upload the image"}
+                alt={
+                  row.find((i) => i.key === "TEST NAME")?.value ||
+                  "Image not found or please upload the image"
+                }
                 className="ProductValidationReportImage"
               />
             </div>
@@ -388,20 +446,19 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                 <Tr key={`${rowIdx}-${colIdx}`}>
                   <Td className="RowsField">{colIdx + 1}</Td>
                   <Td className="RowsField">{nested.header[colIdx]}</Td>
+                  {["Planning", "In Progress", "Completed", "Pending",
+                  ].includes(cell.value) && 
                   <Td className="RowsField ProtoStatusIndicationRow">
                     <div
                       className="ProtoStatusIndication"
                       style={{
                         backgroundColor:
-                          typeof cell.value === "string" && cell.value
-                            ? cell.value.toLowerCase()
-                            : "transparent",
+                          colorCoordinates.find((c) => c.label === cell.value)
+                            ?.color || "gray",
                       }}
                     ></div>
-                    {cell.value === "Orange" && <span>In Progress</span>}
-                    {cell.value === "Green" && <span>Completed</span>}
-                    {cell.value === "Red" && <span>Pending</span>}
-                  </Td>
+                    <span>{cell.value}</span>
+                  </Td>}
                   {!isView && (
                     <Td className="RowsField">
                       <Button
@@ -470,11 +527,25 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   Edit
                 </Button>
               )}
-              {row.map((field) => (
-                <div key={field.key}>
-                  <strong>{field.key}:</strong>&nbsp;&nbsp;{field.value}
-                </div>
-              ))}
+              {row.map((field) =>
+                ImageUploadArray.includes(field.key) ? (
+                  <div key={field.key}>
+                    <strong>{field.key}:</strong>&nbsp;&nbsp;
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={() => setImagePopupUrl(field.value)}
+                    >
+                      View
+                    </Button>
+                  </div>
+                ) : (
+                  <div key={field.key}>
+                    <strong>{field.key}:</strong>&nbsp;&nbsp;{field.value}
+                  </div>
+                )
+              )}
+              {renderImagePopUp()}
             </div>
           ))}
         </div>
@@ -549,7 +620,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   const renderBreakHour = () => (
     <div className="BreakHourContainer">
-      {false && (
+      {!(rows.length > 0) && (
         <div className="BreakHourAddDataContainer">
           <button
             className="AddDataButton"
@@ -570,50 +641,50 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
         />
       )}
 
-      {rows.length > 0 ? (
-        <div className="BreakHourCards">
-          {rows.map((row, rowIdx) => (
-            <div key={rowIdx} className="BreakHourCard">
-              <div className="BreakHourCardHeader">
-                <h3>
-                  {row.find((f) => f.key === "BREAK NAME")?.value ||
-                    `Break ${rowIdx + 1}`}
-                </h3>
-                {!isView && (
-                  <div className="BreakHourActions">
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={() => handleEditClick(rowIdx)}
-                    >
-                      Edit
-                    </Button>
-                    {/* <Button
+      {/* {rows.length > 0 ? ( */}
+      <div className="BreakHourCards">
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} className="BreakHourCard">
+            <div className="BreakHourCardHeader">
+              <h3>
+                {row.find((f) => f.key === "BREAK NAME")?.value ||
+                  `Break ${rowIdx + 1}`}
+              </h3>
+              {!isView && (
+                <div className="BreakHourActions">
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={() => handleEditClick(rowIdx)}
+                  >
+                    Edit
+                  </Button>
+                  {/* <Button
                     size="sm"
                     colorScheme="red"
                     onClick={() => handleDeleteRow(rowIdx)}
                   >
                     Delete
                   </Button> */}
-                  </div>
-                )}
-              </div>
-
-              {/* Grid layout for fields */}
-              <div className="BreakHourCardContent">
-                {row.map((field, idx) => (
-                  <div key={idx} className="BreakHourFieldCard">
-                    <strong>{field.key}</strong>
-                    <span>{field.value}</span>
-                  </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      ) : (
+
+            {/* Grid layout for fields */}
+            <div className="BreakHourCardContent">
+              {row.map((field, idx) => (
+                <div key={idx} className="BreakHourFieldCard">
+                  <strong>{field.key}</strong>
+                  <span>{field.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* ) : (
         <div>Please add the data in the settings tab</div>
-      )}
+      )} */}
     </div>
   );
 
