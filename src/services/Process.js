@@ -3,8 +3,13 @@ import axios from 'axios'
 import { useSelector, useDispatch } from 'react-redux'
 
 import { setMessage } from '../redux/slices/common';
-import { setAllProcesses } from '../redux/slices/department';
-import { setSelectOptionsArray } from '../redux/slices/auth';
+import { 
+    setAllProcesses, 
+    setSelectOptionsArray,
+    updateProcessInStore,  // New
+    setDetailingProducts   // For refreshing active view
+} from '../redux/slices/department';
+import { setSelectOptionsArray as setAuthSelectOptions } from '../redux/slices/auth';
 
 function Process() {
 
@@ -127,6 +132,11 @@ function Process() {
             });
         }
 
+        // ✅ Optimistic Redux Update
+        if (response.data.process) {
+            dispatch(updateProcessInStore(response.data.process));
+        }
+
         return response.data.process;
     } catch (error) {
         console.error("Error adding data:", error);
@@ -181,6 +191,11 @@ function Process() {
         });
         }
 
+        // ✅ Optimistic Redux Update
+        if (response.data.data) {
+             dispatch(updateProcessInStore(response.data.data));
+        }
+
         return response.data.data;
     } catch (error) {
         console.error("Error updating data:", error);
@@ -206,6 +221,11 @@ function Process() {
                 }
             });
             
+            // For delete, we might need to re-fetch to get clean state OR manually filter Redux
+            // Since we don't have the full process returned here typically, 
+            // the 'updateProcessInStore' might be hard to cleaner call without fetching.
+            // But we can rely on handleRefreshData if the user calls it.
+
             dispatch(setMessage({
                 status: 'success',
                 description: 'Data deleted successfully',
@@ -223,6 +243,26 @@ function Process() {
             setLoading(false);
         }
     }
+
+    // ✅ New: Robust Refresh Function
+    const handleRefreshData = async (id) => {
+        setLoading(true);
+        try {
+             // 1. Fetch fresh data
+             const data = await handleGetSingleProcess(id);
+             
+             // 2. Update Redux List Cache
+             dispatch(updateProcessInStore(data));
+             
+             // 3. Update Active View (if applicable)
+             // We can return data so caller updates local state
+             return data;
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSearchSelectOptions = async () => {
         const response = await axios.get(`${URL}/search`, {
@@ -284,7 +324,7 @@ function Process() {
             }
         });
 
-        dispatch(setSelectOptionsArray(selectOptionsArray));
+        dispatch(setAuthSelectOptions(selectOptionsArray));
     };
 
   return {
@@ -295,7 +335,8 @@ function Process() {
     handleAddData,
     handleUpdateData,
     handleDeleteData,
-    handleSearchSelectOptions
+    handleSearchSelectOptions,
+    handleRefreshData
   } 
 }
 

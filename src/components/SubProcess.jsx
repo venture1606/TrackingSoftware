@@ -42,6 +42,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     handleUpdateData,
     handleDeleteData,
     handleGetSingleProcess,
+    handleRefreshData,
     loading: processLoading,
   } = Process();
   const { DefaultTemplateForProtoProcess, ImageUploadArray } = ItemsData;
@@ -181,6 +182,33 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       handleBomProducts();
     }
   }, [nested]);
+
+  // Refresh data function for child FormPage
+  const refreshNestedData = async () => {
+    if (nested && nested.id) {
+      // Re-fetch nested process using robust refresh
+      const response = await handleRefreshData(nested.id);
+      if (response) {
+        const formatted = formatProcessData(response, data.rowDataId);
+        setNested(formatted);
+        setRows(formatted.value);
+        setRowIds(formatted.rowIds);
+
+        if (formatted?.process === "Bill of Materials - BOM") {
+          dispatch(setDetailingProducts(formatted));
+        }
+      }
+    }
+    // Also refresh BOM products if they exist
+    if (bomProducts && bomProducts.id) {
+      // Since handleRefreshData updates store, calling it here updates store cache too
+      const response = await handleRefreshData(bomProducts.id);
+      if (response) {
+        const formatted = formatProcessData(response, data.rowDataId);
+        setBomProducts(formatted);
+      }
+    }
+  };
 
   if (!nested) return null;
 
@@ -449,18 +477,18 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   {["Planning", "In Progress", "Completed", "Pending"].includes(
                     cell.value
                   ) && (
-                    <Td className="RowsField ProtoStatusIndicationRow">
-                      <div
-                        className="ProtoStatusIndication"
-                        style={{
-                          backgroundColor:
-                            colorCoordinates.find((c) => c.label === cell.value)
-                              ?.color || "gray",
-                        }}
-                      ></div>
-                      <span>{cell.value}</span>
-                    </Td>
-                  )}
+                      <Td className="RowsField ProtoStatusIndicationRow">
+                        <div
+                          className="ProtoStatusIndication"
+                          style={{
+                            backgroundColor:
+                              colorCoordinates.find((c) => c.label === cell.value)
+                                ?.color || "gray",
+                          }}
+                        ></div>
+                        <span>{cell.value}</span>
+                      </Td>
+                    )}
                   {!isView && (
                     <Td className="RowsField">
                       <Button
@@ -588,7 +616,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             />
           )}
         </div>
-        <FormPage process={nested} isView={isView} />
+        <FormPage process={nested} isView={isView} onDataUpdate={refreshNestedData} />
       </div>
 
       <div className="Gap">
@@ -620,6 +648,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             process={bomProducts}
             isView={isView}
             currentBomId={nested?.rowDataId}
+            onDataUpdate={refreshNestedData}
           />
         ) : (
           <p>No BOM data found</p>
@@ -904,9 +933,9 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
             selectArray.length > 0
               ? [] // don’t pass formArray if selectArray is being used
               : nested.header.map((col) => ({
-                  label: col,
-                  key: col,
-                }))
+                label: col,
+                key: col,
+              }))
           }
           initialData={formInitialData}
           handleSubmit={handleFormSubmit}
