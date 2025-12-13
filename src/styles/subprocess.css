@@ -85,6 +85,12 @@
     border-radius: 8px;
 }
 
+.TechnicalSpecificationHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .renderBOMContainer{
     display: flex;
     flex-direction: column;

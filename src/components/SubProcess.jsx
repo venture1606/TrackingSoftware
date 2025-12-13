@@ -446,19 +446,21 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                 <Tr key={`${rowIdx}-${colIdx}`}>
                   <Td className="RowsField">{colIdx + 1}</Td>
                   <Td className="RowsField">{nested.header[colIdx]}</Td>
-                  {["Planning", "In Progress", "Completed", "Pending",
-                  ].includes(cell.value) && 
-                  <Td className="RowsField ProtoStatusIndicationRow">
-                    <div
-                      className="ProtoStatusIndication"
-                      style={{
-                        backgroundColor:
-                          colorCoordinates.find((c) => c.label === cell.value)
-                            ?.color || "gray",
-                      }}
-                    ></div>
-                    <span>{cell.value}</span>
-                  </Td>}
+                  {["Planning", "In Progress", "Completed", "Pending"].includes(
+                    cell.value
+                  ) && (
+                    <Td className="RowsField ProtoStatusIndicationRow">
+                      <div
+                        className="ProtoStatusIndication"
+                        style={{
+                          backgroundColor:
+                            colorCoordinates.find((c) => c.label === cell.value)
+                              ?.color || "gray",
+                        }}
+                      ></div>
+                      <span>{cell.value}</span>
+                    </Td>
+                  )}
                   {!isView && (
                     <Td className="RowsField">
                       <Button
@@ -520,12 +522,16 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           {nested.value.map((row, rowIdx) => (
             <div key={rowIdx} className="TechnicalSpecificationCard">
               {!isView && (
-                <Button
-                  className="EditButton"
-                  onClick={() => handleEditClick(rowIdx)}
-                >
-                  Edit
-                </Button>
+                <div className="TechnicalSpecificationHeader">
+                  <div></div>
+                  <div>{row.map(field => (field.key === "REVISION NO" ? field.value : null))}</div>
+                  <Button
+                    className="EditButton"
+                    onClick={() => handleEditClick(rowIdx)}
+                  >
+                    Edit
+                  </Button>
+                </div>
               )}
               {row.map((field) =>
                 ImageUploadArray.includes(field.key) ? (
@@ -541,7 +547,11 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   </div>
                 ) : (
                   <div key={field.key}>
-                    <strong>{field.key}:</strong>&nbsp;&nbsp;{field.value}
+                    {field.key !== "REVISION NO" && (
+                      <>
+                        <strong>{field.key}:</strong>&nbsp;&nbsp;{field.value}
+                      </>
+                    )}
                   </div>
                 )
               )}

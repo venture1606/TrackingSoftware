@@ -139,13 +139,19 @@
         "key": "ADD TO PRODUCT LIST",
         "value": "Pending",
         "process": "value"
+    },
+    {
+        "key": "ITEM LIST",
+        "value": "Pending",
+        "process": "value"
     }
   ],
   "DefaultSelectProcess": [
     "DETAILING PRODUCT"
   ],
   "ArrayValuesProcess": [
-    "REVISION"
+    "REVISION",
+    "PART REV NO"
   ],
   "SelectOptionsArray": [
     {
