@@ -92,6 +92,10 @@
     {
       "tableHeader": "INWARD",
       "processId": "PR/R/003A"
+    },
+    {
+      "tableHeader": "DOCKET",
+      "processId": "MS/R/006A"
     }
   ],
   "DefaultTemplateForProtoProcess": [
@@ -151,7 +155,8 @@
   ],
   "ArrayValuesProcess": [
     "REVISION",
-    "PART REV NO"
+    "PART REV NO",
+    "REV NO"
   ],
   "SelectOptionsArray": [
     {
@@ -357,7 +362,8 @@
     "ACTION REPORT",
     "NPD FORM",
     "EVALUATE",
-    "IMAGE"
+    "IMAGE",
+    "SERVICE REPORT"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
@@ -369,7 +375,8 @@
     "DELIVERY DATE",
     "ISSUE DATE",
     "EXPIRY DATE",
-    "NEXT RENEVAL"
+    "NEXT RENEVAL",
+    "UPDATED DATE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
@@ -403,9 +410,6 @@
     "ITEM-NAME"
   ],
   "noEditableFields":[
-    "ITEM-NAME",
-    "GRADE",
-    "QTY",
-    "UNITS"
+    
   ]
 }
