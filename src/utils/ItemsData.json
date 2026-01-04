@@ -149,6 +149,12 @@
   "DefaultSelectProcess": [
     "DETAILING PRODUCT"
   ],
+  "ColorProcess": [
+    "PROTO",
+    "VALIDATION",
+    "MASTER",
+    "SETTING"
+  ],
   "ArrayValuesProcess": [
     "REVISION",
     "PART REV NO"
@@ -369,7 +375,8 @@
     "DELIVERY DATE",
     "ISSUE DATE",
     "EXPIRY DATE",
-    "NEXT RENEVAL"
+    "NEXT RENEVAL",
+    "UPDATED DATE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"

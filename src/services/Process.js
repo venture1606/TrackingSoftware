@@ -8,7 +8,7 @@ import { setSelectOptionsArray } from "../redux/slices/auth";
 
 function Process() {
   // const URL = "https://adl-server.onrender.com/api/v1/process";
-  const URL = 'http://localhost:3008/api/v1/process';
+  const URL = "http://localhost:3008/api/v1/process";
 
   const allProcesses = useSelector((state) => state.department.allProcesses);
 
@@ -283,14 +283,17 @@ function Process() {
       },
       { key: "CALIBRATION", value: ["DONE", "DUE"] },
       { key: "INSTRUMENTS-STATUS", value: ["Using", "Not Using"] },
-      { key: "INSPECTION-STATUS", value: ["Okay", "Not Okay"] },
+      { key: "INSPECTION-STATUS", value: ["Pending", "Done"] },
       { key: "DIMENSION", value: ["Okay", "Not Okay"] },
       { key: "DEFECT FOUND", value: ["Yes", "No"] },
       { key: "SHORT QUANITY", value: ["Yes", "No"] },
       { key: "ITEM CHANGED", value: ["Yes", "No"] },
       { key: "REPORT RECEIVED", value: ["Yes", "No"] },
       { key: "CCR STATUS", value: ["OPEN", "CLOSED"] },
-      { key: "STATUS OF SETTINGS", value: ["No", "Under Process", "Completed"] },
+      {
+        key: "STATUS OF SETTINGS",
+        value: ["No", "Under Process", "Completed"],
+      },
       {
         key: "QL STATUS",
         value: ["WAITING FOR QUOTE", "WAITING FOR ORDER", "ORDER"],

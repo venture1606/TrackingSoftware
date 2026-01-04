@@ -187,18 +187,24 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   // convert row array to object keyed by header
   const getRowData = (row) => {
     const obj = {};
-    nested.header.forEach((col, idx) => {
-      obj[col] = row[idx]?.value || "";
+    nested.header.forEach((col) => {
+      const cell = row.find((item) => item.key === col);
+      obj[col] = cell ? cell.value : "";
     });
     return obj;
   };
 
   // convert back to row array
-  const objectToRow = (data, oldRow) =>
-    nested.header.map((col, idx) => ({
+  const objectToRow = (data, oldRow) => {
+    const dataMap = Array.isArray(data)
+      ? data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {})
+      : data;
+
+    return nested.header.map((col, idx) => ({
       ...oldRow[idx],
-      value: data[col] || "",
+      value: dataMap[col] !== undefined ? dataMap[col] : "",
     }));
+  };
 
   // handle add data
   const handleAddDataSave = async (newData) => {
@@ -832,7 +838,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const renderDefault = () => (
     <div className="Gap">
       <div className="AddDataContainer">
-        {!isView && (
+        {!(rows.length > 0 && nested.process === "Settings") && !isView && (
           <div className="AddDataContainer">
             <button
               className="AddDataButton AddDataContainer"

@@ -45,6 +45,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
     DefaultSelectProcess,
     ImageUploadArray,
     ShownArray,
+    ColorProcess
   } = ItemsData;
 
   const dispatch = useDispatch();
@@ -111,17 +112,26 @@ function FormPage({ process, isView = false, currentBomId = null }) {
 
   const getRowData = (row) => {
     const obj = {};
-    process.header.forEach((col, idx) => {
-      obj[col] = row[idx]?.value || "";
+    process.header.forEach((col) => {
+      const cell = row.find((item) => item.key === col);
+      obj[col] = cell ? cell.value : "";
     });
     return obj;
   };
 
-  const objectToRow = (data, oldRow) =>
-    process.header.map((col, idx) => ({
-      ...oldRow[idx],
-      value: data[col] || "",
-    }));
+  const objectToRow = (data, oldRow) => {
+    const dataMap = Array.isArray(data)
+      ? data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {})
+      : data;
+
+    return process.header.map((col, idx) => {
+      const existingCell = oldRow.find((item) => item.key === col) || oldRow[idx];
+      return {
+        ...existingCell,
+        value: dataMap[col] !== undefined ? dataMap[col] : "",
+      };
+    });
+  };
 
   const handleEditClick = (rowIdx) => {
     setFormRowIdx(rowIdx);
@@ -152,7 +162,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
       id: process.id,
     });
     updatedRows[formRowIdx] = objectToRow(
-      Object.fromEntries(items.map((i) => [i.key, i.value])),
+      items,
       rows[formRowIdx]
     );
     setRows(updatedRows);
@@ -425,7 +435,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
                               height: "30px",
                             }}
                             colorScheme={`${
-                              cell.key === "PROTO"
+                              ColorProcess.includes(cell.key)
                                 ? `${
                                     cell.process !== "value"
                                       ? `${cell.process}`
