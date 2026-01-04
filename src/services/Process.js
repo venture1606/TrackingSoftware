@@ -7,8 +7,8 @@ import { setAllProcesses } from "../redux/slices/department";
 import { setSelectOptionsArray } from "../redux/slices/auth";
 
 function Process() {
-  // const URL = "https://adl-server.onrender.com/api/v1/process";
-  const URL = "http://localhost:3008/api/v1/process";
+  const URL = "https://adl-server.onrender.com/api/v1/process";
+  // const URL = "http://localhost:3008/api/v1/process";
 
   const allProcesses = useSelector((state) => state.department.allProcesses);
 
