@@ -14,11 +14,15 @@ import {
   Checkbox,
   CheckboxGroup,
   Select,
+  IconButton,
+  Tooltip,
 } from "@chakra-ui/react";
+import { RepeatIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 
 import ItemsData from "../utils/ItemsData";
 import { updateSelectOptions } from "../redux/slices/auth";
+import { findAutoFillData, getFilteredOptions } from "../utils/constant";
 
 function AddData({
   IndicationText = "Add Data",
@@ -36,6 +40,7 @@ function AddData({
   const SelectOptionsArray =
     useSelector((state) => state.auth.SelectOptionsArray) ||
     ItemsData.SelectOptionsArray;
+  const groupItem = useSelector((state) => state.auth.groupItem);
 
   const {
     DefaultHeaderAndProcessId,
@@ -50,6 +55,26 @@ function AddData({
   } = ItemsData;
 
   const initialRef = useRef(null);
+
+  // Helper to recalculate options for all select fields based on current groupItem and formData
+  const refreshOptions = (currentFormData) => {
+    return currentFormData.map((field) => {
+      if (field.process === "select") {
+        const defaultMatch = SelectOptionsArray.find(
+          (item) => item.key === field.key
+        );
+        const defaultOptions = defaultMatch?.value || [];
+        const newOptions = getFilteredOptions(
+          groupItem,
+          currentFormData,
+          field.key,
+          defaultOptions
+        );
+        return { ...field, options: newOptions };
+      }
+      return field;
+    });
+  };
 
   const [formData, setFormData] = useState([]);
   const [options, setOptions] = useState({});
@@ -172,7 +197,7 @@ function AddData({
         };
       });
 
-      return mappedData;
+      return refreshOptions(mappedData);
     });
   }, [
     headers,
@@ -181,21 +206,39 @@ function AddData({
     ArrayValuesProcess,
     DateFieldsArray,
     ImageUploadArray,
-    SelectOptionsArray, // ✅ keep this dependency for updates, but values are preserved now
+    SelectOptionsArray,
+    groupItem, // Added groupItem dependency
   ]);
 
   // Handle value change
   const handleValueChange = (index, val, subIndex = null) => {
     const newData = [...formData];
+    const key = newData[index].key;
+
     if (subIndex !== null && Array.isArray(newData[index].value)) {
       newData[index].value[subIndex] = val;
     } else {
       newData[index].value = val;
     }
-    setFormData(newData);
+
+    // Autofill Logic
+    const autoFillData = findAutoFillData(groupItem, key, val);
+    if (autoFillData) {
+      Object.keys(autoFillData).forEach((autoKey) => {
+        if (autoKey === key) return; // Skip the key that triggered autofill
+        const targetIndex = newData.findIndex((f) => f.key === autoKey);
+        if (targetIndex !== -1) {
+          newData[targetIndex].value = autoFillData[autoKey];
+        }
+      });
+    }
+
+    // Refresh dynamic options (dependent dropdowns)
+    const updatedWithDynamicOptions = refreshOptions(newData);
+    setFormData(updatedWithDynamicOptions);
     // Clear error for this field when user starts typing
     if (errorFields.includes(newData[index].key)) {
-      setErrorFields(errorFields.filter((key) => key !== newData[index].key));
+      setErrorFields(errorFields.filter((k) => k !== newData[index].key));
     }
   };
 
@@ -214,6 +257,102 @@ function AddData({
       newData[index].value.push("");
     }
     setFormData(newData);
+  };
+
+  // Reset form to initial state
+  const handleReset = () => {
+    const mappedData = headers.map((key) => {
+      const match = DefaultHeaderAndProcessId.find(
+        (item) => item.tableHeader === key
+      );
+
+      if (match) {
+        if (DefaultSelectProcess.includes(key)) {
+          return {
+            key,
+            value: [],
+            process: "multiSelect",
+          };
+        }
+        return {
+          key,
+          value: match.processId,
+          process: "processId",
+        };
+      }
+
+      if (DefaultSelectProcess.includes(key)) {
+        return {
+          key,
+          value: [],
+          process: "multiSelect",
+        };
+      }
+
+      if (ArrayValuesProcess.includes(key)) {
+        return {
+          key,
+          value: [""],
+          process: "arrayInput",
+        };
+      }
+
+      // Dropdown select
+      const selectMatch = SelectOptionsArray.find((item) => item.key === key);
+      if (selectMatch) {
+        const hasRed = selectMatch.value.includes("Red");
+        return {
+          key,
+          value: hasRed ? "Red" : "",
+          process: "select",
+          options: selectMatch.value,
+        };
+      }
+
+      // Date
+      if (DateFieldsArray.includes(key)) {
+        return {
+          key,
+          value: "",
+          process: "date",
+        };
+      }
+
+      // Image
+      if (ImageUploadArray.includes(key)) {
+        return {
+          key,
+          value: null,
+          process: "image",
+        };
+      }
+
+      if (TimeArrays.includes(key)) {
+        return {
+          key,
+          value: "",
+          process: "time",
+        };
+      }
+
+      if (NumberFields.includes(key)) {
+        return {
+          key,
+          value: "",
+          process: "number",
+        };
+      }
+
+      return {
+        key,
+        value: "",
+        process: "value",
+      };
+    });
+
+    const resetWithDynamicOptions = refreshOptions(mappedData);
+    setFormData(resetWithDynamicOptions);
+    setErrorFields([]);
   };
 
   // Save handler
@@ -271,7 +410,21 @@ function AddData({
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{IndicationText}</ModalHeader>
+        <ModalHeader>
+          <Flex align="center" justify="space-between" pr={10}>
+            {IndicationText}
+            <Tooltip label="Reset Form">
+              <IconButton
+                icon={<RepeatIcon />}
+                aria-label="Reset Form"
+                size="sm"
+                colorScheme="orange"
+                variant="ghost"
+                onClick={handleReset}
+              />
+            </Tooltip>
+          </Flex>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={4}>
           <Stack spacing={4}>
@@ -369,18 +522,16 @@ function AddData({
                       value={field.value === "others" ? "others" : field.value}
                       onChange={(e) => {
                         const val = e.target.value;
-                        const newData = [...formData];
-
                         if (val === "others") {
+                          const newData = [...formData];
                           newData[idx].value = "others";
                           newData[idx].otherValue =
                             newData[idx].otherValue || "";
+                          setFormData(newData);
                         } else {
-                          newData[idx].value = val;
-                          delete newData[idx].otherValue;
+                          // use handleValueChange to trigger autofill and standard updates
+                          handleValueChange(idx, val);
                         }
-
-                        setFormData(newData);
                       }}
                       borderColor={
                         errorFields.includes(field.key) ? "red.500" : undefined

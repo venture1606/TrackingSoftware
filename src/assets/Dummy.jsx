@@ -37,6 +37,7 @@ function FormPage({ process, isView = false }) {
   const dispatch = useDispatch();
   const detailingProducts = useSelector((state) => state.department.detailingProducts);
   const stateProcess = useSelector((state) => state.department.process);
+  const userDetails = useSelector((state) => state.auth.userDetails);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -153,7 +154,7 @@ function FormPage({ process, isView = false }) {
     const updatedRows = [...rows];
     const updatedRowIds = [...rowIds];
 
-    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id });
+    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id, userId: userDetails?._id });
     updatedRows.splice(rowIdx, 1);
     updatedRowIds.splice(rowIdx, 1);
     setRows(updatedRows);

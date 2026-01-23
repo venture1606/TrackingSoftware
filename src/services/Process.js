@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { setMessage } from "../redux/slices/common";
 import { setAllProcesses } from "../redux/slices/department";
-import { setSelectOptionsArray } from "../redux/slices/auth";
+import { setGroupItem, setSelectOptionsArray } from "../redux/slices/auth";
 
 function Process() {
   const URL = "https://adl-server.onrender.com/api/v1/process";
@@ -32,7 +32,7 @@ function Process() {
           status: "success",
           description: "Process fetched successfully",
           message: "Fetched",
-        })
+        }),
       );
     } catch (error) {
       console.log(error);
@@ -41,7 +41,7 @@ function Process() {
           status: "error",
           description: "Process fetch failed",
           message: "Error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ function Process() {
           status: "error",
           description: "Process fetch failed",
           message: "Error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ function Process() {
           status: "error",
           description: "Process fetch failed",
           message: "Error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -112,7 +112,7 @@ function Process() {
           status: "error",
           description: "Process fetch failed",
           message: "Error",
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -163,7 +163,7 @@ function Process() {
           status: "error",
           description: "Failed to add data.",
           message: error.message,
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -217,18 +217,18 @@ function Process() {
           status: "error",
           description: "Failed to update data.",
           message: error.message,
-        })
+        }),
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteData = async ({ rowId, id }) => {
+  const handleDeleteData = async ({ rowId, id, userId }) => {
     setLoading(true);
     try {
       const response = await axios.delete(`${URL}/data/${id}`, {
-        data: { rowId },
+        data: { rowId, userId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -239,7 +239,7 @@ function Process() {
           status: "success",
           description: "Data deleted successfully",
           message: "Deleted",
-        })
+        }),
       );
     } catch (error) {
       console.error("Error deleting data:", error);
@@ -248,7 +248,7 @@ function Process() {
           status: "error",
           description: "Failed to delete data.",
           message: error.message,
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -263,6 +263,14 @@ function Process() {
     });
 
     const dynamicOptions = response.data.data; // [{ key: 'partNo', value: [...] }, ...]
+    dispatch(
+      setGroupItem({
+        groupOfItems: response.data.groupOfItems,
+        groupOfItemList: response.data.groupOfItemList,
+        groupOfVendorList: response.data.groupOfVendorList,
+        groupOfCustomerList: response.data.groupOfCustomerList,
+      }),
+    );
 
     // Your existing hardcoded array
     const selectOptionsArray = [
@@ -282,7 +290,7 @@ function Process() {
         value: ["Under Process", "Completed", "Next Setting"],
       },
       { key: "CALIBRATION", value: ["DONE", "DUE"] },
-      { key: "INSTRUMENTS-STATUS", value: ["Using", "Not Using"] },
+      { key: "INSTRUMENTS-STATUS", value: ["Active", "Not Using"] },
       { key: "INSPECTION-STATUS", value: ["Pending", "Done"] },
       { key: "DIMENSION", value: ["Okay", "Not Okay"] },
       { key: "DEFECT FOUND", value: ["Yes", "No"] },
@@ -330,7 +338,7 @@ function Process() {
       }
 
       const existing = selectOptionsArray.find(
-        (opt) => opt.key.toLowerCase() === dynamicItem.key.toLowerCase()
+        (opt) => opt.key.toLowerCase() === dynamicItem.key.toLowerCase(),
       );
       if (existing) {
         // merge unique values only

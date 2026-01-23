@@ -53,6 +53,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
     (state) => state.department.detailingProducts
   );
   const stateProcess = useSelector((state) => state.department.process);
+  const userDetails = useSelector((state) => state.auth.userDetails);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -143,7 +144,7 @@ function FormPage({ process, isView = false, currentBomId = null }) {
     const updatedRows = [...rows];
     const updatedRowIds = [...rowIds];
 
-    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id });
+    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id, userId: userDetails?._id });
 
     // ✅ Remove both the row and its corresponding ID
     updatedRows.splice(rowIdx, 1);

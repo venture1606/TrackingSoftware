@@ -52,6 +52,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     (state) => state.department.detailingProducts
   );
   const process = useSelector((state) => state.department.process);
+  const userDetails = useSelector((state) => state.auth.userDetails);
 
   const [nested, setNested] = useState(null);
   const [rows, setRows] = useState([]);
@@ -299,7 +300,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       if (!rowIdToDelete) return;
 
       // 🔥 Call backend delete API
-      await handleDeleteData({ rowId: rowIdToDelete, id: nested.id });
+      await handleDeleteData({ rowId: rowIdToDelete, id: nested.id, userId: userDetails?._id });
 
       // 🔄 Remove row + ID locally
       const updatedRows = [...rows];
