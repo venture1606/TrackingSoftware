@@ -16,11 +16,15 @@ import {
   Flex,
   Checkbox,
   CheckboxGroup,
+  IconButton,
+  Tooltip,
 } from "@chakra-ui/react";
+import { RepeatIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 
 import ItemsData from "../utils/ItemsData";
 import { updateSelectOptions } from "../redux/slices/auth";
+import { findAutoFillData, getFilteredOptions } from "../utils/constant";
 
 function FormDialog({
   IndicationText,
@@ -42,6 +46,7 @@ function FormDialog({
   const SelectOptionsArray =
     useSelector((state) => state.auth.SelectOptionsArray) ||
     ItemsData.SelectOptionsArray;
+  const groupItem = useSelector((state) => state.auth.groupItem);
 
   const {
     DefaultSelectProcess,
@@ -66,9 +71,56 @@ function FormDialog({
       : []
   );
 
+  const [dynamicOptions, setDynamicOptions] = useState({});
+
+  // Helper to refresh filtered options for all select fields
+  const refreshDynamicOptions = (currentFormValues, currentSelectValues) => {
+    const mergedValues = { ...currentFormValues, ...currentSelectValues };
+    const formDataFormat = Object.keys(mergedValues).map((key) => ({
+      key,
+      value: mergedValues[key],
+    }));
+
+    const newDynamicOptions = {};
+
+    // Filter for SelectArray
+    if (SelectArray) {
+      SelectArray.forEach((field) => {
+        const defaultOptions = field.options || [];
+        newDynamicOptions[field.key] = getFilteredOptions(
+          groupItem,
+          formDataFormat,
+          field.key,
+          defaultOptions
+        );
+      });
+    }
+
+    // Filter for FormArray (select types)
+    if (FormArray) {
+      FormArray.forEach((field) => {
+        const selectMatch = SelectOptionsArray.find(
+          (item) => item.key === field.key
+        );
+        if (selectMatch) {
+          const defaultOptions = selectMatch.value || [];
+          newDynamicOptions[field.key] = getFilteredOptions(
+            groupItem,
+            formDataFormat,
+            field.key,
+            defaultOptions
+          );
+        }
+      });
+    }
+
+    setDynamicOptions(newDynamicOptions);
+  };
+
   // Reset on initialData change
   useEffect(() => {
     setFormValues(initialData);
+    refreshDynamicOptions(initialData, selectValues);
   }, [initialData]);
 
   useEffect(() => {
@@ -80,22 +132,92 @@ function FormDialog({
         }
       });
       setSelectValues(initialSelects);
+      refreshDynamicOptions(formValues, initialSelects);
     }
   }, [initialData, SelectArray]);
 
   const handleInputChange = (field, value, subIndex = null) => {
-    setFormValues((prev) => {
-      if (subIndex !== null && Array.isArray(prev[field])) {
-        const updated = [...prev[field]];
-        updated[subIndex] = value;
-        return { ...prev, [field]: updated };
-      }
-      return { ...prev, [field]: value };
-    });
+    let newFormValues;
+    if (subIndex !== null && Array.isArray(formValues[field])) {
+      const updated = [...formValues[field]];
+      updated[subIndex] = value;
+      newFormValues = { ...formValues, [field]: updated };
+    } else {
+      newFormValues = { ...formValues, [field]: value };
+    }
+
+    // Autofill Logic
+    const autoFillData = findAutoFillData(groupItem, field, value);
+    if (autoFillData) {
+      Object.keys(autoFillData).forEach((autoKey) => {
+        if (autoKey === field) return;
+        // Search in formValues or selectValues
+        if (FormArray?.some((f) => f.key === autoKey)) {
+          newFormValues[autoKey] = autoFillData[autoKey];
+        } else if (SelectArray?.some((s) => s.key === autoKey)) {
+          setSelectValues((prev) => ({
+            ...prev,
+            [autoKey]: autoFillData[autoKey],
+          }));
+        }
+      });
+    }
+
+    setFormValues(newFormValues);
+    refreshDynamicOptions(newFormValues, selectValues);
   };
 
   const handleSelectChange = (field, value) => {
-    setSelectValues((prev) => ({ ...prev, [field]: value }));
+    const newSelectValues = { ...selectValues, [field]: value };
+
+    // Autofill Logic
+    const autoFillData = findAutoFillData(groupItem, field, value);
+    if (autoFillData) {
+      const newFormValues = { ...formValues };
+      Object.keys(autoFillData).forEach((autoKey) => {
+        if (autoKey === field) return;
+        if (SelectArray?.some((s) => s.key === autoKey)) {
+          newSelectValues[autoKey] = autoFillData[autoKey];
+        } else if (FormArray?.some((f) => f.key === autoKey)) {
+          newFormValues[autoKey] = autoFillData[autoKey];
+        }
+      });
+      setFormValues(newFormValues);
+    }
+
+    setSelectValues(newSelectValues);
+    refreshDynamicOptions(formValues, newSelectValues);
+  };
+
+  const handleReset = () => {
+    // Clear everything as requested
+    const clearedForm = {};
+    if (FormArray) {
+      FormArray.forEach((f) => {
+        if (ArrayValuesProcess.includes(f.key)) {
+          clearedForm[f.key] = [""];
+        } else {
+          clearedForm[f.key] = "";
+        }
+      });
+    }
+    const clearedSelect = {};
+    if (SelectArray) {
+      SelectArray.forEach((s) => {
+        clearedSelect[s.key] = "";
+      });
+    }
+    setFormValues(clearedForm);
+    setSelectValues(clearedSelect);
+    setGraphData(
+      graphFormArray
+        ? graphFormArray.map((g) => ({
+            name: g.name,
+            data: [""],
+          }))
+        : []
+    );
+    refreshDynamicOptions(clearedForm, clearedSelect);
   };
 
   // Array helpers
@@ -186,7 +308,21 @@ function FormDialog({
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{IndicationText}</ModalHeader>
+        <ModalHeader>
+          <Flex align="center" justify="space-between" pr={10}>
+            {IndicationText}
+            <Tooltip label="Reset Form">
+              <IconButton
+                icon={<RepeatIcon />}
+                aria-label="Reset Form"
+                size="sm"
+                colorScheme="orange"
+                variant="ghost"
+                onClick={handleReset}
+              />
+            </Tooltip>
+          </Flex>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
           <Stack gap="4">
@@ -203,11 +339,13 @@ function FormDialog({
                       handleSelectChange(field.key, e.target.value)
                     }
                   >
-                    {field.options.map((option, i) => (
-                      <option key={i} value={option}>
-                        {option}
-                      </option>
-                    ))}
+                    {(dynamicOptions[field.key] || field.options || []).map(
+                      (option, i) => (
+                        <option key={i} value={option}>
+                          {option}
+                        </option>
+                      )
+                    )}
                   </Select>
                 </FormControl>
               ))}
@@ -300,26 +438,27 @@ function FormDialog({
                           onChange={(e) => {
                             const val = e.target.value;
 
-                            if (val === "Others") {
-                              // keep showing input field
-                              setFormValues((prev) => ({
-                                ...prev,
-                                [field.key]: "Others",
-                                [`${field.key}_other`]:
-                                  prev[`${field.key}_other`] || "",
-                              }));
-                            } else {
-                              setFormValues((prev) => {
-                                const updated = { ...prev, [field.key]: val };
-                                delete updated[`${field.key}_other`];
-                                return updated;
-                              });
-                            }
-                          }}
-                        >
-                          {(() => {
-                            const options = [...selectMatch.value];
-                            const currentValue = formValues[field.key];
+                           if (val === "Others") {
+                                // keep showing input field
+                                const newValues = {
+                                  ...formValues,
+                                  [field.key]: "Others",
+                                  [`${field.key}_other`]:
+                                    formValues[`${field.key}_other`] || "",
+                                };
+                                setFormValues(newValues);
+                                refreshDynamicOptions(newValues, selectValues);
+                              } else {
+                                handleInputChange(field.key, val);
+                              }
+                            }}
+                          >
+                            {(() => {
+                              const options = [
+                                ...(dynamicOptions[field.key] ||
+                                  selectMatch.value),
+                              ];
+                              const currentValue = formValues[field.key];
 
                             // ✅ If editing & current value not in dropdown, add it temporarily
                             if (

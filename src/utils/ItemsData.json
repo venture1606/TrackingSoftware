@@ -92,6 +92,14 @@
     {
       "tableHeader": "INWARD",
       "processId": "PR/R/003A"
+    },
+    {
+      "tableHeader": "CALIBRATION DETAILS",
+      "processId": "QA/R/002A"
+    },
+    {
+      "tableHeader": "CRS-STATUS",
+      "processId": "QA/R/011A"
     }
   ],
   "DefaultTemplateForProtoProcess": [
@@ -148,6 +156,12 @@
   ],
   "DefaultSelectProcess": [
     "DETAILING PRODUCT"
+  ],
+  "ColorProcess": [
+    "PROTO",
+    "VALIDATION",
+    "MASTER",
+    "SETTING"
   ],
   "ArrayValuesProcess": [
     "REVISION",
@@ -357,7 +371,8 @@
     "ACTION REPORT",
     "NPD FORM",
     "EVALUATE",
-    "IMAGE"
+    "IMAGE",
+    "CERTIFICATE"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
@@ -369,7 +384,8 @@
     "DELIVERY DATE",
     "ISSUE DATE",
     "EXPIRY DATE",
-    "NEXT RENEVAL"
+    "NEXT RENEVAL",
+    "UPDATED DATE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"

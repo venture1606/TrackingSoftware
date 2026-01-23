@@ -6,7 +6,8 @@ const initialState = {
   token: localStorage.getItem('token') || null,
   notifications: [],
   allUsers: [],
-  SelectOptionsArray: []
+  SelectOptionsArray: [],
+  groupItem: []
 };
 
 const authSlice = createSlice({
@@ -39,6 +40,24 @@ const authSlice = createSlice({
     setSelectOptionsArray: (state, action) => {
       state.SelectOptionsArray = action.payload;
     },
+    setGroupItem: (state, action) => {
+      state.groupItem = action.payload;
+    },
+    updateGroupItem: (state, action) => {
+      const { key, value } = action.payload;
+
+      const existing = state.groupItem.find(
+        (item) => item.key.toLowerCase() === key.toLowerCase()
+      );
+
+      if (existing) {
+        // merge new unique values
+        existing.value = Array.from(new Set([...existing.value, ...value]));
+      } else {
+        // add a new key if it doesn’t exist
+        state.groupItem.push({ key, value });
+      }
+    },
     updateSelectOptions: (state, action) => {
       const { key, value } = action.payload;
 
@@ -64,7 +83,9 @@ export const {
   setLogout,
   setAllUsers,
   setSelectOptionsArray,
-  updateSelectOptions
+  updateSelectOptions,
+  setGroupItem,
+  updateGroupItem
 } = authSlice.actions;
 
 export default authSlice.reducer;

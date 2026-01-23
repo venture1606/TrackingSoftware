@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 
 // importing components
@@ -83,7 +83,7 @@ const combineSimilarRows = (mainTableData) => {
   };
 };
 
-function DepartmentPage() {
+function DepartmentPage({ department, processId }) {
   const dispatch = useDispatch();
   const process = useSelector((state) => state.department.process);
   const departments = useSelector((state) => state.department.departments);
@@ -94,10 +94,11 @@ function DepartmentPage() {
     handleGetProcessbyDepartmentId,
     handleSearchSelectOptions,
     handleAddData,
+    handleGetProcessByProcessId,
     loading: processLoading,
   } = Process();
 
-  const { department } = useParams();
+  const navigate = useNavigate();
 
   const [selectedProcess, setSelectedProcess] = useState("");
   const [processes, setProcesses] = useState([]);
@@ -128,17 +129,36 @@ function DepartmentPage() {
     setSelectedProcess("");
     dispatch(setMainTableData(null));
   }, [currentDepartment, department]);
+  
+  // Sync selectedProcess with URL processId
+  useEffect(() => {
+    if (processId && processes.length > 0) {
+      const found = processes.find((p) => (p._id || p.id) === processId);
+      if (found) {
+        setSelectedProcess(found.process);
+      }
+    } else if (!processId) {
+      setSelectedProcess("");
+    }
+  }, [processId, processes]);
 
   useEffect(() => {
-    dispatch(setMainTableData(null));
-    setIsMerged(false);
-    setOriginalMainTable(null);
-    if (selectedProcess && processes.length > 0) {
-      const found = processes.find((p) => p.process === selectedProcess);
-      dispatch(setMainTableData(found ? transformProcess(found) : null));
-    } else {
+    const fetchData = async () => {
       dispatch(setMainTableData(null));
-    }
+      setIsMerged(false);
+      setOriginalMainTable(null);
+
+      if (selectedProcess && processes.length > 0) {
+        const found = processes.find((p) => p.process === selectedProcess);
+        if (found) {
+          const data = await handleGetProcessByProcessId(found._id || found.id);
+          dispatch(setMainTableData(transformProcess(data)));
+        }
+      } else {
+        dispatch(setMainTableData(null));
+      }
+    };
+    fetchData();
   }, [selectedProcess, processes]);
 
   const handleAddDataSave = async (data) => {
@@ -160,12 +180,10 @@ function DepartmentPage() {
       dispatch(setMainTableData(merged));
       setIsMerged(true);
 
-      console.log("Merged Procurement Data:", merged);
     } else {
       // 🔹 Restore the original main table
       if (originalMainTable) {
         dispatch(setMainTableData(originalMainTable));
-        console.log("Restored Original Procurement Data:", originalMainTable);
       }
       setIsMerged(false);
     }
@@ -182,7 +200,17 @@ function DepartmentPage() {
           <select
             value={selectedProcess}
             className="ProcessSelectContainer"
-            onChange={(e) => setSelectedProcess(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "") {
+                navigate(`/department/${department}`);
+              } else {
+                const found = processes.find((p) => p.process === val);
+                if (found) {
+                  navigate(`/department/${department}/${found._id || found.id}`);
+                }
+              }
+            }}
           >
             <option value="">-- Select Process --</option>
             {currentDepartment.process.map((subProc, index) => (
