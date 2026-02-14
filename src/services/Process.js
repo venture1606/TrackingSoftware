@@ -1,138 +1,190 @@
-import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-
+import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
-import { setAllProcesses } from "../redux/slices/department";
 import { setGroupItem, setSelectOptionsArray } from "../redux/slices/auth";
 
-function Process() {
-  const URL = process.env.REACT_APP_PROCESS_URL;
+const URL = process.env.REACT_APP_PROCESS_URL;
 
-  const allProcesses = useSelector((state) => state.department.allProcesses);
+const getAuthHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 
-  const [loading, setLoading] = useState(false);
+export const useAllProcesses = (enabled = true) => {
+  return useQuery({
+    queryKey: ["allProcesses"],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/all`, getAuthHeaders());
+      return response.data.data;
+    },
+    enabled,
+    onError: (error) => console.log(error),
+  });
+};
+
+export const useProcessById = (id) => {
+  return useQuery({
+    queryKey: ["process", id],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/${id}`, getAuthHeaders());
+      return response.data.data;
+    },
+    enabled: !!id,
+    onError: (error) => console.log(error),
+  });
+};
+
+export const useProcessesByDepartmentId = (departmentId) => {
+  return useQuery({
+    queryKey: ["processesByDepartment", departmentId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${URL}/department/${departmentId}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+    enabled: !!departmentId,
+    onError: (error) => console.log(error),
+  });
+};
+
+export const useSearchSelectOptions = () => {
   const dispatch = useDispatch();
 
-  const handlegetAllProcess = async () => {
-    setLoading(true);
-    if (allProcesses.length > 0) return;
-    try {
-      const response = await axios.get(`${URL}/all`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+  // This one is a bit different as it dispatches to redux store for global options.
+  // We can treat it as a query that updates redux on success.
+  return useQuery({
+    queryKey: ["searchSelectOptions"],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/search`, getAuthHeaders());
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const dynamicOptions = data.data; // [{ key: 'partNo', value: [...] }, ...]
+      dispatch(
+        setGroupItem({
+          groupOfItems: data.groupOfItems,
+          groupOfItemList: data.groupOfItemList,
+          groupOfVendorList: data.groupOfVendorList,
+          groupOfCustomerList: data.groupOfCustomerList,
+        }),
+      );
+
+      // Hardcoded array logic from original file
+      const selectOptionsArray = [
+        { key: "MOVE TO", value: ["Scrap", "Rework"] },
+        { key: "ACTION PLAN STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "ACTION TAKEN", value: ["YES", "NO"] },
+        {
+          key: "RM",
+          value: ["Planning", "In Progress", "Pending", "Completed"],
         },
+        {
+          key: "INCOMING INSPECTION",
+          value: ["In Progress", "Pending", "Completed"],
+        },
+        { key: "MACHINE", value: ["In Progress", "Pending", "Completed"] },
+        { key: "OUT PROCESS", value: ["In Progress", "Pending", "Completed"] },
+        { key: "ASSEMBLY", value: ["In Progress", "Pending", "Completed"] },
+        {
+          key: "PR-STATUS",
+          value: ["Under Process", "Completed", "Next Setting"],
+        },
+        { key: "CALIBRATION", value: ["DONE", "DUE"] },
+        { key: "INSTRUMENTS-STATUS", value: ["Active", "Not Using"] },
+        { key: "INSPECTION-STATUS", value: ["Pending", "Done"] },
+        { key: "DIMENSION", value: ["Okay", "Not Okay"] },
+        { key: "DEFECT FOUND", value: ["Yes", "No"] },
+        { key: "SHORT QUANITY", value: ["Yes", "No"] },
+        { key: "ITEM CHANGED", value: ["Yes", "No"] },
+        { key: "REPORT RECEIVED", value: ["Yes", "No"] },
+        { key: "CCR STATUS", value: ["OPEN", "CLOSED"] },
+        {
+          key: "STATUS OF SETTINGS",
+          value: ["No", "Under Process", "Completed"],
+        },
+        {
+          key: "QL STATUS",
+          value: ["WAITING FOR QUOTE", "WAITING FOR ORDER", "ORDER"],
+        },
+        { key: "PSR STATUS", value: ["OPEN", "CLOSED"] },
+        {
+          key: "TRIAL STATUS",
+          value: ["WAITING FOR ORDER", "ORDER CONFIRMED", "PRODUCT FAILED"],
+        },
+        { key: "PR STATUS", value: ["PENDING", "CLOSED"] },
+        {
+          key: "QC QUALITY INSPECTION",
+          value: ["Move to Inspection", "Inspection Done"],
+        },
+        { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
+        { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
+        {
+          key: "NPD STATUS",
+          value: [
+            "Not Feasible",
+            "Waiting For Order",
+            "Order Confirmed",
+            "Under Process",
+            "Supplied to Customer",
+          ],
+        },
+        {
+          key: "ITEM CATEGORY",
+          value: [
+            "RAW MATERIAL",
+            "FINISHED GOOD",
+            "SEAL",
+            "BALL",
+            "INTERNAL SPRING",
+            "EXTERNAL SPRING",
+          ],
+        },
+      ];
+
+      dynamicOptions.forEach((dynamicItem) => {
+        if (!dynamicItem.value.includes("Others")) {
+          dynamicItem.value.push("Others");
+        }
+        const existing = selectOptionsArray.find(
+          (opt) => opt.key.toLowerCase() === dynamicItem.key.toLowerCase(),
+        );
+        if (existing) {
+          dynamicItem.value.forEach((val) => {
+            if (!existing.value.includes(val)) {
+              existing.value.push(val);
+            }
+          });
+        } else {
+          selectOptionsArray.push(dynamicItem);
+        }
       });
 
-      dispatch(setAllProcesses(response.data.data));
+      dispatch(setSelectOptionsArray(selectOptionsArray));
+    },
+    refetchOnWindowFocus: false,
+  });
+};
 
-      dispatch(
-        setMessage({
-          status: "success",
-          description: "Process fetched successfully",
-          message: "Fetched",
-        }),
-      );
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        setMessage({
-          status: "error",
-          description: "Process fetch failed",
-          message: "Error",
-        }),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+export const useAddProcessData = () => {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
 
-  const handleGetSingleProcess = async (id) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${URL}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      return response.data.data;
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        setMessage({
-          status: "error",
-          description: "Process fetch failed",
-          message: "Error",
-        }),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetProcessbyDepartmentId = async (id) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${URL}/department/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      return response.data.data;
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        setMessage({
-          status: "error",
-          description: "Process fetch failed",
-          message: "Error",
-        }),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGetProcessByProcessId = async (id) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${URL}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      return response.data.data;
-    } catch (error) {
-      console.log(error);
-      dispatch(
-        setMessage({
-          status: "error",
-          description: "Process fetch failed",
-          message: "Error",
-        }),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddData = async ({ items, id, rowDataId }) => {
-    setLoading(true);
-    try {
+  return useMutation({
+    mutationFn: async ({ items, id, rowDataId }) => {
       let hasFile = items.some((item) => item.value instanceof File);
-
       let response;
       if (hasFile) {
         const formData = new FormData();
         if (rowDataId) formData.append("rowDataId", rowDataId);
 
-        // Separate files & JSON
         const itemsForJson = items.map((item) => {
           if (item.value instanceof File) {
-            formData.append(item.key, item.value); // send file
-            return { ...item, value: "" }; // placeholder for backend
+            formData.append(item.key, item.value);
+            return { ...item, value: "" };
           }
           return item;
         });
@@ -147,16 +199,25 @@ function Process() {
         });
       } else {
         const payload = { items, rowDataId };
-        response = await axios.post(`${URL}/data/${id}`, payload, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        response = await axios.post(
+          `${URL}/data/${id}`,
+          payload,
+          getAuthHeaders(),
+        );
       }
-
       return response.data.process;
-    } catch (error) {
-      console.error("Error adding data:", error);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["process", variables.id]);
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Data added successfully",
+          message: "Added",
+        }),
+      );
+    },
+    onError: (error) => {
       dispatch(
         setMessage({
           status: "error",
@@ -164,34 +225,29 @@ function Process() {
           message: error.message,
         }),
       );
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+};
 
-  const handleUpdateData = async ({ rowId, items, id }) => {
-    setLoading(true);
-    try {
-      // Check if any field contains a File (for image upload)
+export const useUpdateProcessData = () => {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ rowId, items, id }) => {
       const hasFile = items.some((item) => item.value instanceof File);
-
       let response;
       if (hasFile) {
-        // Build FormData for multipart upload
         const formData = new FormData();
         formData.append("rowId", rowId);
-
-        // Separate items: append files directly, keep others for JSON
         const itemsForJson = items.map((item) => {
           if (item.value instanceof File) {
-            formData.append(item.key, item.value); // send file separately
-            return { ...item, value: "" }; // backend will replace with Cloudinary URL
+            formData.append(item.key, item.value);
+            return { ...item, value: "" };
           }
           return item;
         });
-
         formData.append("items", JSON.stringify(itemsForJson));
-
         response = await axios.put(`${URL}/data/${id}`, formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -199,18 +255,19 @@ function Process() {
           },
         });
       } else {
-        // Normal JSON payload (no files)
         const payload = { items, rowId };
-        response = await axios.put(`${URL}/data/${id}`, payload, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        response = await axios.put(
+          `${URL}/data/${id}`,
+          payload,
+          getAuthHeaders(),
+        );
       }
-
       return response.data.data;
-    } catch (error) {
-      console.error("Error updating data:", error);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["process", variables.id]);
+    },
+    onError: (error) => {
       dispatch(
         setMessage({
           status: "error",
@@ -218,21 +275,26 @@ function Process() {
           message: error.message,
         }),
       );
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+};
 
-  const handleDeleteData = async ({ rowId, id, userId }) => {
-    setLoading(true);
-    try {
+export const useDeleteProcessData = () => {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ rowId, id, userId }) => {
       const response = await axios.delete(`${URL}/data/${id}`, {
         data: { rowId, userId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["process", variables.id]);
       dispatch(
         setMessage({
           status: "success",
@@ -240,8 +302,8 @@ function Process() {
           message: "Deleted",
         }),
       );
-    } catch (error) {
-      console.error("Error deleting data:", error);
+    },
+    onError: (error) => {
       dispatch(
         setMessage({
           status: "error",
@@ -249,126 +311,36 @@ function Process() {
           message: error.message,
         }),
       );
-    } finally {
-      setLoading(false);
+    },
+  });
+};
+
+// Default export acting as a hook for backward compatibility if needed,
+// though we encourage using individual hooks.
+function Process() {
+  const addMutation = useAddProcessData();
+  const updateMutation = useUpdateProcessData();
+  const deleteMutation = useDeleteProcessData();
+
+  const handleGetSingleProcess = async (id) => {
+    try {
+      const response = await axios.get(`${URL}/${id}`, getAuthHeaders());
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching single process:", error);
+      throw error;
     }
   };
 
-  const handleSearchSelectOptions = async () => {
-    const response = await axios.get(`${URL}/search`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    const dynamicOptions = response.data.data; // [{ key: 'partNo', value: [...] }, ...]
-    dispatch(
-      setGroupItem({
-        groupOfItems: response.data.groupOfItems,
-        groupOfItemList: response.data.groupOfItemList,
-        groupOfVendorList: response.data.groupOfVendorList,
-        groupOfCustomerList: response.data.groupOfCustomerList,
-      }),
-    );
-
-    // Your existing hardcoded array
-    const selectOptionsArray = [
-      { key: "MOVE TO", value: ["Scrap", "Rework"] },
-      { key: "ACTION PLAN STATUS", value: ["OPEN", "CLOSED"] },
-      { key: "ACTION TAKEN", value: ["YES", "NO"] },
-      { key: "RM", value: ["Planning", "In Progress", "Pending", "Completed"] },
-      {
-        key: "INCOMING INSPECTION",
-        value: ["In Progress", "Pending", "Completed"],
-      },
-      { key: "MACHINE", value: ["In Progress", "Pending", "Completed"] },
-      { key: "OUT PROCESS", value: ["In Progress", "Pending", "Completed"] },
-      { key: "ASSEMBLY", value: ["In Progress", "Pending", "Completed"] },
-      {
-        key: "PR-STATUS",
-        value: ["Under Process", "Completed", "Next Setting"],
-      },
-      { key: "CALIBRATION", value: ["DONE", "DUE"] },
-      { key: "INSTRUMENTS-STATUS", value: ["Active", "Not Using"] },
-      { key: "INSPECTION-STATUS", value: ["Pending", "Done"] },
-      { key: "DIMENSION", value: ["Okay", "Not Okay"] },
-      { key: "DEFECT FOUND", value: ["Yes", "No"] },
-      { key: "SHORT QUANITY", value: ["Yes", "No"] },
-      { key: "ITEM CHANGED", value: ["Yes", "No"] },
-      { key: "REPORT RECEIVED", value: ["Yes", "No"] },
-      { key: "CCR STATUS", value: ["OPEN", "CLOSED"] },
-      {
-        key: "STATUS OF SETTINGS",
-        value: ["No", "Under Process", "Completed"],
-      },
-      {
-        key: "QL STATUS",
-        value: ["WAITING FOR QUOTE", "WAITING FOR ORDER", "ORDER"],
-      },
-      { key: "PSR STATUS", value: ["OPEN", "CLOSED"] },
-      {
-        key: "TRIAL STATUS",
-        value: ["WAITING FOR ORDER", "ORDER CONFIRMED", "PRODUCT FAILED"],
-      },
-      { key: "PR STATUS", value: ["PENDING", "CLOSED"] },
-      {
-        key: "QC QUALITY INSPECTION",
-        value: ["Move to Inspection", "Inspection Done"],
-      },
-      { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
-      { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
-      {
-        key: "NPD STATUS",
-        value: [
-          "Not Feasible",
-          "Waiting For Order",
-          "Order Confirmed",
-          "Under Process",
-          "Supplied to Customer",
-        ],
-      },
-      {
-        key: "ITEM CATEGORY",
-        value: ["RAW MATERIAL", "FINISHED GOOD", "SEAL", "BALL", "INTERNAL SPRING", "EXTERNAL SPRING"],
-      },
-    ];
-
-    // ✅ Merge dynamic values into the hardcoded array
-    dynamicOptions.forEach((dynamicItem) => {
-      // Ensure “Others” is always included
-      if (!dynamicItem.value.includes("Others")) {
-        dynamicItem.value.push("Others");
-      }
-
-      const existing = selectOptionsArray.find(
-        (opt) => opt.key.toLowerCase() === dynamicItem.key.toLowerCase(),
-      );
-      if (existing) {
-        // merge unique values only
-        dynamicItem.value.forEach((val) => {
-          if (!existing.value.includes(val)) {
-            existing.value.push(val);
-          }
-        });
-      } else {
-        // add new key if it doesn't exist
-        selectOptionsArray.push(dynamicItem);
-      }
-    });
-
-    dispatch(setSelectOptionsArray(selectOptionsArray));
-  };
-
   return {
-    loading,
-    handlegetAllProcess,
+    handleAddData: addMutation.mutateAsync,
+    handleUpdateData: updateMutation.mutateAsync,
+    handleDeleteData: deleteMutation.mutateAsync,
     handleGetSingleProcess,
-    handleGetProcessbyDepartmentId,
-    handleAddData,
-    handleUpdateData,
-    handleDeleteData,
-    handleSearchSelectOptions,
-    handleGetProcessByProcessId,
+    loading:
+      addMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   };
 }
 

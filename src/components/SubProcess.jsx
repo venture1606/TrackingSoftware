@@ -14,17 +14,26 @@ import {
   Th,
   Td,
   Button,
+  IconButton,
+  Flex,
+  Box,
 } from "@chakra-ui/react";
+import { EditIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
+import TruncatedText from "./TruncatedText";
 import { useDispatch, useSelector } from "react-redux";
 
 // components
-import FormPage from "./FormPage";
 import Loading from "../hooks/Loading";
-import AddData from "../hooks/AddData";
 import FormDialog from "../hooks/FormDialog";
+import ProductValidationCompo from "./ProductValidationCompo";
+import ProtoCompo from "./ProtoCompo";
+import TechnicalSpecificationCompo from "./TechnicalSpecificationCompo";
+import BOMCompo from "./BOMCompo";
+import BreakHourCompo from "./BreakHourCompo";
+import ContinousImprovementCompo from "./ContinousImprovementCompo";
+import DefaultProcessCompo from "./DefaultProcessCompo";
 
 // assets
-import ProductImage from "../assets/ProductImage.jpg";
 
 // styles
 import "../styles/subprocess.css";
@@ -48,9 +57,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const [imagePopupUrl, setImagePopupUrl] = useState(null);
   const dispatch = useDispatch();
 
-  const detailingProducts = useSelector(
-    (state) => state.department.detailingProducts
-  );
   const process = useSelector((state) => state.department.process);
   const userDetails = useSelector((state) => state.auth.userDetails);
 
@@ -67,12 +73,13 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const [formInitialData, setFormInitialData] = useState({});
   const [selectArray, setSelectArray] = useState([]);
   const [bomProducts, setBomProducts] = useState(null);
+  const [editingProtoCell, setEditingProtoCell] = useState(null); // { rowIdx, colIdx }
 
-  const colorCoordinates = [
+
+  const colorCoordinatesProto = [
     { label: "In Progress", color: "#ffb176" },
     { label: "Pending", color: "#ff4545" },
     { label: "Completed", color: "#92ff89" },
-    { label: "Planning", color: "#89b8ff" },
   ];
 
   // ------------------------
@@ -183,7 +190,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     }
   }, [nested]);
 
-  if (!nested) return null;
 
   // convert row array to object keyed by header
   const getRowData = (row) => {
@@ -229,16 +235,18 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       }))
     );
 
+    const updatedRowIds = filteredRows.map((row) => row._id);
     setNested({
       id: response._id,
       process: response.process,
       header: response.headers,
       value: formattedRows,
-      rowIds: filteredRows.map((row) => row._id),
+      rowIds: updatedRowIds,
       rowDataId: nested.rowDataId,
     });
 
     setRows(formattedRows);
+    setRowIds(updatedRowIds);
   };
 
   const handleAddDataSaveForBOM = async (newData) => {
@@ -279,36 +287,24 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     setIsFormOpen(true);
   };
 
-  const handleEditClickForProto = (rowIdx, status, colIdx) => {
-    setFormRowIdx(rowIdx);
-    setProtoFormIdx(colIdx);
-    setFormInitialData({ value: status });
-    setSelectArray([
-      {
-        key: "value",
-        label: `${nested.header[colIdx]} Status`,
-        options: ["Completed", "In Progress", "Pending"],
-      },
-    ]);
-    setIsFormOpen(true);
-  };
 
+  // delete button
   // delete button
   const handleDeleteRow = async (rowIdx) => {
     try {
       const rowIdToDelete = rowIds[rowIdx];
-      if (!rowIdToDelete) return;
+      if (!rowIdToDelete) {
+        console.error("No row ID found for index:", rowIdx);
+        return;
+      }
 
       // 🔥 Call backend delete API
       await handleDeleteData({ rowId: rowIdToDelete, id: nested.id, userId: userDetails?._id });
 
-      // 🔄 Remove row + ID locally
-      const updatedRows = [...rows];
-      const updatedRowIds = [...rowIds];
-      updatedRows.splice(rowIdx, 1);
-      updatedRowIds.splice(rowIdx, 1);
+      // 🔄 Update locally
+      const updatedRows = rows.filter((_, idx) => idx !== rowIdx);
+      const updatedRowIds = rowIds.filter((_, idx) => idx !== rowIdx);
 
-      // ✅ Update both states to stay aligned
       setRows(updatedRows);
       setRowIds(updatedRowIds);
       setNested((prev) => ({
@@ -362,506 +358,161 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   // Renderers
   // ------------------------
   const renderProductValidationReport = () => (
-    <div className="ProductValidationReportEntireContainer">
-      {!isView && (
-        <button
-          className="AddDataButton ProductValidationReportContainerButton"
-          onClick={() => setShowAddData(true)}
-        >
-          Add Data
-        </button>
-      )}
-
-      {showAddData && (
-        <AddData
-          headers={nested.header || []}
-          IndicationText="Add New Data"
-          isOpen={showAddData}
-          onClose={() => setShowAddData(false)}
-          onSave={handleAddDataSave}
-        />
-      )}
-
-      {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="ProductValidationReportContainer">
-          <div className="ProductValidationReportHeader">
-            {!isView && (
-              <Button
-                colorScheme="blue"
-                onClick={() => handleEditClick(rowIndex)}
-              >
-                Edit
-              </Button>
-            )}
-            <h2>{row.find((item) => item.key === "TEST NAME")?.value}</h2>
-            {!isView && (
-              <Button
-                colorScheme="red"
-                onClick={() => handleDeleteRow(rowIndex)}
-              >
-                Delete
-              </Button>
-            )}
-          </div>
-
-          <div className="ProductValidationReportContent">
-            <div className="ProductValidationReportDetails">
-              {row.map((item, colIndex) =>
-                item.key === "IMAGE" || item.key === "SL.NO" ? null : (
-                  <div key={colIndex}>
-                    <span>
-                      <strong>{item.key}:</strong> {item.value}
-                    </span>
-                  </div>
-                )
-              )}
-            </div>
-            <div>
-              <img
-                src={row.find((i) => i.key === "IMAGE")?.value || ""}
-                alt={
-                  row.find((i) => i.key === "TEST NAME")?.value ||
-                  "Image not found or please upload the image"
-                }
-                className="ProductValidationReportImage"
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <ProductValidationCompo 
+      rows={rows}
+      nested={nested}
+      isView={isView}
+      handleEditClick={handleEditClick}
+      handleDeleteRow={handleDeleteRow}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+      setImagePopupUrl={setImagePopupUrl}
+      getStatusStyle={getStatusStyle}
+    />
   );
 
-  const renderNpdProtoModel = () => (
-    <div
-      className="FormPageContainer"
-      style={{ overflowX: "auto", maxWidth: "100%" }}
-    >
-      <Table size="sm" showColumnBorder stickyHeader variant="striped">
-        <Thead className="TableHeader">
-          <Tr>
-            <Th className="TableHeaderContent">SL.NO</Th>
-            <Th className="TableHeaderContent">Document</Th>
-            <Th className="TableHeaderContent">Status</Th>
-            {!isView && <Th className="TableHeaderContent">Action</Th>}
-          </Tr>
-        </Thead>
-        {nested.value.length > 0 ? (
-          <Tbody className="TableBody">
-            {rows.map((row, rowIdx) =>
-              row.map((cell, colIdx) => (
-                <Tr key={`${rowIdx}-${colIdx}`}>
-                  <Td className="RowsField">{colIdx + 1}</Td>
-                  <Td className="RowsField">{nested.header[colIdx]}</Td>
-                  {["Planning", "In Progress", "Completed", "Pending"].includes(
-                    cell.value
-                  ) && (
-                    <Td className="RowsField ProtoStatusIndicationRow">
-                      <div
-                        className="ProtoStatusIndication"
-                        style={{
-                          backgroundColor:
-                            colorCoordinates.find((c) => c.label === cell.value)
-                              ?.color || "gray",
-                        }}
-                      ></div>
-                      <span>{cell.value}</span>
-                    </Td>
-                  )}
-                  {!isView && (
-                    <Td className="RowsField">
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          handleEditClickForProto(rowIdx, cell.value, colIdx)
-                        }
-                      >
-                        Edit
-                      </Button>
-                    </Td>
-                  )}
-                </Tr>
-              ))
-            )}
-          </Tbody>
-        ) : (
-          !isView && (
-            <Button
-              className="AddDataButton"
-              onClick={() => handleAddDataSave(DefaultTemplateForProtoProcess)}
-            >
-              Create Page
-            </Button>
-          )
-        )}
-      </Table>
-    </div>
-  );
-
-  const renderTechnicalSpecification = () => {
-    if (!nested?.value) return null;
-
-    return (
-      <div className="TechnicalSpecificationContainer">
-        <div className="AddDataContainer">
-          {!isView && (
-            <div className="AddDataContainer">
-              <button
-                className="AddDataButton AddDataContainer"
-                onClick={() => setShowAddData(true)}
-              >
-                Add Data
-              </button>
-            </div>
-          )}
-
-          {showAddData && (
-            <AddData
-              headers={nested.header || []}
-              IndicationText="Add New Data"
-              isOpen={showAddData}
-              onClose={() => setShowAddData(false)}
-              onSave={handleAddDataSave}
-            />
-          )}
-        </div>
-        <div className="TechnicalSpecificationCardsContainer">
-          {nested.value.map((row, rowIdx) => (
-            <div key={rowIdx} className="TechnicalSpecificationCard">
-              {!isView && (
-                <div className="TechnicalSpecificationHeader">
-                  <div></div>
-                  <div>{row.map(field => (field.key === "REVISION NO" ? field.value : null))}</div>
-                  <Button
-                    className="EditButton"
-                    onClick={() => handleEditClick(rowIdx)}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              )}
-              {row.map((field) =>
-                ImageUploadArray.includes(field.key) ? (
-                  <div key={field.key}>
-                    <strong>{field.key}:</strong>&nbsp;&nbsp;
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={() => setImagePopupUrl(field.value)}
-                    >
-                      View
-                    </Button>
-                  </div>
-                ) : (
-                  <div key={field.key}>
-                    {field.key !== "REVISION NO" && (
-                      <>
-                        <strong>{field.key}:</strong>&nbsp;&nbsp;{field.value}
-                      </>
-                    )}
-                  </div>
-                )
-              )}
-              {renderImagePopUp()}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  /* New handler for inline status change - Updates Local State Only */
+  const handleProtoStatusChange = (e, rowIdx, colIdx) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rows];
+    updatedRows[rowIdx] = [...updatedRows[rowIdx]];
+    updatedRows[rowIdx][colIdx] = {
+      ...updatedRows[rowIdx][colIdx],
+      value: newValue,
+    };
+    setRows(updatedRows);
   };
 
+  const getStatusStyle = (value) => {
+    let badgeColor = "gray.100";
+    let textColor = "gray.600";
+    let dotColor = "gray.500";
+
+    const lowerVal = (value || "").toLowerCase();
+    if (lowerVal.includes("waiting") || lowerVal.includes("planning")) {
+      badgeColor = "#fffaf0";
+      textColor = "#dd6b20";
+      dotColor = "#dd6b20";
+    } else if (lowerVal.includes("prototype") || lowerVal.includes("progress")) {
+      badgeColor = "#ebf8ff";
+      textColor = "#3182ce";
+      dotColor = "#3182ce";
+    } else if (lowerVal.includes("complete") || lowerVal.includes("done")) {
+      badgeColor = "#f0fff4";
+      textColor = "#38a169";
+      dotColor = "#38a169";
+    } else if (lowerVal.includes("pending")) {
+      badgeColor = "#fff5f5";
+      textColor = "#e53e3e";
+      dotColor = "#e53e3e";
+    }
+    return { badgeColor, textColor, dotColor };
+  };
+
+  const handleProtoSaveClick = async (rowIdx) => {
+    await handleProtoSave(rowIdx);
+    setEditingProtoCell(null);
+  };
+
+  /* Save handler for Proto Status */
+  const handleProtoSave = async (rowIdx) => {
+    try {
+        await handleUpdateData({
+            rowId: rowIds[rowIdx],
+            items: rows[rowIdx],
+            id: nested.id,
+        });
+
+        // Update nested state to sync
+        setNested((prev) => ({
+            ...prev,
+            value: rows,
+        }));
+        
+        // Optional: Show success toast or feedback
+    } catch (err) {
+        console.error("Failed to save status", err);
+    }
+  };
+
+  const renderNpdProtoModel = () => (
+    <ProtoCompo 
+      nested={nested}
+      rows={rows}
+      isView={isView}
+      editingProtoCell={editingProtoCell}
+      handleProtoStatusChange={handleProtoStatusChange}
+      handleProtoSaveClick={handleProtoSaveClick}
+      setEditingProtoCell={setEditingProtoCell}
+      colorCoordinatesProto={colorCoordinatesProto}
+      getStatusStyle={getStatusStyle}
+      handleAddDataSave={handleAddDataSave}
+      DefaultTemplateForProtoProcess={DefaultTemplateForProtoProcess}
+    />
+  );
+
+  const renderTechnicalSpecification = () => (
+    <TechnicalSpecificationCompo 
+      nested={nested}
+      isView={isView}
+      handleEditClick={handleEditClick}
+      setImagePopupUrl={setImagePopupUrl}
+      ImageUploadArray={ImageUploadArray}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+    />
+  );
+
   const renderBOM = () => (
-    <div className="renderBOMContainer">
-      <div className="Gap">
-        <div className="AddDataContainer">
-          {!isView && (
-            <div className="AddDataContainer">
-              <button
-                className="AddDataButton AddDataContainer"
-                onClick={() => setShowAddData(true)}
-              >
-                Add Data
-              </button>
-            </div>
-          )}
-
-          {showAddData && (
-            <AddData
-              headers={nested.header || []}
-              IndicationText="Add New Data"
-              isOpen={showAddData}
-              onClose={() => setShowAddData(false)}
-              onSave={handleAddDataSave}
-            />
-          )}
-        </div>
-        <FormPage process={nested} isView={isView} />
-      </div>
-
-      <div className="Gap">
-        <div className="AddDataContainer">
-          {!isView && (
-            <div className="AddDataContainer">
-              <button
-                className="AddDataButton AddDataContainer"
-                onClick={() => setShowBOMAddData(true)}
-              >
-                Add Products Data
-              </button>
-            </div>
-          )}
-
-          {showBOMAddData && (
-            <AddData
-              headers={bomProducts?.header || []}
-              IndicationText="Add New Data"
-              isOpen={showBOMAddData}
-              onClose={() => setShowBOMAddData(false)}
-              onSave={handleAddDataSaveForBOM}
-              currentBomId={nested?.rowDataId}
-            />
-          )}
-        </div>
-        {bomProducts ? (
-          <FormPage
-            process={bomProducts}
-            isView={isView}
-            currentBomId={nested?.rowDataId}
-          />
-        ) : (
-          <p>No BOM data found</p>
-        )}
-      </div>
-    </div>
+    <BOMCompo 
+      nested={nested}
+      isView={isView}
+      bomProducts={bomProducts}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+      showBOMAddData={showBOMAddData}
+      setShowBOMAddData={setShowBOMAddData}
+      handleAddDataSaveForBOM={handleAddDataSaveForBOM}
+    />
   );
 
   const renderBreakHour = () => (
-    <div className="BreakHourContainer">
-      {!(rows.length > 0) && (
-        <div className="BreakHourAddDataContainer">
-          <button
-            className="AddDataButton"
-            onClick={() => setShowAddData(true)}
-          >
-            + Add Data
-          </button>
-        </div>
-      )}
-
-      {showAddData && (
-        <AddData
-          headers={nested.header || []}
-          IndicationText="Add New Break Hour"
-          isOpen={showAddData}
-          onClose={() => setShowAddData(false)}
-          onSave={handleAddDataSave}
-        />
-      )}
-
-      {/* {rows.length > 0 ? ( */}
-      <div className="BreakHourCards">
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className="BreakHourCard">
-            <div className="BreakHourCardHeader">
-              <h3>
-                {row.find((f) => f.key === "BREAK NAME")?.value ||
-                  `Break ${rowIdx + 1}`}
-              </h3>
-              {!isView && (
-                <div className="BreakHourActions">
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    onClick={() => handleEditClick(rowIdx)}
-                  >
-                    Edit
-                  </Button>
-                  {/* <Button
-                    size="sm"
-                    colorScheme="red"
-                    onClick={() => handleDeleteRow(rowIdx)}
-                  >
-                    Delete
-                  </Button> */}
-                </div>
-              )}
-            </div>
-
-            {/* Grid layout for fields */}
-            <div className="BreakHourCardContent">
-              {row.map((field, idx) => (
-                <div key={idx} className="BreakHourFieldCard">
-                  <strong>{field.key}</strong>
-                  <span>{field.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* ) : (
-        <div>Please add the data in the settings tab</div>
-      )} */}
-    </div>
+    <BreakHourCompo 
+      rows={rows}
+      nested={nested}
+      isView={isView}
+      handleEditClick={handleEditClick}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+    />
   );
 
-  const renderContinousImrovementStatus = () => {
-    return (
-      <div className="Gap">
-        <div className="AddDataContainer">
-          {!isView && (
-            <button
-              className="AddDataButton AddDataContainer"
-              onClick={() => setShowAddData(true)}
-            >
-              Add Data
-            </button>
-          )}
-
-          {showAddData && (
-            <AddData
-              headers={nested.header || []}
-              IndicationText="Add New Data"
-              isOpen={showAddData}
-              onClose={() => setShowAddData(false)}
-              onSave={handleAddDataSave}
-            />
-          )}
-        </div>
-
-        {rows.map((row, rowIndex) => {
-          const rowData = getRowData(row);
-
-          return (
-            <div key={rowIndex} className="ContinousImprovementCard">
-              {/* Action Buttons */}
-              {!isView && (
-                <div className="ImprovementActions">
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    onClick={() => handleEditClick(rowIndex)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    onClick={() => handleDeleteRow(rowIndex)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              )}
-              {/* Header */}
-              <div className="ContinousImprovementHeaderContainer">
-                <div className="ContinousImprovementHeader">
-                  <strong>IMP. NO:</strong>
-                  <div>{rowData["IMP. NO"]}</div>
-                </div>
-                <div className="ContinousImprovementHeader">
-                  <strong>DATE:</strong>
-                  <div>{rowData["DATE"]}</div>
-                </div>
-                <div className="ContinousImprovementHeader">
-                  <strong>NATURE OF PROBLEM:</strong>
-                  <div>{rowData["NATURE OF PROBLEM"]}</div>
-                </div>
-                <div className="ContinousImprovementHeader">
-                  <strong>IMPROVEMENT ACTION:</strong>
-                  <div>{rowData["IMPROVEMENT ACTION"]}</div>
-                </div>
-                <div className="ContinousImprovementHeader">
-                  <strong>DONE BY:</strong>
-                  <div>{rowData["DONE BY"]}</div>
-                </div>
-              </div>
-              {/* Section Rows */}
-              <div className="ImprovementSection">
-                <strong>ROOT CAUSE:</strong>
-                <span>{rowData["ROOT CAUSE"]}</span>
-              </div>
-
-              <div className="ImprovementSection">
-                <strong>CORRECTIVE ACTION:</strong>
-                <span>{rowData["CORRECTIVE ACTION"]}</span>
-              </div>
-
-              <div className="ImprovementSection">
-                <strong>ACTION IMPLEMENTATION:</strong>
-                <span>{rowData["ACTION IMPLEMENTATION"]}</span>
-              </div>
-
-              {/* Before/After with Images */}
-              <div className="ImprovementSectionImage">
-                <div className="BeforeImage">
-                  <strong>BEFORE:</strong>
-                  {rowData["BEFORE"] ? (
-                    <img
-                      src={rowData["BEFORE"]}
-                      alt="Before"
-                      style={{ width: "120px", border: "1px solid #ccc" }}
-                    />
-                  ) : (
-                    "No Image"
-                  )}
-                </div>
-                <div className="AfterImage">
-                  <strong>AFTER:</strong>
-                  {rowData["AFTER"] ? (
-                    <img
-                      src={rowData["AFTER"]}
-                      alt="After"
-                      style={{ width: "120px", border: "1px solid #ccc" }}
-                    />
-                  ) : (
-                    "No Image"
-                  )}
-                </div>
-              </div>
-
-              <div className="ImprovementSection">
-                <strong>RESULTS AND BENEFITS:</strong>
-                <div>{rowData["RESULTS AND BENEFITS"]}</div>
-              </div>
-
-              <div className="ImprovementSection">
-                <strong>HORIZONTAL DEPLOYMENT:</strong>
-                <div>{rowData["HORIZONTAL DEPLOYMENT"]}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  const renderContinousImrovementStatus = () => (
+    <ContinousImprovementCompo 
+      rows={rows}
+      nested={nested}
+      getRowData={getRowData}
+      isView={isView}
+      handleEditClick={handleEditClick}
+      handleDeleteRow={handleDeleteRow}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+    />
+  );
 
   const renderDefault = () => (
-    <div className="Gap">
-      <div className="AddDataContainer">
-        {!(rows.length > 0 && nested.process === "Settings") && !isView && (
-          <div className="AddDataContainer">
-            <button
-              className="AddDataButton AddDataContainer"
-              onClick={() => setShowAddData(true)}
-            >
-              Add Data
-            </button>
-          </div>
-        )}
-
-        {showAddData && (
-          <AddData
-            headers={nested.header || []}
-            IndicationText="Add New Data"
-            isOpen={showAddData}
-            onClose={() => setShowAddData(false)}
-            onSave={handleAddDataSave}
-          />
-        )}
-      </div>
-      <FormPage process={nested} isView={isView} />
-    </div>
+    <DefaultProcessCompo 
+      nested={nested}
+      isView={isView}
+      showAddData={showAddData}
+      setShowAddData={setShowAddData}
+      handleAddDataSave={handleAddDataSave}
+    />
   );
 
   return (
@@ -875,12 +526,14 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{nested.process}</ModalHeader>
+          <ModalHeader>{nested?.process || "Loading..."}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody minH="400px" display="flex" flexDirection="column">
             {loading || processLoading ? (
-              <Loading />
-            ) : (
+              <Flex flex="1" align="center" justify="center" direction="column">
+                <Loading />
+              </Flex>
+            ) : nested ? (
               <>
                 {nested.process === "Product Validation Report" &&
                   renderProductValidationReport()}
@@ -899,6 +552,10 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
                   nested.process !== "Continous Improvement Status" &&
                   renderDefault()}
               </>
+            ) : (
+                <Flex flex="1" align="center" justify="center">
+                    <Loading />
+                </Flex>
             )}
           </ModalBody>
         </ModalContent>
@@ -923,6 +580,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           mode="form"
         />
       )}
+      {renderImagePopUp()}
     </div>
   );
 }

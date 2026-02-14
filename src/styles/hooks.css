@@ -1,14 +1,20 @@
-.LoadingContainer{
-    position: absolute;
-    top: 40%;
-    left: 47%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.LoadingContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(1px);
+  z-index: 10000;
+  pointer-events: all;
 }
 
-.LoadingContainer span{
-    text-align: center;
+.LoadingContainer span {
+  text-align: center;
 }
 
 .UserDetailsContainer {
@@ -25,7 +31,7 @@
   font-size: 16px;
   text-align: center;
   border-bottom: 1px solid var(--primary-color);
-  padding:0 0 6px 0;
+  padding: 0 0 6px 0;
   margin: 0 0 8px 0;
 }
 

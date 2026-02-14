@@ -1,26 +1,45 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setMessage } from "../redux/slices/common";
 import {
+  setAllUsers,
   setToken,
   setUserDetails,
   setLogin,
-  setAllUsers,
 } from "../redux/slices/auth";
+import { setMessage } from "../redux/slices/common";
+
+const URL = process.env.REACT_APP_AUTH_URL;
+
+export const useAllUsers = (enabled = true) => {
+  const dispatch = useDispatch();
+
+  return useQuery({
+    queryKey: ["allUsers"],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/all`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data.result;
+    },
+    enabled,
+    onSuccess: (data) => {
+      dispatch(setAllUsers(data));
+    },
+  });
+};
 
 function Auth() {
-  const URL = process.env.REACT_APP_AUTH_URL;
   const userDetails = useSelector((state) => state.auth.userDetails);
-  const allUsers = useSelector((state) => state.auth.allUsers);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [isOtpCorrect, setisOtpCorrect] = useState(false);
-  const [isPasswordReset, setisPasswordReset] = useState(false);
 
   const handleRegister = async (credentials) => {
     setLoading(true);
@@ -163,21 +182,7 @@ function Auth() {
   };
 
   const handleGetAllUser = async () => {
-    setLoading(true);
-    if (allUsers.length > 0) return;
-    try {
-      const response = await axios.get(`${URL}/all`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      dispatch(setAllUsers(response.data.result));
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+    // This is now legacy, using useAllUsers hook instead
   };
 
   return {
@@ -187,6 +192,7 @@ function Auth() {
     handleForgotPassword,
     handleGetAllUser,
     loading,
+    isOtpCorrect,
   };
 }
 

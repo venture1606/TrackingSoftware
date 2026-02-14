@@ -22,7 +22,7 @@
   ],
   "DefaultHeaderAndProcessId": [
     {
-      "tableHeader": "MASTER",
+      "tableHeader": "MASTER PIECE",
       "processId": "DD/R/008"
     },
     {
@@ -128,6 +128,11 @@
       "process": "value"
     },
     {
+        "key": "ITEM LIST",
+        "value": "Pending",
+        "process": "value"
+    },
+    {
       "key": "BOM",
       "value": "Pending",
       "process": "value"
@@ -151,11 +156,6 @@
         "key": "ADD TO PRODUCT LIST",
         "value": "Pending",
         "process": "value"
-    },
-    {
-        "key": "ITEM LIST",
-        "value": "Pending",
-        "process": "value"
     }
   ],
   "DefaultSelectProcess": [
@@ -164,7 +164,7 @@
   "ColorProcess": [
     "PROTO",
     "VALIDATION",
-    "MASTER",
+    "MASTER PIECE",
     "SETTING"
   ],
   "ArrayValuesProcess": [
@@ -422,11 +422,5 @@
     "UNITS",
     "GRADE",
     "ITEM-NAME"
-  ],
-  "noEditableFields":[
-    "ITEM-NAME",
-    "GRADE",
-    "QTY",
-    "UNITS"
   ]
 }

@@ -1,4 +1,10 @@
 {
+  "noEditableFields":[
+    "ITEM-NAME",
+    "GRADE",
+    "QTY",
+    "UNITS"
+  ],
     "DepartmentsList": [
     {
     "id": 1,
@@ -2190,7 +2196,7 @@
         "UPLOAD",
         "PROTO",
         "VALIDATION",
-        "MASTER"
+        "MASTER PIECE"
       ],
       "data": [
         [
@@ -2207,7 +2213,7 @@
           { "key": "UPLOAD", "value": "File.pdf" },
           { "key": "PROTO", "value": "Prototype 1" },
           { "key": "VALIDATION", "value": "Validated" },
-          { "key": "MASTER", "value": "processId", 
+          { "key": "MASTER PIECE", "value": "processId", 
             "process":  {
               "process": "Master Piece",
               "header": [

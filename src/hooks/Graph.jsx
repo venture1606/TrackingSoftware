@@ -1,7 +1,7 @@
 import React from "react"
 
 import { Box, HStack, Stack, Text } from "@chakra-ui/react"
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis, Line as ReLine } from "recharts"
+import { CartesianGrid, LineChart, Tooltip, XAxis, YAxis, Line as ReLine } from "recharts"
 
 // Custom Tooltip (still reusable)
 function CustomTooltip({ active, payload, label }) {

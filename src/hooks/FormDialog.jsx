@@ -18,13 +18,17 @@ import {
   CheckboxGroup,
   IconButton,
   Tooltip,
+  Box,
+  Text,
+  Center,
 } from "@chakra-ui/react";
-import { RepeatIcon } from "@chakra-ui/icons";
+import { RepeatIcon, AttachmentIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 
 import ItemsData from "../utils/ItemsData";
 import { updateSelectOptions } from "../redux/slices/auth";
 import { findAutoFillData, getFilteredOptions } from "../utils/constant";
+import DataCheck from "../utils/DataCheck.json";
 
 function FormDialog({
   IndicationText,
@@ -44,7 +48,7 @@ function FormDialog({
     (state) => state.department.detailingProducts
   );
   const SelectOptionsArray =
-    useSelector((state) => state.auth.SelectOptionsArray) ||
+    useSelector((state) => (state.auth.SelectOptionsArray?.length > 0 ? state.auth.SelectOptionsArray : null)) ||
     ItemsData.SelectOptionsArray;
   const groupItem = useSelector((state) => state.auth.groupItem);
 
@@ -57,8 +61,9 @@ function FormDialog({
     TimeArrays,
     NumberFields,
     MandatoryFields,
-    noEditableFields,
   } = ItemsData;
+
+  const noEditableFields = DataCheck?.noEditableFields || [];
 
   const [formValues, setFormValues] = useState(initialData);
   const [selectValues, setSelectValues] = useState({});
@@ -121,7 +126,7 @@ function FormDialog({
   useEffect(() => {
     setFormValues(initialData);
     refreshDynamicOptions(initialData, selectValues);
-  }, [initialData]);
+  }, [initialData, refreshDynamicOptions, selectValues]);
 
   useEffect(() => {
     if (SelectArray) {
@@ -261,24 +266,25 @@ function FormDialog({
 
       const items = Object.keys(merged).map((key) => {
         const value = merged[key];
-
-        // Determine process type
+        const lowerKey = key.trim().toLowerCase();
         let process = "value";
 
-        if (DefaultSelectProcess.includes(key)) {
+        if (DefaultSelectProcess.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "multiSelect";
-        } else if (SelectArray?.some((s) => s.key === key)) {
+        } else if (SelectArray?.some((s) => s.key.trim().toLowerCase() === lowerKey)) {
           process = "select";
-        } else if (ImageUploadArray.includes(key)) {
+        } else if (ImageUploadArray.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "image";
-        } else if (ArrayValuesProcess.includes(key)) {
+        } else if (ArrayValuesProcess.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "array";
-        } else if (DateFieldsArray.includes(key)) {
+        } else if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "date";
-        } else if (TimeArrays.includes(key)) {
+        } else if (TimeArrays.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "time";
-        } else if (NumberFields.includes(key)) {
+        } else if (NumberFields.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "number";
+        } else if (SelectOptionsArray.some(item => item.key.trim().toLowerCase() === lowerKey)) {
+           process = "select";
         }
 
         // unwrap image file if needed
@@ -332,7 +338,7 @@ function FormDialog({
                 <FormControl key={index}>
                   <FormLabel>{field.label}</FormLabel>
                   <Select
-                    isDisabled={noEditableFields.includes(field.key)}
+                    isDisabled={noEditableFields.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase())}
                     placeholder={`Select ${field.label}`}
                     value={selectValues[field.key] || ""}
                     onChange={(e) =>
@@ -354,14 +360,14 @@ function FormDialog({
             {FormArray &&
               FormArray.map((field, index) => {
                 const selectMatch = SelectOptionsArray.find(
-                  (item) => item.key === field.key
+                  (item) => item.key.trim().toLowerCase() === field.key.trim().toLowerCase()
                 );
 
                 return (
                   <FormControl key={index}>
                     <FormLabel>{field.label}</FormLabel>
 
-                    {DefaultSelectProcess.includes(field.key) ? (
+                    {DefaultSelectProcess.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Checkbox group
                       <CheckboxGroup
                         isDisabled={noEditableFields.includes(field.key)}
@@ -383,7 +389,7 @@ function FormDialog({
                           })}
                         </Stack>
                       </CheckboxGroup>
-                    ) : ArrayValuesProcess.includes(field.key) ? (
+                    ) : ArrayValuesProcess.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Array inputs
                       <Stack spacing={2}>
                         {(Array.isArray(formValues[field.key])
@@ -520,7 +526,7 @@ function FormDialog({
                           />
                         )}
                       </Stack>
-                    ) : DateFieldsArray.includes(field.key) ? (
+                    ) : DateFieldsArray.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Date field
                       <Input
                         isDisabled={noEditableFields.includes(field.key)}
@@ -530,41 +536,78 @@ function FormDialog({
                           handleInputChange(field.key, e.target.value)
                         }
                       />
-                    ) : ImageUploadArray.includes(field.key) ? (
-                      // ✅ Image upload with thumbnail preview
-                      <Stack spacing={3}>
-                        <Input
-                          isDisabled={noEditableFields.includes(field.key)}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0] || null;
-                            if (file) {
-                              const previewUrl = URL.createObjectURL(file);
-                              handleInputChange(field.key, {
-                                file,
-                                previewUrl,
-                              });
-                            } else {
-                              handleInputChange(field.key, null);
-                            }
-                          }}
-                        />
-                        {formValues[field.key]?.previewUrl && (
-                          <img
-                            src={formValues[field.key].previewUrl}
-                            alt="Preview"
-                            style={{
-                              width: "120px",
-                              height: "120px",
-                              objectFit: "cover",
-                              borderRadius: "8px",
-                              border: "1px solid #ccc",
-                            }}
-                          />
-                        )}
-                      </Stack>
-                    ) : TimeArrays.includes(field.key) ? (
+                    ) : ImageUploadArray.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
+                       // ✅ Image upload with centered dashed UI
+                       <Stack spacing={3} align="center">
+                         <input 
+                           type="file" 
+                           id={`file-upload-dialog-${index}`}
+                           accept="image/*"
+                           style={{ display: "none" }}
+                           disabled={noEditableFields.includes(field.key)}
+                           onChange={(e) => {
+                             const file = e.target.files?.[0] || null;
+                             if (file) {
+                               const previewUrl = URL.createObjectURL(file);
+                               handleInputChange(field.key, {
+                                 file,
+                                 previewUrl,
+                               });
+                             } else {
+                               handleInputChange(field.key, null);
+                             }
+                           }}
+                         />
+                         <Box
+                            as="label"
+                            htmlFor={`file-upload-dialog-${index}`}
+                            cursor={noEditableFields.includes(field.key) ? "not-allowed" : "pointer"}
+                            border="2px dashed"
+                            borderColor="gray.300"
+                            borderRadius="xl"
+                            p={4}
+                            width="100%"
+                            bg="white"
+                            _hover={!noEditableFields.includes(field.key) ? { borderColor: "blue.400", bg: "gray.50" } : {}}
+                            transition="all 0.2s"
+                            opacity={noEditableFields.includes(field.key) ? 0.6 : 1}
+                         >
+                            <Center gap={2}>
+                              <AttachmentIcon color="gray.500" />
+                              <Text fontSize="sm" color="gray.600" fontWeight="500">
+                                Upload Image
+                              </Text>
+                            </Center>
+                         </Box>
+
+                         {formValues[field.key]?.previewUrl && (
+                           <Flex direction="column" align="center" gap={2} width="100%">
+                             <Box border="1px solid" borderColor="gray.100" p={1} borderRadius="lg" bg="white">
+                               <img
+                                 src={formValues[field.key].previewUrl}
+                                 alt="Preview"
+                                 style={{
+                                   width: "100%",
+                                   maxHeight: "200px",
+                                   objectFit: "contain",
+                                   borderRadius: "8px",
+                                 }}
+                               />
+                             </Box>
+                             {!noEditableFields.includes(field.key) && (
+                               <Button
+                                 size="xs"
+                                 colorScheme="red"
+                                 variant="ghost"
+                                 onClick={() => handleInputChange(field.key, null)}
+                               >
+                                 Remove Image
+                               </Button>
+                             )}
+                           </Flex>
+                         )}
+                       </Stack>
+                    ) : TimeArrays.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Time field
                       <Input
                         isDisabled={noEditableFields.includes(field.key)}
@@ -574,7 +617,7 @@ function FormDialog({
                           handleInputChange(field.key, e.target.value)
                         }
                       />
-                    ) : NumberFields.includes(field.key) ? (
+                    ) : NumberFields.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Number field
                       <Input
                         isDisabled={noEditableFields.includes(field.key)}

@@ -1,23 +1,21 @@
-import React, { useState } from "react";
-
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { setDepartments } from "../redux/slices/department";
 
-function Department() {
-  const [loading, setLoading] = useState(false);
-  const departments = useSelector((state) => state.department.departments);
+const URL = process.env.REACT_APP_DEPARTMENT_URL;
+
+export const useDepartments = () => {
   const dispatch = useDispatch();
 
-  const URL = process.env.REACT_APP_DEPARTMENT_URL;
-
-  const handleGetAllDepartments = async () => {
-    if (departments.length > 0) return;
-    setLoading(true);
-    try {
+  return useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
       const response = await axios.get(`${URL}/all`);
-
+      return response.data.data;
+    },
+    onSuccess: (data) => {
       dispatch(
         setMessage({
           status: "success",
@@ -25,19 +23,14 @@ function Department() {
           message: "Fetched",
         }),
       );
+      dispatch(setDepartments(data));
+    },
+    refetchOnWindowFocus: false,
+  });
+};
 
-      dispatch(setDepartments(response.data.data));
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    loading,
-    handleGetAllDepartments,
-  };
+function Department() {
+  return {};
 }
 
 export default Department;

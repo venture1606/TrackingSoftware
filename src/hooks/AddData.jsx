@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -16,8 +16,11 @@ import {
   Select,
   IconButton,
   Tooltip,
+  Box,
+  Text,
+  Center,
 } from "@chakra-ui/react";
-import { RepeatIcon } from "@chakra-ui/icons";
+import { RepeatIcon, AttachmentIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
 
 import ItemsData from "../utils/ItemsData";
@@ -38,7 +41,7 @@ function AddData({
     (state) => state.department.detailingProducts
   );
   const SelectOptionsArray =
-    useSelector((state) => state.auth.SelectOptionsArray) ||
+    useSelector((state) => (state.auth.SelectOptionsArray?.length > 0 ? state.auth.SelectOptionsArray : null)) ||
     ItemsData.SelectOptionsArray;
   const groupItem = useSelector((state) => state.auth.groupItem);
 
@@ -61,7 +64,7 @@ function AddData({
     return currentFormData.map((field) => {
       if (field.process === "select") {
         const defaultMatch = SelectOptionsArray.find(
-          (item) => item.key === field.key
+          (item) => item.key.trim().toLowerCase() === field.key.trim().toLowerCase()
         );
         const defaultOptions = defaultMatch?.value || [];
         const newOptions = getFilteredOptions(
@@ -105,96 +108,47 @@ function AddData({
 
   // Initialize formData whenever headers change
   useEffect(() => {
+    const getProcessType = (key) => {
+        if (!key) return "value";
+        const lowerKey = key.trim().toLowerCase();
+        if (DefaultSelectProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "multiSelect";
+        if (ArrayValuesProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "arrayInput";
+        if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) return "date";
+        if (ImageUploadArray.some(h => h.trim().toLowerCase() === lowerKey)) return "image";
+        if (TimeArrays.some(h => h.trim().toLowerCase() === lowerKey)) return "time";
+        if (NumberFields.some(h => h.trim().toLowerCase() === lowerKey)) return "number";
+        if (DefaultHeaderAndProcessId.some(item => item.tableHeader.trim().toLowerCase() === lowerKey)) return "processId";
+        if (SelectOptionsArray.some(item => item.key.trim().toLowerCase() === lowerKey)) return "select";
+        return "value";
+    };
+
     setFormData((prevData) => {
       const mappedData = headers.map((key) => {
         const prevField = prevData.find((f) => f.key === key);
+        const process = getProcessType(key);
+        let value = prevField?.value;
 
-        const match = DefaultHeaderAndProcessId.find(
-          (item) => item.tableHeader === key
-        );
-
-        if (match) {
-          if (DefaultSelectProcess.includes(key)) {
-            return {
-              key,
-              value: prevField?.value || [],
-              process: "multiSelect",
-            };
-          }
-          return {
-            key,
-            value: prevField?.value || match.processId,
-            process: "processId",
-          };
+        if (value === undefined) {
+             if (process === "multiSelect") value = [];
+             else if (process === "arrayInput") value = [""];
+             else if (process === "processId") {
+                 const match = DefaultHeaderAndProcessId.find(item => item.tableHeader === key);
+                 value = match ? match.processId : "";
+             } else if (process === "select") {
+                 const selectMatch = SelectOptionsArray.find(item => item.key.trim().toLowerCase() === key.trim().toLowerCase());
+                 value = selectMatch?.value.some(v => v.toLowerCase() === "red") ? "Red" : "";
+             } else {
+                 value = "";
+             }
         }
 
-        if (DefaultSelectProcess.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || [],
-            process: "multiSelect",
-          };
+        const field = { key, value, process };
+        if (process === "select") {
+            const selectMatch = SelectOptionsArray.find(item => item.key.trim().toLowerCase() === key.trim().toLowerCase());
+            field.options = selectMatch ? selectMatch.value : [];
         }
 
-        if (ArrayValuesProcess.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || [""],
-            process: "arrayInput",
-          };
-        }
-
-        // Dropdown select
-        const selectMatch = SelectOptionsArray.find((item) => item.key === key);
-        if (selectMatch) {
-          const hasRed = selectMatch.value.includes("Red");
-          return {
-            key,
-            value: prevField?.value || (hasRed ? "Red" : ""),
-            process: "select",
-            options: selectMatch.value,
-          };
-        }
-
-        // Date
-        if (DateFieldsArray.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || "",
-            process: "date",
-          };
-        }
-
-        // Image
-        if (ImageUploadArray.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || null,
-            process: "image",
-          };
-        }
-
-        if (TimeArrays.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || "",
-            process: "time",
-          };
-        }
-
-        if (NumberFields.includes(key)) {
-          return {
-            key,
-            value: prevField?.value || "",
-            process: "number",
-          };
-        }
-
-        return {
-          key,
-          value: prevField?.value || "",
-          process: "value",
-        };
+        return field;
       });
 
       return refreshOptions(mappedData);
@@ -434,7 +388,7 @@ function AddData({
                 <Input
                   value={field.key}
                   isReadOnly
-                  width="200px"
+                  width="150px"
                   placeholder="Key"
                 />
 
@@ -608,10 +562,12 @@ function AddData({
                     }
                   />
                 ) : field.process === "image" ? (
-                  <Stack spacing={3}>
-                    <Input
+                  <Stack spacing={3} align="center">
+                    <input
                       type="file"
+                      id={`file-upload-add-${idx}`}
                       accept="image/*"
+                      style={{ display: "none" }}
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         if (file) {
@@ -621,32 +577,49 @@ function AddData({
                           handleValueChange(idx, null);
                         }
                       }}
-                      borderColor={
-                        errorFields.includes(field.key) ? "red.500" : undefined
-                      }
-                      borderWidth={
-                        errorFields.includes(field.key) ? "2px" : undefined
-                      }
                     />
+                    <Box
+                      as="label"
+                      htmlFor={`file-upload-add-${idx}`}
+                      cursor="pointer"
+                      border="1px dashed"
+                      borderColor={errorFields.includes(field.key) ? "red.500" : "gray.300"}
+                      borderRadius="md"
+                      p={1}
+                      width="100%"
+                      bg="white"
+                      _hover={{ borderColor: "blue.400", bg: "gray.50" }}
+                      transition="all 0.2s"
+                    >
+                      <Center gap={2}>
+                        <AttachmentIcon color="gray.500" />
+                        <Text fontSize="sm" color="gray.600" fontWeight="500">
+                          Upload Image
+                        </Text>
+                      </Center>
+                    </Box>
+
                     {field.value?.previewUrl && (
-                      <Flex align="center" gap={2}>
-                        <img
-                          src={field.value.previewUrl}
-                          alt="Preview"
-                          style={{
-                            width: "120px",
-                            height: "120px",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                          }}
-                        />
+                      <Flex direction="column" align="center" gap={2} width="100%">
+                        <Box border="1px solid" borderColor="gray.200" p={1} borderRadius="lg" bg="white">
+                          <img
+                            src={field.value.previewUrl}
+                            alt="Preview"
+                            style={{
+                              width: "100%",
+                              maxHeight: "200px",
+                              objectFit: "contain",
+                              borderRadius: "8px",
+                            }}
+                          />
+                        </Box>
                         <Button
-                          size="sm"
+                          size="xs"
                           colorScheme="red"
+                          variant="ghost"
                           onClick={() => handleValueChange(idx, null)}
                         >
-                          Remove
+                          Remove Image
                         </Button>
                       </Flex>
                     )}

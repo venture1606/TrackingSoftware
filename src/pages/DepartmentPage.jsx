@@ -1,22 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { 
+    Button, 
+    Select, 
+    Box, 
+    IconButton,
+    Tooltip
+} from "@chakra-ui/react";
+import { DownloadIcon } from "@chakra-ui/icons";
 
 // importing components
 import FormPage from "../components/FormPage";
 import Loading from "../hooks/Loading";
-import AddData from "../hooks/AddData";
-import DepartmentDashboard from "./DepartmentDashboard";
+import HeaderSection from "../components/HeaderSection";
+import SearchCompo from "../components/SearchCompo";
+import FilterCompo from "../components/FilterCompo";
 
 // importing styles
 import "../styles/departmentpage.css";
 
-// importing the datas
-import ItemsData from "../utils/ItemsData.json";
-
 // importing API's
-import Department from "../services/Department";
-import Process from "../services/Process";
+import { useDepartments } from "../services/Department";
+import { 
+  useProcessesByDepartmentId, 
+  useProcessById, 
+  useSearchSelectOptions 
+} from "../services/Process";
 import { setMainTableData, setProcess } from "../redux/slices/department";
 
 // utility: transform process object → FormPage format
@@ -83,26 +93,21 @@ const combineSimilarRows = (mainTableData) => {
   };
 };
 
-function DepartmentPage({ department, processId }) {
+function DepartmentPage({ department: propDept, processId: propProcId }) {
+  // Use params from router if props not provided (depending on usage)
+  const params = useParams();
+  const department = propDept || params.department;
+  const processId = propProcId || params.processId;
+
   const dispatch = useDispatch();
-  const process = useSelector((state) => state.department.process);
-  const departments = useSelector((state) => state.department.departments);
   const mainTableData = useSelector((state) => state.department.mainTableData);
 
-  const { loading, handleGetAllDepartments } = Department();
-  const {
-    handleGetProcessbyDepartmentId,
-    handleSearchSelectOptions,
-    handleAddData,
-    handleGetProcessByProcessId,
-    loading: processLoading,
-  } = Process();
+  const { data: departments = [], isLoading: loadingDepts } = useDepartments();
+  useSearchSelectOptions(); 
 
   const navigate = useNavigate();
 
   const [selectedProcess, setSelectedProcess] = useState("");
-  const [processes, setProcesses] = useState([]);
-  const [showAddData, setShowAddData] = useState(false);
   const [isMerged, setIsMerged] = useState(false);
   const [originalMainTable, setOriginalMainTable] = useState(null);
 
@@ -110,27 +115,17 @@ function DepartmentPage({ department, processId }) {
     (d) => d.name.toLowerCase() === department?.toLowerCase()
   );
 
-  useEffect(() => {
-    handleGetAllDepartments();
-    handleSearchSelectOptions();
-  }, []);
+  const { 
+      data: processes = [], 
+      isLoading: loadingProcesses 
+  } = useProcessesByDepartmentId(currentDepartment?._id);
 
   useEffect(() => {
-    const fetchProcesses = async () => {
-      if (currentDepartment?._id) {
-        const data = await handleGetProcessbyDepartmentId(
-          currentDepartment._id
-        );
-        setProcesses(data);
-        dispatch(setProcess(data));
+      if (processes.length > 0) {
+          dispatch(setProcess(processes));
       }
-    };
-    fetchProcesses();
-    setSelectedProcess("");
-    dispatch(setMainTableData(null));
-  }, [currentDepartment, department]);
-  
-  // Sync selectedProcess with URL processId
+  }, [processes, dispatch]);
+
   useEffect(() => {
     if (processId && processes.length > 0) {
       const found = processes.find((p) => (p._id || p.id) === processId);
@@ -142,46 +137,34 @@ function DepartmentPage({ department, processId }) {
     }
   }, [processId, processes]);
 
+  const foundProcess = processes.find((p) => p.process === selectedProcess);
+  const selectedProcessId = foundProcess ? (foundProcess._id || foundProcess.id) : null;
+
+  const { 
+      data: processDataRaw, 
+      isLoading: loadingSingleProcess 
+  } = useProcessById(selectedProcessId);
+
   useEffect(() => {
-    const fetchData = async () => {
-      dispatch(setMainTableData(null));
-      setIsMerged(false);
-      setOriginalMainTable(null);
+    dispatch(setMainTableData(null));
+    setIsMerged(false);
+    setOriginalMainTable(null);
 
-      if (selectedProcess && processes.length > 0) {
-        const found = processes.find((p) => p.process === selectedProcess);
-        if (found) {
-          const data = await handleGetProcessByProcessId(found._id || found.id);
-          dispatch(setMainTableData(transformProcess(data)));
-        }
-      } else {
-        dispatch(setMainTableData(null));
-      }
-    };
-    fetchData();
-  }, [selectedProcess, processes]);
+    if (processDataRaw) {
+        const transformed = transformProcess(processDataRaw);
+        dispatch(setMainTableData(transformed));
+    }
+  }, [processDataRaw, dispatch]);
 
-  const handleAddDataSave = async (data) => {
-    const processId = mainTableData.id;
-    const response = await handleAddData({ items: data, id: processId });
-    dispatch(setMainTableData(transformProcess(response)));
-  };
-
-  // ✅ Toggle (Merge / Restore) handler
   const handleSortMerge = () => {
     if (!mainTableData) return;
 
     if (!isMerged) {
-      // 🔹 Store original before merging
       setOriginalMainTable(mainTableData);
-
-      // 🔹 Merge and update Redux
       const merged = combineSimilarRows(mainTableData);
       dispatch(setMainTableData(merged));
       setIsMerged(true);
-
     } else {
-      // 🔹 Restore the original main table
       if (originalMainTable) {
         dispatch(setMainTableData(originalMainTable));
       }
@@ -189,86 +172,100 @@ function DepartmentPage({ department, processId }) {
     }
   };
 
-  if (loading || processLoading) {
+  if (loadingDepts || loadingProcesses || loadingSingleProcess) {
     return <Loading />;
   }
 
   return (
-    <div className="AppRightContainer DepartmentPageContainer">
-      {currentDepartment && (
-        <div className="ProcessListContainer">
-          <select
-            value={selectedProcess}
-            className="ProcessSelectContainer"
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") {
-                navigate(`/department/${department}`);
-              } else {
-                const found = processes.find((p) => p.process === val);
-                if (found) {
-                  navigate(`/department/${department}/${found._id || found.id}`);
-                }
-              }
-            }}
-          >
-            <option value="">-- Select Process --</option>
-            {currentDepartment.process.map((subProc, index) => (
-              <option
-                key={index}
-                value={subProc}
-                className="ProcessOptionContainer"
-              >
-                {subProc}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+    <div className="AppRightContainer DepartmentPageContainer" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px", width: "100%", overflow: "hidden" }}>
+      
+      <HeaderSection 
+          title={selectedProcess || `${currentDepartment?.name || department} Analysis`} 
+          description={selectedProcess ? `Manage and track ${selectedProcess.toLowerCase()} specifications and statuses.` : `Overview and department-level analysis for ${department}.`}
+      >
+          {selectedProcess && (
+            <>
+              <SearchCompo 
+                  placeholder="Search records..." 
+                  onSearch={(term) => console.log("Searching for:", term)} 
+              />
+              
+              <FilterCompo 
+                  filters={["Completed", "Pending", "In Progress"]} 
+                  onFilterChange={(val) => console.log("Filter:", val)}
+              />
 
-      {selectedProcess && (
-        <div className="SelectedProcessContainer">
-          <h1>{selectedProcess}</h1>
-          <div className="AddDataContainer">
-            <button
-              className="AddDataButton IconButtonStyle"
-              onClick={() => setShowAddData(true)}
+              <Tooltip label="Export Data">
+                <IconButton 
+                    icon={<DownloadIcon />} 
+                    size="sm"
+                    variant="solid" 
+                    bg="white"
+                    color="gray.600"
+                    border="1px solid"
+                    borderColor="gray.200"
+                    _hover={{
+                        bg: "gray.50",
+                        boxShadow: "sm",
+                        borderColor: "gray.300",
+                        color: "blue.500"
+                    }}
+                    transition="all 0.2s"
+                    aria-label="Export Data"
+                />
+              </Tooltip>
+            </>
+          )}
+
+          <Box width="180px">
+              <Select
+                  placeholder="Select Process"
+                  value={selectedProcess}
+                  onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                          navigate(`/department/${department}`);
+                      } else {
+                          const processObj = processes.find((p) => p.process === val);
+                          if (processObj) {
+                              navigate(`/department/${department}/${processObj._id || processObj.id}`);
+                          } else {
+                               navigate(`/department/${department}`);
+                          }
+                      }
+                  }}
+                  bg="white"
+                  borderColor="gray.300"
+                  size="sm"
+                  fontSize="xs"
+                  borderRadius="md"
+              >
+                  {currentDepartment?.process.map((subProc, index) => (
+                      <option key={index} value={subProc}>{subProc}</option>
+                  ))}
+              </Select>
+          </Box>
+
+          {selectedProcess === "Procurement Register" && (
+            <Button
+              onClick={handleSortMerge}
+              colorScheme={isMerged ? "red" : "purple"}
+              variant="solid"
             >
-              Add Data
-            </button>
-            {selectedProcess === "Procurement Register" && (
-              <button
-                className="AddDataButton IconButtonStyle"
-                onClick={handleSortMerge}
-              >
-                {isMerged ? "Undo Sort" : "Sort"}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {showAddData && (
-        <AddData
-          headers={mainTableData?.header || []}
-          IndicationText="Add New Data"
-          isOpen={showAddData}
-          onClose={() => setShowAddData(false)}
-          onSave={handleAddDataSave}
-        />
-      )}
-
-      {selectedProcess && (
-        <FormPage
-          key={selectedProcess}
-          process={mainTableData}
-          isView={selectedProcess === "Products"}
-        />
-      )}
-
-      {!selectedProcess && (
-        <DepartmentDashboard Content={currentDepartment?.name || ""} />
-      )}
+              {isMerged ? "Undo Sort" : "Sort Data"}
+            </Button>
+          )}
+      </HeaderSection>
+      
+      <Box flex="1" overflow="hidden" display="flex" flexDirection="column">
+        {selectedProcess && (
+           <FormPage
+             key={selectedProcess}
+             process={mainTableData}
+             isView={selectedProcess === "Products"}
+           />
+        )}
+      </Box>
     </div>
   );
 }
