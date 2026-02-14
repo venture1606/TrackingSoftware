@@ -1,144 +1,166 @@
-import React, { useState } from 'react'
-import axios from 'axios'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { setMessage } from '../redux/slices/common'
-import { setToken, setUserDetails, setLogin, setAllUsers } from '../redux/slices/auth'
+import React, { useState } from "react";
+import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setMessage } from "../redux/slices/common";
+import {
+  setToken,
+  setUserDetails,
+  setLogin,
+  setAllUsers,
+} from "../redux/slices/auth";
 
 function Auth() {
-
-  const URL = 'https://adl-server.onrender.com/api/v1/user'
+  const URL = process.env.REACT_APP_AUTH_URL;
   const userDetails = useSelector((state) => state.auth.userDetails);
   const allUsers = useSelector((state) => state.auth.allUsers);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [isOtpCorrect, setisOtpCorrect] = useState(false);
   const [isPasswordReset, setisPasswordReset] = useState(false);
 
   const handleRegister = async (credentials) => {
     setLoading(true);
-    try{
-      const response = await axios.post(`${URL}/register`, credentials)
-      const { token, user } = response.data
+    try {
+      const response = await axios.post(`${URL}/register`, credentials);
+      const { token, user } = response.data;
 
-      dispatch(setToken(token))
-      dispatch(setUserDetails(user))
-      dispatch(setMessage({ 
-        status: 'success', 
-        description: 'Account Registered Successfully', 
-        message: `Welcome ${user.userName}` 
-      }));
-
+      dispatch(setToken(token));
+      dispatch(setUserDetails(user));
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Account Registered Successfully",
+          message: `Welcome ${user.userName}`,
+        }),
+      );
     } catch (error) {
-      console.log(error)
-      dispatch(setMessage({ 
-        status: 'error', 
-        description: 'Account Registration Failed', 
-        message: error.response?.data?.message 
-      }));
-      
+      console.log(error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Account Registration Failed",
+          message: error.response?.data?.message,
+        }),
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleLogin = async (credentials) => {
     setLoading(true);
     try {
-        if (!credentials.email || !credentials.password) {
-            dispatch(setMessage({ status: 'error', description: 'Please enter both email and password.', message: 'Invalid credentials' }));
-            return;
-        }
+      if (!credentials.email || !credentials.password) {
+        dispatch(
+          setMessage({
+            status: "error",
+            description: "Please enter both email and password.",
+            message: "Invalid credentials",
+          }),
+        );
+        return;
+      }
 
-        const response = await axios.post(`${URL}/login`, credentials, {
-            withCredentials: true
-        });
+      const response = await axios.post(`${URL}/login`, credentials, {
+        withCredentials: true,
+      });
 
-        const { token, user } = response.data;
-        
-        dispatch(setToken(token));
-        dispatch(setUserDetails(user));
-        dispatch(setLogin(true));
-        dispatch(setMessage({
-            status: 'success', 
-            description: 'Logged In Succesfully',
-            message: `Welcome ${user.userName}`
-        }));
-        
-        navigate('/');
+      const { token, user } = response.data;
 
+      dispatch(setToken(token));
+      dispatch(setUserDetails(user));
+      dispatch(setLogin(true));
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Logged In Succesfully",
+          message: `Welcome ${user.userName}`,
+        }),
+      );
+
+      navigate("/");
     } catch (error) {
-        console.log(error);
-        const errorMessage = error.response?.data?.message || 'An error occurred';
-        const errorStatus = error.response.status;
-        
-        dispatch(setMessage({ 
-            status: 'error',
-            description: errorMessage, 
-            message: `Error ${errorStatus}` 
-        }));
+      console.log(error);
+      const errorMessage = error.response?.data?.message || "An error occurred";
+      const errorStatus = error.response.status;
 
+      dispatch(
+        setMessage({
+          status: "error",
+          description: errorMessage,
+          message: `Error ${errorStatus}`,
+        }),
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-        await axios.get(`${URL}/logout`, {
-            withCredentials: true
-        });
-        
-        dispatch(setMessage({ 
-            status: 'success', 
-            description: 'Logged Out Successfully', 
-            message: `${userDetails.userName} Goodbye` 
-        }));
-        
-        dispatch(setLogin(false));
+      await axios.get(`${URL}/logout`, {
+        withCredentials: true,
+      });
 
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Logged Out Successfully",
+          message: `${userDetails.userName} Goodbye`,
+        }),
+      );
+
+      dispatch(setLogin(false));
     } catch (error) {
-        console.log(error);
-        dispatch(setMessage({ 
-            status: 'error', 
-            description: 'Logout Failed', 
-            message: 'Error' 
-        }));
+      console.log(error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Logout Failed",
+          message: "Error",
+        }),
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-  }
+  };
 
   const handleForgotPassword = async (credentials) => {
     setLoading(true);
-    localStorage.setItem('resetEmail', credentials.email);
+    localStorage.setItem("resetEmail", credentials.email);
 
     try {
-      const response = await axios.post(`${URL}/forgotpassword`, { email: credentials.email });
-            
-            dispatch(setMessage({ 
-                status: 'success',
-                description: response.data.message,
-                message: 'OTP sent'
-            }));
+      const response = await axios.post(`${URL}/forgotpassword`, {
+        email: credentials.email,
+      });
 
-            setisOtpCorrect(true)
+      dispatch(
+        setMessage({
+          status: "success",
+          description: response.data.message,
+          message: "OTP sent",
+        }),
+      );
 
+      setisOtpCorrect(true);
     } catch (error) {
-        console.log(error);
-        dispatch(setMessage({ 
-            status: 'error', 
-            description: 'Forgot Password Failed', 
-            message: 'Error' 
-        }));
+      console.log(error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Forgot Password Failed",
+          message: "Error",
+        }),
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-  }
+  };
 
   const handleGetAllUser = async () => {
     setLoading(true);
@@ -146,18 +168,17 @@ function Auth() {
     try {
       const response = await axios.get(`${URL}/all`, {
         headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       dispatch(setAllUsers(response.data.result));
-
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return {
     handleRegister,
@@ -166,7 +187,7 @@ function Auth() {
     handleForgotPassword,
     handleGetAllUser,
     loading,
-  }
+  };
 }
 
-export default Auth
+export default Auth;

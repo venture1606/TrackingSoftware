@@ -100,6 +100,10 @@
     {
       "tableHeader": "CRS-STATUS",
       "processId": "QA/R/011A"
+    },
+    {
+      "tableHeader": "DOCKET",
+      "processId": "MS/R/006A"
     }
   ],
   "DefaultTemplateForProtoProcess": [
@@ -385,7 +389,8 @@
     "ISSUE DATE",
     "EXPIRY DATE",
     "NEXT RENEVAL",
-    "UPDATED DATE"
+    "UPDATED DATE",
+    "REVIEW DATE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"

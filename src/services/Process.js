@@ -7,8 +7,7 @@ import { setAllProcesses } from "../redux/slices/department";
 import { setGroupItem, setSelectOptionsArray } from "../redux/slices/auth";
 
 function Process() {
-  const URL = "https://adl-server.onrender.com/api/v1/process";
-  // const URL = "http://localhost:3008/api/v1/process";
+  const URL = process.env.REACT_APP_PROCESS_URL;
 
   const allProcesses = useSelector((state) => state.department.allProcesses);
 
@@ -327,6 +326,10 @@ function Process() {
           "Under Process",
           "Supplied to Customer",
         ],
+      },
+      {
+        key: "ITEM CATEGORY",
+        value: ["RAW MATERIAL", "FINISHED GOOD", "SEAL", "BALL", "INTERNAL SPRING", "EXTERNAL SPRING"],
       },
     ];
 
