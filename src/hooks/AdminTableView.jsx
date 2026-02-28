@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
     Table,
     Thead,
@@ -9,8 +9,11 @@ import {
     TableContainer,
     Button,
     Select,
-    useDisclosure
+    useDisclosure,
+    Box,
+    Flex
 } from '@chakra-ui/react'
+import { FixedSizeList as List } from 'react-window';
 
 import Process from '../services/Process'
 import SubProcess from '../components/SubProcess';
@@ -40,31 +43,73 @@ function AdminTableView({ DetailsArray, TableContent }) {
         onOpen();
     }
 
+    const UserRow = useCallback(({ index, style }) => {
+        const row = DetailsArray[index];
+        return (
+            <div style={{ ...style, display: 'flex', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
+                {row.map((cell, cellIndex) => (
+                    <Box key={cellIndex} flex="1" px={4} py={3} fontSize="sm" isTruncated>
+                        {cell.value}
+                    </Box>
+                ))}
+            </div>
+        );
+    }, [DetailsArray]);
+
+    const ProcessRow = useCallback(({ index, style }) => {
+        const row = selectedProcess.data[index];
+        const gridTemplate = `repeat(${selectedProcess.headers.length}, 1fr) 150px 200px`;
+        
+        return (
+            <div style={{ ...style, display: 'grid', gridTemplateColumns: gridTemplate, gap: '4px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
+                {selectedProcess.headers.map((header) => {
+                    const item = row.items.find((i) => i.key === header);
+                    return (
+                        <Box key={header} px={4} py={2} fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                            {item && item.value?.startsWith("processId -") ? (
+                                <Button
+                                    size="xs"
+                                    colorScheme="blue"
+                                    onClick={() => handleViewSubProcess(row._id, item.value)}
+                                >
+                                    View
+                                </Button>
+                            ) : (
+                                item?.value || "-"
+                            )}
+                        </Box>
+                    );
+                })}
+                <Box px={4} py={2} fontSize="sm">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
+                <Box px={4} py={2} fontSize="sm">{new Date(row.createdAt).toLocaleString()}</Box>
+            </div>
+        );
+    }, [selectedProcess, handleViewSubProcess]);
+
     const renderContent = () => {
         switch (TableContent) {
             case 'users':
+                if (!DetailsArray || DetailsArray.length === 0) return null;
                 return (
                   <div className='FormPageContainer' style={{ overflowX: "auto", maxWidth: "100%" }}>
-                      <Table  size='sm' showColumnBorder stickyHeader variant="striped">
-                          <Thead className="TableHeader">
-                              <Tr>
-                                  { DetailsArray[0].map((item, idx) => (
-                                      <Th key={idx} className="TableHeaderContent">{item.key}</Th>
-                                  ))}
-                              </Tr>
-                          </Thead>
-                          <Tbody className="TableBody">
-                              {DetailsArray.map((row, rowIndex) => (
-                                  <Tr key={rowIndex} className="RowsField">
-                                      {row.map((cell, cellIndex) => (
-                                          <Td key={cellIndex} className="RowsField">
-                                              {cell.value}
-                                          </Td>
-                                      ))}
-                                  </Tr>
+                      <Box minW="max-content" bg="white" borderRadius="md" shadow="sm">
+                          {/* Custom Header */}
+                          <Flex bg="gray.50" borderBottom="1px solid #E2E8F0" fontWeight="bold">
+                              {DetailsArray[0].map((item, idx) => (
+                                  <Box key={idx} flex="1" px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">
+                                      {item.key}
+                                  </Box>
                               ))}
-                          </Tbody>
-                      </Table>
+                          </Flex>
+                          <List
+                            height={500}
+                            itemCount={DetailsArray.length}
+                            itemSize={50}
+                            width="100%"
+                          >
+                            {UserRow}
+                          </List>
+                      </Box>
                   </div>
                 )
 
@@ -85,48 +130,36 @@ function AdminTableView({ DetailsArray, TableContent }) {
                             ))}
                         </Select>
 
-                        {/* Render Table if process selected */}
+                        {/* Render Virtualized List if process selected */}
                         {selectedProcess && (
-                            <TableContainer mt={4} className='FormPageContainer'>
-                                <Table showColumnBorder stickyHeader size="sm" variant="striped">
-                                    <Thead className='TableHeader'>
-                                        <Tr>
-                                            {selectedProcess.headers.map((header) => (
-                                                <Th key={header} className='TableHeaderContent'>{header}</Th>
-                                            ))}
-                                            <Th className='TableHeaderContent'>Updated By</Th>
-                                            <Th className='TableHeaderContent'>Created At</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody className='TableBody'>
-                                        {selectedProcess.data.map((row) => (
-                                        <Tr key={row._id}>
-                                            {selectedProcess.headers.map((header) => {
-                                                const item = row.items.find((i) => i.key === header);
-
-                                                return (
-                                                    <Td key={header} className="RowsField">
-                                                    {item && item.value?.startsWith("processId -") ? (
-                                                        <Button
-                                                            size="sm"
-                                                            colorScheme="blue"
-                                                            onClick={() => handleViewSubProcess(row._id, item.value)}
-                                                        >
-                                                            View
-                                                        </Button>
-                                                    ) : (
-                                                        item?.value || "-"
-                                                    )}
-                                                    </Td>
-                                                );
-                                            })}
-                                            <Td className='RowsField'>{selectedProcess.updatedBy?.userName || "N/A"}</Td>
-                                            <Td className='RowsField'>{new Date(row.createdAt).toLocaleString()}</Td>
-                                        </Tr>
+                            <Box mt={4} className='FormPageContainer' overflowX="auto">
+                                <Box minW="1200px" bg="white" borderRadius="md" shadow="sm">
+                                    <Box 
+                                        display="grid" 
+                                        gridTemplateColumns={`repeat(${selectedProcess.headers.length}, 1fr) 150px 200px`} 
+                                        gap="4px" 
+                                        bg="gray.50" 
+                                        borderBottom="2px solid #E2E8F0" 
+                                        fontWeight="bold"
+                                        px={2}
+                                    >
+                                        {selectedProcess.headers.map((header) => (
+                                            <Box key={header} px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">{header}</Box>
                                         ))}
-                                    </Tbody>
-                                </Table>
-                            </TableContainer>
+                                        <Box px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">Updated By</Box>
+                                        <Box px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">Created At</Box>
+                                    </Box>
+                                    
+                                    <List
+                                        height={500}
+                                        itemCount={selectedProcess.data.length}
+                                        itemSize={60}
+                                        width="100%"
+                                    >
+                                        {ProcessRow}
+                                    </List>
+                                </Box>
+                            </Box>
                         )}
                         <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} isView={true} />
                     </div>

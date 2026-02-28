@@ -3,6 +3,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { setGroupItem, setSelectOptionsArray } from "../redux/slices/auth";
+import { useEffect } from "react";
 
 const URL = process.env.REACT_APP_PROCESS_URL;
 
@@ -20,7 +21,6 @@ export const useAllProcesses = (enabled = true) => {
       return response.data.data;
     },
     enabled,
-    onError: (error) => console.log(error),
   });
 };
 
@@ -32,7 +32,6 @@ export const useProcessById = (id) => {
       return response.data.data;
     },
     enabled: !!id,
-    onError: (error) => console.log(error),
   });
 };
 
@@ -47,7 +46,6 @@ export const useProcessesByDepartmentId = (departmentId) => {
       return response.data.data;
     },
     enabled: !!departmentId,
-    onError: (error) => console.log(error),
   });
 };
 
@@ -56,13 +54,19 @@ export const useSearchSelectOptions = () => {
 
   // This one is a bit different as it dispatches to redux store for global options.
   // We can treat it as a query that updates redux on success.
-  return useQuery({
+  const query = useQuery({
     queryKey: ["searchSelectOptions"],
     queryFn: async () => {
       const response = await axios.get(`${URL}/search`, getAuthHeaders());
       return response.data;
     },
-    onSuccess: (data) => {
+    refetchOnWindowFocus: false,
+  });
+
+  const { data } = query;
+
+  useEffect(() => {
+    if (data) {
       const dynamicOptions = data.data; // [{ key: 'partNo', value: [...] }, ...]
       dispatch(
         setGroupItem({
@@ -159,14 +163,15 @@ export const useSearchSelectOptions = () => {
             }
           });
         } else {
-          selectOptionsArray.push(dynamicItem);
+          selectOptionsArray.push(dynamicItem); 
         }
       });
 
       dispatch(setSelectOptionsArray(selectOptionsArray));
-    },
-    refetchOnWindowFocus: false,
-  });
+    }
+  }, [data, dispatch]);
+
+  return query;
 };
 
 export const useAddProcessData = () => {

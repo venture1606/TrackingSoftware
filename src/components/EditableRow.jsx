@@ -122,7 +122,7 @@ const EditableRow = ({
 
     if (initialData) {
       // Edit Mode
-      mappedData = headers.map((key) => {
+      mappedData = (headers || []).map((key) => {
         const cell = initialData.find((item) => item.key === key);
         let value = cell ? cell.value : "";
         let process = getProcessType(key);
@@ -141,7 +141,7 @@ const EditableRow = ({
       });
     } else {
       // New Mode (Add Data logic)
-      mappedData = headers.map((key) => {
+      mappedData = (headers || []).map((key) => {
         const process = getProcessType(key);
         let value = "";
 
@@ -342,7 +342,6 @@ const EditableRow = ({
                     isDisabled={isReadOnly}
                     bg="white"
                  >
-                     <option value="">Select</option>
                      {field.options?.filter(o => o.toLowerCase() !== "others").map((opt, i) => (
                          <option key={i} value={opt}>{opt}</option>
                      ))}

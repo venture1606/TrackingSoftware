@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Box,
   Flex,
@@ -11,6 +11,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AttachmentIcon } from "@chakra-ui/icons";
+import { FixedSizeList as List } from "react-window";
 import ConfirmDialog from "./ConfirmDialog";
 import AddData from "../hooks/AddData";
 
@@ -40,6 +41,153 @@ const ProductValidationCompo = ({
       setDeleteTargetIdx(null);
     }
   };
+
+  const ReportRow = useCallback(({ index, style }) => {
+    const row = rows[index];
+    const rowIndex = index;
+
+    const testName = row.find((i) => i.key === "TEST NAME")?.value || "-";
+    const apparatus = row.find((i) => i.key === "APPARATUS")?.value || "-";
+    const evidence = row.find((i) => i.key === "EVIDENCE")?.value || "-";
+    const resultValue = row.find((i) => i.key === "RESULT")?.value || "";
+    const description = row.find((i) => i.key === "DESCRIPTION")?.value || "";
+    const imageUrl = row.find((i) => i.key === "IMAGE")?.value || "";
+    
+    const { badgeColor, textColor, dotColor } = getStatusStyle(resultValue);
+
+    return (
+      <div style={{ ...style, paddingBottom: "32px" }}>
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          bg="#f8fafc"
+          borderRadius="2xl"
+          p={8}
+          gap={10}
+          position="relative"
+          border="1px solid"
+          borderColor="gray.100"
+          height="calc(100% - 32px)"
+        >
+          {/* Left Content */}
+          <Box flex="1">
+            <Stack spacing={6}>
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                  TEST NAME
+                </Text>
+                <Text fontSize="lg" fontWeight="bold" color="gray.700">
+                  {testName}
+                </Text>
+              </Box>
+
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                  APPARATUS
+                </Text>
+                <Text fontSize="md" fontWeight="semibold" color="gray.600">
+                  {apparatus}
+                </Text>
+              </Box>
+
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                  EVIDENCE
+                </Text>
+                <Flex align="center" gap={2}>
+                  <Text fontSize="sm" fontWeight="medium">
+                     {evidence}
+                  </Text>
+                </Flex>
+              </Box>
+
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                  RESULT
+                </Text>
+                <Flex
+                    align="center"
+                    padding="4px 12px"
+                    borderRadius="20px"
+                    backgroundColor={badgeColor}
+                    border={`1px solid ${badgeColor === "#fff" ? "#e2e8f0" : badgeColor}`}
+                    color={textColor}
+                    fontSize="xs"
+                    fontWeight="bold"
+                    width="fit-content"
+                >
+                    <Box
+                        w="6px"
+                        h="6px"
+                        borderRadius="50%"
+                        bg={dotColor}
+                        mr={2}
+                    />
+                    {resultValue || "Unspecified"}
+                </Flex>
+              </Box>
+
+              {description && (
+                <Text fontSize="sm" color="gray.600" fontStyle="italic" lineHeight="tall" isTruncated noOfLines={2}>
+                  "{description}"
+                </Text>
+              )}
+            </Stack>
+          </Box>
+
+          {/* Right Content - Image and Actions */}
+          <Box position="relative">
+            {!isView && (
+              <Flex position="absolute" top="-10px" right="-10px" zIndex={10} gap={2}>
+                <IconButton
+                  icon={<EditIcon />}
+                  size="sm"
+                  bg="white"
+                  boxShadow="md"
+                  _hover={{ bg: "gray.50" }}
+                  onClick={() => handleEditClick(rowIndex)}
+                  aria-label="Edit report"
+                />
+                <IconButton
+                  icon={<DeleteIcon />}
+                  size="sm"
+                  bg="white"
+                  boxShadow="md"
+                  color="red.500"
+                  _hover={{ bg: "gray.50" }}
+                  onClick={() => handleDeleteTrigger(rowIndex)}
+                  aria-label="Delete report"
+                />
+              </Flex>
+            )}
+
+            <Box
+              p={2}
+              bg="white"
+              borderRadius="xl"
+              boxShadow="lg"
+              border="1px solid"
+              borderColor="gray.200"
+              maxW="400px"
+            >
+              <Image
+                src={imageUrl}
+                alt={testName}
+                borderRadius="lg"
+                fallbackSrc="https://via.placeholder.com/400x250?text=No+Validation+Image"
+                objectFit="cover"
+                w="100%"
+                h="250px"
+              />
+            </Box>
+            <Text mt={3} fontSize="10px" color="gray.400" textAlign="center" fontWeight="bold" textTransform="uppercase">
+               Fig {rowIndex + 1}: {testName} Distribution
+            </Text>
+          </Box>
+        </Flex>
+      </div>
+    );
+  }, [rows, nested.rowIds, isView, handleEditClick, getStatusStyle]);
+
   return (
     <Box p={6} bg="white" borderRadius="xl" boxShadow="sm" border="1px solid" borderColor="gray.100">
       {/* Header Section */}
@@ -67,151 +215,18 @@ const ProductValidationCompo = ({
         )}
       </Flex>
 
-      {/* Reports List */}
-      <Stack spacing={8}>
-        {rows.map((row, rowIndex) => {
-          const testName = row.find((i) => i.key === "TEST NAME")?.value || "-";
-          const apparatus = row.find((i) => i.key === "APPARATUS")?.value || "-";
-          const evidence = row.find((i) => i.key === "EVIDENCE")?.value || "-";
-          const resultValue = row.find((i) => i.key === "RESULT")?.value || "";
-          const description = row.find((i) => i.key === "DESCRIPTION")?.value || "";
-          const imageUrl = row.find((i) => i.key === "IMAGE")?.value || "";
-          
-          const { badgeColor, textColor, dotColor } = getStatusStyle(resultValue);
+      {/* Reports List with Virtualization */}
+      <Box height="600px">
+        <List
+            height={600}
+            itemCount={rows.length}
+            itemSize={450}
+            width="100%"
+        >
+            {ReportRow}
+        </List>
+      </Box>
 
-          return (
-            <Flex
-              key={nested.rowIds?.[rowIndex] || rowIndex}
-              direction={{ base: "column", lg: "row" }}
-              bg="#f8fafc"
-              borderRadius="2xl"
-              p={8}
-              gap={10}
-              position="relative"
-              border="1px solid"
-              borderColor="gray.100"
-            >
-              {/* Left Content */}
-              <Box flex="1">
-                <Stack spacing={6}>
-                  <Box>
-                    <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
-                      TEST NAME
-                    </Text>
-                    <Text fontSize="lg" fontWeight="bold" color="gray.700">
-                      {testName}
-                    </Text>
-                  </Box>
-
-                  <Box>
-                    <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
-                      APPARATUS
-                    </Text>
-                    <Text fontSize="md" fontWeight="semibold" color="gray.600">
-                      {apparatus}
-                    </Text>
-                  </Box>
-
-                  <Box>
-                    <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
-                      EVIDENCE
-                    </Text>
-                    <Flex align="center" gap={2}>
-                      {/* <AttachmentIcon size="sm" /> */}
-                      <Text fontSize="sm" fontWeight="medium">
-                         {evidence}
-                      </Text>
-                    </Flex>
-                  </Box>
-
-                  <Box>
-                    <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
-                      RESULT
-                    </Text>
-                    <Flex
-                        align="center"
-                        padding="4px 12px"
-                        borderRadius="20px"
-                        backgroundColor={badgeColor}
-                        border={`1px solid ${badgeColor === "#fff" ? "#e2e8f0" : badgeColor}`}
-                        color={textColor}
-                        fontSize="xs"
-                        fontWeight="bold"
-                        width="fit-content"
-                    >
-                        <Box
-                            w="6px"
-                            h="6px"
-                            borderRadius="50%"
-                            bg={dotColor}
-                            mr={2}
-                        />
-                        {resultValue || "Unspecified"}
-                    </Flex>
-                  </Box>
-
-                  {description && (
-                    <Text fontSize="sm" color="gray.600" fontStyle="italic" lineHeight="tall">
-                      "{description}"
-                    </Text>
-                  )}
-                </Stack>
-              </Box>
-
-              {/* Right Content - Image and Actions */}
-              <Box position="relative">
-                {/* Action Icons */}
-                {!isView && (
-                  <Flex position="absolute" top="-10px" right="-10px" zIndex={10} gap={2}>
-                    <IconButton
-                      icon={<EditIcon />}
-                      size="sm"
-                      bg="white"
-                      boxShadow="md"
-                      _hover={{ bg: "gray.50" }}
-                      onClick={() => handleEditClick(rowIndex)}
-                      aria-label="Edit report"
-                    />
-                    <IconButton
-                      icon={<DeleteIcon />}
-                      size="sm"
-                      bg="white"
-                      boxShadow="md"
-                      color="red.500"
-                      _hover={{ bg: "gray.50" }}
-                      onClick={() => handleDeleteTrigger(rowIndex)}
-                      aria-label="Delete report"
-                    />
-                  </Flex>
-                )}
-
-                <Box
-                  p={2}
-                  bg="white"
-                  borderRadius="xl"
-                  boxShadow="lg"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  maxW="400px"
-                >
-                  <Image
-                    src={imageUrl}
-                    alt={testName}
-                    borderRadius="lg"
-                    fallbackSrc="https://via.placeholder.com/400x250?text=No+Validation+Image"
-                    objectFit="cover"
-                    w="100%"
-                    h="250px"
-                  />
-                </Box>
-                <Text mt={3} fontSize="10px" color="gray.400" textAlign="center" fontWeight="bold" textTransform="uppercase">
-                   Fig {rowIndex + 1}: {testName} Distribution
-                </Text>
-              </Box>
-            </Flex>
-          );
-        })}
-      </Stack>
       <ConfirmDialog 
         isOpen={isDeleteAlertOpen}
         onClose={() => setIsDeleteAlertOpen(false)}
@@ -231,5 +246,6 @@ const ProductValidationCompo = ({
     </Box>
   );
 };
+
 
 export default ProductValidationCompo;
