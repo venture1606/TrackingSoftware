@@ -169,6 +169,15 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     setRowIds(formatted.rowIds);
   }, [data]);
 
+  const handleRefresh = async () => {
+    if (!nested?.id) return;
+    const response = await handleGetSingleProcess(nested.id);
+    const formatted = formatProcessData(response, nested.rowDataId);
+    setNested(formatted);
+    setRows(formatted.value);
+    setRowIds(formatted.rowIds);
+  };
+
   const handleBomProducts = async () => {
     // find the "Products" process dynamically
     const productProcess = process.find((p) => p.process === "Products");
@@ -215,7 +224,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
   // handle add data
   const handleAddDataSave = async (newData) => {
-    console.log(nested);
     const response = await handleAddData({
       items: newData,
       id: nested.id,
@@ -512,6 +520,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       showAddData={showAddData}
       setShowAddData={setShowAddData}
       handleAddDataSave={handleAddDataSave}
+      handleRefresh={handleRefresh}
     />
   );
 

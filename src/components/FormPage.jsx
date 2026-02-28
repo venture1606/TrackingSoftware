@@ -43,6 +43,7 @@ import ArrayDisplayCompo from "./ArrayDisplayCompo";
 import ImagePreviewCompo from "./ImagePreviewCompo";
 import StatusBadgeCompo from "./StatusBadgeCompo";
 import ActionButtonCompo from "./ActionButtonCompo";
+import ConfirmDialog from "./ConfirmDialog";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -52,7 +53,7 @@ import { setDetailingProducts } from "../redux/slices/department";
 
 const URL = process.env.REACT_APP_PROCESS_URL;
 
-function FormPage({ process, isView = false, currentBomId = null }) {
+function FormPage({ process, isView = false, currentBomId = null, isDefault = false, rowDataId = null, refresh }) {
   const queryClient = useQueryClient();
   const updateMutation = useUpdateProcessData();
   const deleteMutation = useDeleteProcessData();
@@ -82,6 +83,9 @@ function FormPage({ process, isView = false, currentBomId = null }) {
   const [editingRowIds, setEditingRowIds] = useState([]); 
   const [editingRowId, setEditingRowId] = useState(null);
   const [newRowKey, setNewRowKey] = useState(0); // Key to force re-render/reset of new row
+
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [deleteTargetIdx, setDeleteTargetIdx] = useState(null);
 
   const tableContainerRef = useRef(null);
 
@@ -156,18 +160,25 @@ function FormPage({ process, isView = false, currentBomId = null }) {
   }, [process, bomData, currentBomId, dispatch]);
 
   const handleDeleteRow = (rowIdx) => {
-    if(window.confirm("Are you sure you want to delete this row?")) {
-        const updatedRows = [...rows];
-        const updatedRowIds = [...rowIds];
+    setDeleteTargetIdx(rowIdx);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTargetIdx === null) return;
     
-        deleteMutation.mutate({ rowId: rowIds[rowIdx], id: process?.id, userId: userDetails?._id });
-    
-        updatedRows.splice(rowIdx, 1);
-        updatedRowIds.splice(rowIdx, 1);
-    
-        setRows(updatedRows);
-        setRowIds(updatedRowIds);
-    }
+    const rowIdx = deleteTargetIdx;
+    const updatedRows = [...rows];
+    const updatedRowIds = [...rowIds];
+
+    deleteMutation.mutate({ rowId: rowIds[rowIdx], id: process?.id, userId: userDetails?._id });
+
+    updatedRows.splice(rowIdx, 1);
+    updatedRowIds.splice(rowIdx, 1);
+
+    setRows(updatedRows);
+    setRowIds(updatedRowIds);
+    setDeleteTargetIdx(null);
   };
 
   const handleSaveEdit = async (items, rowId, rowIdx) => {
@@ -197,9 +208,13 @@ function FormPage({ process, isView = false, currentBomId = null }) {
       try {
           await addMutation.mutateAsync({
               items,
-              id: process?.id
+              id: process?.id,
+              ...(isDefault && { rowDataId: rowDataId})
           });
           setNewRowKey(prev => prev + 1); // Reset new row form
+          if (isDefault && refresh) {
+              refresh();
+          }
       } catch (e) {
           console.error("Failed to add new data", e);
       }
@@ -510,6 +525,14 @@ function FormPage({ process, isView = false, currentBomId = null }) {
       </div>
 
       <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
+
+      <ConfirmDialog 
+        isOpen={isDeleteAlertOpen}
+        onClose={() => setIsDeleteAlertOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Row"
+        message="Are you sure you want to delete this record? This action cannot be undone."
+      />
 
       {renderImagePopUp()}
       {loading && <Loading />}

@@ -10,6 +10,7 @@ const DefaultProcessCompo = ({
   showAddData,
   setShowAddData,
   handleAddDataSave,
+  handleRefresh,
 }) => {
   return (
     <Box>
@@ -37,7 +38,13 @@ const DefaultProcessCompo = ({
         borderColor="gray.100"
         overflowX="auto"
       >
-        <FormPage process={nested} isView={isView} />
+        <FormPage 
+          process={nested} 
+          isView={isView} 
+          isDefault={true} 
+          rowDataId={nested?.rowDataId} 
+          refresh={handleRefresh}
+        />
       </Box>
 
       {showAddData && (
