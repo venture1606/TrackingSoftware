@@ -44,6 +44,7 @@ import ImagePreviewCompo from "./ImagePreviewCompo";
 import StatusBadgeCompo from "./StatusBadgeCompo";
 import ActionButtonCompo from "./ActionButtonCompo";
 import ConfirmDialog from "./ConfirmDialog";
+import ImageCompo from "./ImageCompo";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -64,7 +65,8 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
     DefaultSelectProcess,
     ImageUploadArray,
     ShownArray,
-    ColorProcess
+    ColorProcess,
+    DateFieldsArray,
   } = ItemsData;
 
   const dispatch = useDispatch();
@@ -107,6 +109,19 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
 
   // Fetch BOM data if needed
   const { data: bomData } = useProcessById(bomProcessId);
+
+  // Convert epoch milliseconds string → DD/MM/YYYY for display
+  const formatEpochToDate = (value) => {
+    if (!value) return value;
+    const num = Number(value);
+    if (isNaN(num) || String(value).trim() === "") return value; // not a number, return as-is
+    const d = new Date(num);
+    if (isNaN(d.getTime())) return value;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
 
   const getStatusStyle = (value) => {
     let badgeColor = "gray.100";
@@ -199,6 +214,10 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
         updatedRows[rowIdx] = newRow;
         setRows(updatedRows);
 
+        if (refresh) {
+            refresh();
+        }
+
     } catch (e) {
         console.error("Failed to save edit", e);
     }
@@ -212,9 +231,9 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
               ...(isDefault && { rowDataId: rowDataId})
           });
           setNewRowKey(prev => prev + 1); // Reset new row form
-          if (isDefault && refresh) {
+          // if (isDefault && refresh) {
               refresh();
-          }
+          // }
       } catch (e) {
           console.error("Failed to add new data", e);
       }
@@ -259,51 +278,7 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
     }
   };
 
-  const renderImagePopUp = () => {
-    if (!imagePopupUrl) return null;
-
-    const isFileObject =
-      typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
-    const imageSrc = isFileObject
-      ? URL.createObjectURL(imagePopupUrl)
-      : imagePopupUrl;
-
-    return (
-      <Modal
-        isOpen={!!imagePopupUrl}
-        onClose={() => setImagePopupUrl(null)}
-        size="xl"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Uploaded Image</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt="Uploaded"
-                style={{ width: "100%", borderRadius: "8px" }}
-              />
-            ) : (
-              "Please reload to see the image"
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                if (isFileObject) URL.revokeObjectURL(imageSrc);
-                setImagePopupUrl(null);
-              }}
-            >
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  };
+  // Removed renderImagePopUp - now using ImageCompo
 
   const loading = updateMutation.isPending || deleteMutation.isPending || addMutation.isPending;
 
@@ -369,7 +344,7 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
                 <ImagePreviewCompo 
                   key={cellIdx}
                   url={cell.value}
-                  isView={isView}
+                  isView={true}
                   onClick={() => setImagePopupUrl(cell.value)}
                 />
               );
@@ -385,6 +360,14 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
                 );
             }
 
+            // Format date fields from epoch to DD/MM/YYYY
+            const isDateField = DateFieldsArray.some(
+              (d) => d.trim().toLowerCase() === cell.key.trim().toLowerCase()
+            );
+            const displayValue = isDateField
+              ? formatEpochToDate(cell.value)
+              : cell.value;
+
             return (
               <div key={cellIdx} className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`} style={{ fontSize: "0.8rem", color: "#2d3748", fontWeight: "500", textAlign: "center" }}>
                 {cell?.process === "multiSelect" || (typeof cell.value === "string" && cell.value.startsWith("processId -")) ? (
@@ -395,7 +378,7 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
                     onClick={() => handleCellButtonClick(row, index, cellIdx, cell.key)}
                   />
                 ) : (
-                    <TruncatedText text={cell.value} limit={25} />
+                    <TruncatedText text={displayValue} limit={25} />
                 )}
               </div>
             );
@@ -534,7 +517,7 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
         message="Are you sure you want to delete this record? This action cannot be undone."
       />
 
-      {renderImagePopUp()}
+      <ImageCompo imageUrl={imagePopupUrl} onClose={() => setImagePopupUrl(null)} />
       {loading && <Loading />}
     </div>
   );

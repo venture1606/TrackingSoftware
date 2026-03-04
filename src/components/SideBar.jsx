@@ -194,7 +194,7 @@ const NavItem = ({ icon, label, isActive, onClick, sidebarVisible, isDropdown, i
             align="center"
             justify={sidebarVisible ? "flex-start" : "center"}
             p={1}
-            borderRadius="xl"
+            borderRadius="3xl"
             cursor="pointer"
             transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
             bg={isActive && !isDropdown ? activeBg : 'transparent'}
@@ -208,17 +208,17 @@ const NavItem = ({ icon, label, isActive, onClick, sidebarVisible, isDropdown, i
             position="relative"
             width="100%"
         >
-            {isActive && !isDropdown && (
+            {/* {isActive && !isDropdown && (
                 <Box 
                     position="absolute" 
                     left={sidebarVisible ? "0" : "5px"}
                     width="4px" 
-                    height="50%" 
+                    height="95%" 
                     bg="white" 
                     borderRadius="full" 
                     boxShadow="0 0 10px rgba(255,255,255,0.5)"
                 />
-            )}
+            )} */}
             
             <Box 
                 fontSize="22px" 
@@ -227,7 +227,7 @@ const NavItem = ({ icon, label, isActive, onClick, sidebarVisible, isDropdown, i
                 justify="center" 
                 minW="40px"
                 ml={sidebarVisible ? 0 : 1}
-                bg={isActive && !isDropdown ? 'whiteAlpha.300' : 'transparent'}
+                // bg={isActive && !isDropdown ? 'whiteAlpha.300' : 'transparent'}
                 borderRadius="lg"
                 p={1.5}
                 transition="all 0.2s"

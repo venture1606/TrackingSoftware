@@ -343,6 +343,13 @@ function AddData({
         }
         return { ...field, value: field.value || "" };
       }
+      // Convert date fields to epoch milliseconds string
+      if (field.process === "date" && field.value) {
+        const epoch = new Date(field.value).getTime();
+        if (!isNaN(epoch)) {
+          return { ...field, value: String(epoch) };
+        }
+      }
       return field;
     });
 

@@ -27,6 +27,7 @@ import Loading from "../hooks/Loading";
 import FormDialog from "../hooks/FormDialog";
 import ProductValidationCompo from "./ProductValidationCompo";
 import ProtoCompo from "./ProtoCompo";
+import ImageCompo from "./ImageCompo";
 import TechnicalSpecificationCompo from "./TechnicalSpecificationCompo";
 import BOMCompo from "./BOMCompo";
 import BreakHourCompo from "./BreakHourCompo";
@@ -106,52 +107,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       rowIds: filteredRows.map((row) => row._id),
       rowDataId,
     };
-  };
-
-  const renderImagePopUp = () => {
-    if (!imagePopupUrl) return null;
-
-    const isFileObject =
-      typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
-    const imageSrc = isFileObject
-      ? URL.createObjectURL(imagePopupUrl)
-      : imagePopupUrl;
-
-    return (
-      <Modal
-        isOpen={!!imagePopupUrl}
-        onClose={() => setImagePopupUrl(null)}
-        size="xl"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Uploaded Image</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt="Uploaded"
-                style={{ width: "100%", borderRadius: "8px" }}
-              />
-            ) : (
-              "Please reload to see the image"
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                if (isFileObject) URL.revokeObjectURL(imageSrc);
-                setImagePopupUrl(null);
-              }}
-            >
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
   };
 
   // load nested process
@@ -589,7 +544,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           mode="form"
         />
       )}
-      {renderImagePopUp()}
+      <ImageCompo imageUrl={imagePopupUrl} onClose={() => setImagePopupUrl(null)} />
     </div>
   );
 }

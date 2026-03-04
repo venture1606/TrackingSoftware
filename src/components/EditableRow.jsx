@@ -131,6 +131,14 @@ const EditableRow = ({
             value = [value || ""];
         }
 
+        // Convert epoch string back to YYYY-MM-DD for the date input
+        if (process === "date" && value && /^\d+$/.test(String(value))) {
+            const d = new Date(Number(value));
+            if (!isNaN(d.getTime())) {
+                value = d.toISOString().split("T")[0];
+            }
+        }
+
         const field = { key, value, process };
         if (process === "select") {
             const selectMatch = SelectOptionsArray.find((item) => item.key.trim().toLowerCase() === key.trim().toLowerCase());
@@ -229,6 +237,13 @@ const EditableRow = ({
     const items = formData.map((field) => {
         if (field.process === "image" && field.value?.file) {
             return { ...field, value: field.value.file };
+        }
+        // Convert date fields to epoch milliseconds string
+        if (field.process === "date" && field.value) {
+            const epoch = new Date(field.value).getTime();
+            if (!isNaN(epoch)) {
+                return { ...field, value: String(epoch) };
+            }
         }
         return field;
     });

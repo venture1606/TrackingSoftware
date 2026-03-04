@@ -124,8 +124,24 @@ function FormDialog({
 
   // Reset on initialData change
   useEffect(() => {
-    setFormValues(initialData);
-    refreshDynamicOptions(initialData, selectValues);
+    // Convert epoch date values back to YYYY-MM-DD for display
+    const normalizedData = { ...initialData };
+    if (FormArray) {
+      FormArray.forEach((field) => {
+        const lowerKey = field.key.trim().toLowerCase();
+        if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) {
+          const val = normalizedData[field.key];
+          if (val && /^\d+$/.test(String(val))) {
+            const d = new Date(Number(val));
+            if (!isNaN(d.getTime())) {
+              normalizedData[field.key] = d.toISOString().split("T")[0];
+            }
+          }
+        }
+      });
+    }
+    setFormValues(normalizedData);
+    refreshDynamicOptions(normalizedData, selectValues);
   }, [initialData, refreshDynamicOptions, selectValues]);
 
   useEffect(() => {
@@ -293,7 +309,18 @@ function FormDialog({
         return { key, value: finalValue, process };
       });
 
-      data = items;
+      // Convert date fields to epoch milliseconds string
+      const convertedItems = items.map((item) => {
+        if (item.process === "date" && item.value && typeof item.value === "string") {
+          const epoch = new Date(item.value).getTime();
+          if (!isNaN(epoch)) {
+            return { ...item, value: String(epoch) };
+          }
+        }
+        return item;
+      });
+
+      data = convertedItems;
     }
 
     handleSubmit(data);

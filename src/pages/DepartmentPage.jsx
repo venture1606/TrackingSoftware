@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { 
@@ -6,9 +6,15 @@ import {
     Select, 
     Box, 
     IconButton,
-    Tooltip
+    Tooltip,
+    Center,
+    Spinner,
+    Text as ChakraText,
+    VStack
 } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 // importing components
 import FormPage from "../components/FormPage";
@@ -93,19 +99,51 @@ const combineSimilarRows = (mainTableData) => {
   };
 };
 
+const PageLoader = () => (
+  <Center h="100%" w="100%" bg="white" borderRadius="xl">
+    <VStack spacing={4}>
+      <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+      <ChakraText color="gray.500" fontWeight="medium">Loading process data...</ChakraText>
+    </VStack>
+  </Center>
+);
+
 function DepartmentPage({ department: propDept, processId: propProcId }) {
-  // Use params from router if props not provided (depending on usage)
   const params = useParams();
   const department = propDept || params.department;
   const processId = propProcId || params.processId;
 
+  return (
+    <div className="AppRightContainer DepartmentPageContainer" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px", width: "100%", overflow: "hidden" }}>
+      <Suspense fallback={<Loading />}>
+        <DepartmentPageContent department={department} processId={processId} />
+      </Suspense>
+    </div>
+  );
+}
+
+const DEPT_URL = process.env.REACT_APP_DEPARTMENT_URL;
+const PROC_URL = process.env.REACT_APP_PROCESS_URL;
+
+const getAuthHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
+
+function DepartmentPageContent({ department, processId }) {
   const dispatch = useDispatch();
   const mainTableData = useSelector((state) => state.department.mainTableData);
-
-  const { data: departments = [], isLoading: loadingDepts } = useDepartments();
-  useSearchSelectOptions(); 
-
   const navigate = useNavigate();
+
+  // Suspense-enabled queries
+  const { data: departments } = useSuspenseQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const response = await axios.get(`${DEPT_URL}/all`);
+      return response.data.data;
+    },
+  });
+
+  useSearchSelectOptions();
 
   const [selectedProcess, setSelectedProcess] = useState("");
   const [isMerged, setIsMerged] = useState(false);
@@ -115,15 +153,18 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
     (d) => d.name.toLowerCase() === department?.toLowerCase()
   );
 
-  const { 
-      data: processes = [], 
-      isLoading: loadingProcesses 
-  } = useProcessesByDepartmentId(currentDepartment?._id);
+  const { data: processes } = useSuspenseQuery({
+    queryKey: ["processesByDepartment", currentDepartment?._id],
+    queryFn: async () => {
+      const response = await axios.get(`${PROC_URL}/department/${currentDepartment?._id}`, getAuthHeaders());
+      return response.data.data;
+    },
+  });
 
   useEffect(() => {
-      if (processes.length > 0) {
-          dispatch(setProcess(processes));
-      }
+    if (processes.length > 0) {
+      dispatch(setProcess(processes));
+    }
   }, [processes, dispatch]);
 
   useEffect(() => {
@@ -140,10 +181,18 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   const foundProcess = processes.find((p) => p.process === selectedProcess);
   const selectedProcessId = foundProcess ? (foundProcess._id || foundProcess.id) : null;
 
-  const { 
-      data: processDataRaw, 
-      isLoading: loadingSingleProcess 
-  } = useProcessById(selectedProcessId);
+  const { data: processDataRaw, refetch: refetchProcess } = useSuspenseQuery({
+    queryKey: ["process", selectedProcessId],
+    queryFn: async () => {
+      if (!selectedProcessId) return null;
+      const response = await axios.get(`${PROC_URL}/${selectedProcessId}`, getAuthHeaders());
+      return response.data.data;
+    },
+  });
+
+  const handleRefresh = () => {
+    refetchProcess();
+  };
 
   useEffect(() => {
     dispatch(setMainTableData(null));
@@ -151,10 +200,10 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
     setOriginalMainTable(null);
 
     if (processDataRaw) {
-        const transformed = transformProcess(processDataRaw);
-        dispatch(setMainTableData(transformed));
+      const transformed = transformProcess(processDataRaw);
+      dispatch(setMainTableData(transformed));
     }
-  }, [processDataRaw, dispatch]);
+  }, [processDataRaw, dispatch, selectedProcessId]);
 
   const handleSortMerge = () => {
     if (!mainTableData) return;
@@ -172,13 +221,8 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
     }
   };
 
-  if (loadingDepts || loadingProcesses || loadingSingleProcess) {
-    return <Loading />;
-  }
-
   return (
-    <div className="AppRightContainer DepartmentPageContainer" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px", width: "100%", overflow: "hidden" }}>
-      
+    <>
       <HeaderSection 
           title={selectedProcess || `${currentDepartment?.name || department} Analysis`} 
           description={selectedProcess ? `Manage and track ${selectedProcess.toLowerCase()} specifications and statuses.` : `Overview and department-level analysis for ${department}.`}
@@ -263,10 +307,11 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
              key={selectedProcess}
              process={mainTableData}
              isView={selectedProcess === "Products"}
+             refresh={handleRefresh}
            />
         )}
       </Box>
-    </div>
+    </>
   );
 }
 

@@ -4,7 +4,7 @@ import { AttachmentIcon } from "@chakra-ui/icons";
 
 const ImagePreviewCompo = ({ url, isView, onClick }) => {
   if (!url) {
-    return isView ? <Text color="gray.300" fontSize="sm">-</Text> : null;
+    return isView ? <Text fontSize="sm" textAlign="center">-</Text> : null;
   }
 
   return (
