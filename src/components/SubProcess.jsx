@@ -6,20 +6,8 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  ModalFooter,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Button,
-  IconButton,
   Flex,
-  Box,
 } from "@chakra-ui/react";
-import { EditIcon, CheckIcon, CloseIcon } from "@chakra-ui/icons";
-import TruncatedText from "./TruncatedText";
 import { useDispatch, useSelector } from "react-redux";
 
 // components
@@ -33,6 +21,7 @@ import BOMCompo from "./BOMCompo";
 import BreakHourCompo from "./BreakHourCompo";
 import ContinousImprovementCompo from "./ContinousImprovementCompo";
 import DefaultProcessCompo from "./DefaultProcessCompo";
+import HistoryCompo from "./HistoryCompo";
 
 // assets
 
@@ -490,13 +479,21 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{nested?.process || "Loading..."}</ModalHeader>
+          <ModalHeader>
+              {data?.type === "history" ? `History: ${nested?.process || 'Loading...'}` : (nested?.process || "Loading...")}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody minH="400px" display="flex" flexDirection="column">
             {loading || processLoading ? (
               <Flex flex="1" align="center" justify="center" direction="column">
                 <Loading />
               </Flex>
+            ) : data?.type === "history" ? (
+                <HistoryCompo 
+                    type={data.type} 
+                    processId={data.processId} 
+                    rowDataId={data.rowDataId} 
+                />
             ) : nested ? (
               <>
                 {nested.process === "Product Validation Report" &&

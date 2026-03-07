@@ -49,6 +49,34 @@ export const useProcessesByDepartmentId = (departmentId) => {
   });
 };
 
+export const useProcessHistory = (id) => {
+  return useQuery({
+    queryKey: ["processHistory", id],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${URL}/history/${id}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useProcessRowHistory = (id, rowId) => {
+  return useQuery({
+    queryKey: ["processRowHistory", id, rowId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${URL}/history/${id}/${rowId}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+    enabled: !!id && !!rowId,
+  });
+};
+
 export const useSearchSelectOptions = () => {
   const dispatch = useDispatch();
 
@@ -163,7 +191,7 @@ export const useSearchSelectOptions = () => {
             }
           });
         } else {
-          selectOptionsArray.push(dynamicItem); 
+          selectOptionsArray.push(dynamicItem);
         }
       });
 

@@ -32,56 +32,91 @@ function AdminTableView({ DetailsArray, TableContent }) {
     const handleViewSubProcess = async (rowDataId, processId) => {
         let id = processId.split("processId -")[1]?.trim();
         const response = await handleGetSingleProcess(id);
+        const nestedProcess = response || null
         setPopupData({
             parentProcess: selectedProcess.process,
+            type: "subProcess",
             row: null,
             rowIdx: null,
             cellIdx: null,
-            nestedProcess: response || null,
+            nestedProcess: nestedProcess,
             rowDataId,
         })
+        onOpen();
+    }
+
+    const handleViewHistory = (rowDataId) => {
+        setPopupData({
+            parentProcess: selectedProcess.process,
+            type: "history",
+            processId: selectedProcess._id,
+            rowDataId: rowDataId
+        });
         onOpen();
     }
 
     const UserRow = useCallback(({ index, style }) => {
         const row = DetailsArray[index];
         return (
-            <div style={{ ...style, display: 'flex', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
-                {row.map((cell, cellIndex) => (
-                    <Box key={cellIndex} flex="1" px={4} py={3} fontSize="sm" isTruncated>
-                        {cell.value}
-                    </Box>
-                ))}
+            <div style={{ ...style }}>
+                <div style={{
+                    display: 'flex', 
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9",
+                    padding: "8px 10px",
+                    borderBottom: '1px solid #E2E8F0', 
+                    alignItems: 'center',
+                    height: "100%"
+                }}>
+                    {row.map((cell, cellIndex) => (
+                        <Box key={cellIndex} flex="1" px={4} fontSize="sm" isTruncated textAlign="center" color="#2d3748" fontWeight="500">
+                            {cell?.value && cell?.value !== "" ? cell?.value : "-"}
+                        </Box>
+                    ))}
+                </div>
             </div>
         );
     }, [DetailsArray]);
 
     const ProcessRow = useCallback(({ index, style }) => {
         const row = selectedProcess.data[index];
-        const gridTemplate = `repeat(${selectedProcess.headers.length}, 1fr) 150px 200px`;
+        const gridTemplate = selectedProcess.headers.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + " 150px 160px 100px";
         
         return (
-            <div style={{ ...style, display: 'grid', gridTemplateColumns: gridTemplate, gap: '4px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
-                {selectedProcess.headers.map((header) => {
-                    const item = row.items.find((i) => i.key === header);
-                    return (
-                        <Box key={header} px={4} py={2} fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                            {item && item.value?.startsWith("processId -") ? (
-                                <Button
-                                    size="xs"
-                                    colorScheme="blue"
-                                    onClick={() => handleViewSubProcess(row._id, item.value)}
-                                >
-                                    View
-                                </Button>
-                            ) : (
-                                item?.value || "-"
-                            )}
-                        </Box>
-                    );
-                })}
-                <Box px={4} py={2} fontSize="sm">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
-                <Box px={4} py={2} fontSize="sm">{new Date(row.createdAt).toLocaleString()}</Box>
+            <div style={{ ...style }}>
+                <div style={{
+                    display: 'grid', 
+                    gridTemplateColumns: gridTemplate, 
+                    gap: '20px', 
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9",
+                    padding: "8px 10px",
+                    borderBottom: '1px solid #E2E8F0', 
+                    alignItems: 'center',
+                    height: '100%'
+                }}>
+                    {selectedProcess.headers.map((header) => {
+                        const item = row.items.find((i) => i.key === header);
+                        return (
+                            <Box key={header} fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" textAlign="center" fontWeight="500" color="#2d3748">
+                                {item && item.value?.startsWith("processId -") ? (
+                                    <Button
+                                        size="xs"
+                                        colorScheme="blue"
+                                        onClick={() => handleViewSubProcess(row._id, item.value)}
+                                    >
+                                        View
+                                    </Button>
+                                ) : (
+                                    item?.value && item?.value !== '' ? item?.value : "-"
+                                )}
+                            </Box>
+                        );
+                    })}
+                    <Box fontSize="sm" textAlign="center">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
+                    <Box fontSize="sm" textAlign="center">{new Date(row.createdAt).toLocaleString()}</Box>
+                    <Box fontSize="sm" textAlign="center">
+                       <Button size="xs" colorScheme="orange" onClick={() => handleViewHistory(row._id)}>History</Button>
+                    </Box>
+                </div>
             </div>
         );
     }, [selectedProcess, handleViewSubProcess]);
@@ -91,12 +126,12 @@ function AdminTableView({ DetailsArray, TableContent }) {
             case 'users':
                 if (!DetailsArray || DetailsArray.length === 0) return null;
                 return (
-                  <div className='FormPageContainer' style={{ overflowX: "auto", maxWidth: "100%" }}>
-                      <Box minW="max-content" bg="white" borderRadius="md" shadow="sm">
+                  <div className='FormPageContainer' style={{ overflowX: "auto", overflowY: "auto", maxWidth: "100%", maxHeight: "calc(100vh - 250px)", position: "relative", borderRadius: "8px", padding: "10px", backgroundColor: "#f7f9fc" }}>
+                      <Box minW="max-content" bg="transparent" borderRadius="md">
                           {/* Custom Header */}
-                          <Flex bg="gray.50" borderBottom="1px solid #E2E8F0" fontWeight="bold">
+                          <Flex bg="#f7f9fc" borderBottom="2px solid #e2e8f0" fontWeight="bold" padding="10px" position="sticky" top={0} zIndex={15}>
                               {DetailsArray[0].map((item, idx) => (
-                                  <Box key={idx} flex="1" px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">
+                                  <Box key={idx} flex="1" px={4} py={3} fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">
                                       {item.key}
                                   </Box>
                               ))}
@@ -104,8 +139,9 @@ function AdminTableView({ DetailsArray, TableContent }) {
                           <List
                             height={500}
                             itemCount={DetailsArray.length}
-                            itemSize={50}
+                            itemSize={55}
                             width="100%"
+                            style={{ overflowX: "hidden" }}
                           >
                             {UserRow}
                           </List>
@@ -117,50 +153,64 @@ function AdminTableView({ DetailsArray, TableContent }) {
                 return (
                     <div>
                         {/* Dropdown to choose process */}
-                        <Select
-                            placeholder="Select Process"
-                            onChange={(e) => setSelectedProcessId(e.target.value)}
-                            maxW="300px"
-                            mb={4}
-                        >
-                            {DetailsArray.map((proc) => (
-                                <option key={proc._id} value={proc._id}>
-                                    {proc.process}
-                                </option>
-                            ))}
-                        </Select>
+                        <Flex gap={4} mb={4} align="center">
+                            <Select
+                                placeholder="Select Process"
+                                onChange={(e) => setSelectedProcessId(e.target.value)}
+                                maxW="300px"
+                            >
+                                {DetailsArray.map((proc) => (
+                                    <option key={proc._id} value={proc._id}>
+                                        {proc.process}
+                                    </option>
+                                ))}
+                            </Select>
+                            {selectedProcess && (
+                                <Button colorScheme="purple" onClick={() => handleViewHistory(null)}>
+                                    View Process History
+                                </Button>
+                            )}
+                        </Flex>
 
                         {/* Render Virtualized List if process selected */}
-                        {selectedProcess && (
-                            <Box mt={4} className='FormPageContainer' overflowX="auto">
-                                <Box minW="1200px" bg="white" borderRadius="md" shadow="sm">
-                                    <Box 
-                                        display="grid" 
-                                        gridTemplateColumns={`repeat(${selectedProcess.headers.length}, 1fr) 150px 200px`} 
-                                        gap="4px" 
-                                        bg="gray.50" 
-                                        borderBottom="2px solid #E2E8F0" 
-                                        fontWeight="bold"
-                                        px={2}
-                                    >
-                                        {selectedProcess.headers.map((header) => (
-                                            <Box key={header} px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">{header}</Box>
-                                        ))}
-                                        <Box px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">Updated By</Box>
-                                        <Box px={4} py={3} fontSize="xs" textTransform="uppercase" color="gray.600">Created At</Box>
+                        {selectedProcess && (() => {
+                            const gridTemplateColumns = selectedProcess.headers.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + " 150px 160px 100px";
+                            return (
+                                <Box mt={4} className='FormPageContainer' overflowX="auto" overflowY="auto" maxH="calc(100vh - 250px)" position="relative" borderRadius="8px" bg="#f7f9fc" p="10px">
+                                    <Box minW="max-content" bg="transparent" borderRadius="md">
+                                        <Box 
+                                            display="grid" 
+                                            gridTemplateColumns={gridTemplateColumns} 
+                                            gap="20px" 
+                                            bg="#f7f9fc" 
+                                            borderBottom="2px solid #e2e8f0" 
+                                            fontWeight="bold"
+                                            padding="10px"
+                                            position="sticky"
+                                            top={0}
+                                            zIndex={15}
+                                        >
+                                            {selectedProcess.headers.map((header) => (
+                                                <Box key={header} fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">{header}</Box>
+                                            ))}
+                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">Updated By</Box>
+                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">Created At</Box>
+                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">History</Box>
+                                        </Box>
+                                        
+                                        <List
+                                            height={500}
+                                            itemCount={selectedProcess.data.length}
+                                            itemSize={55}
+                                            width="100%"
+                                            style={{ overflowX: "hidden" }}
+                                        >
+                                            {ProcessRow}
+                                        </List>
                                     </Box>
-                                    
-                                    <List
-                                        height={500}
-                                        itemCount={selectedProcess.data.length}
-                                        itemSize={60}
-                                        width="100%"
-                                    >
-                                        {ProcessRow}
-                                    </List>
                                 </Box>
-                            </Box>
-                        )}
+                            )
+                        })()}
                         <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} isView={true} />
                     </div>
                 )
