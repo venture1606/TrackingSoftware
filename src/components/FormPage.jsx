@@ -62,6 +62,8 @@ function FormPage({
   isDefault = false,
   rowDataId = null,
   refresh,
+  isAddingNewRow = false,
+  setIsAddingNewRow,
 }) {
   const queryClient = useQueryClient();
   const updateMutation = useUpdateProcessData();
@@ -78,7 +80,7 @@ function FormPage({
   } = ItemsData;
 
   const dispatch = useDispatch();
-  const { isEditor, isCreator, isViewer } = usePermissions();
+  const { isEditor, isCreator, isViewer, isAdmin } = usePermissions();
   const detailingProducts = useSelector(
     (state) => state.department.detailingProducts,
   );
@@ -87,9 +89,9 @@ function FormPage({
 
   // Computed permissions
   const canModify = !isView && !isViewer;
-  const canEdit = canModify && isEditor;
-  const canCreate = canModify && (isEditor || isCreator);
-  const canDelete = canModify && isEditor;
+  const canEdit = canModify && (isEditor || isAdmin);
+  const canCreate = canModify && (isEditor || isCreator || isAdmin);
+  const canDelete = canModify && (isEditor || isAdmin);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -255,9 +257,10 @@ function FormPage({
         ...(isDefault && { rowDataId: rowDataId }),
       });
       setNewRowKey((prev) => prev + 1); // Reset new row form
-      // if (isDefault && refresh) {
+      if (setIsAddingNewRow) {
+        setIsAddingNewRow(false);
+      }
       refresh();
-      // }
     } catch (e) {
       console.error("Failed to add new data", e);
     }
@@ -617,7 +620,7 @@ function FormPage({
           )}
 
           {/* Sticky Add New Row at the bottom */}
-          {canCreate && process?.header?.length > 0 && (
+          {canCreate && process?.header?.length > 0 && isAddingNewRow && (
             <div
               style={{
                 position: "sticky",
@@ -636,7 +639,10 @@ function FormPage({
                 isNew={true}
                 currentBomId={currentBomId}
                 onSave={handleSaveNew}
-                onCancel={() => setNewRowKey((prev) => prev + 1)} // Reset form
+                onCancel={() => {
+                  setNewRowKey((prev) => prev + 1);
+                  if (setIsAddingNewRow) setIsAddingNewRow(false);
+                }} // Reset form and close
                 gridTemplateColumns={gridTemplateColumns}
               />
             </div>

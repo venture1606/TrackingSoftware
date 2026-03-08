@@ -1,5 +1,5 @@
-import React from 'react';
-import { Tooltip, Text } from '@chakra-ui/react';
+import React from "react";
+import { Tooltip, Text } from "@chakra-ui/react";
 
 const TruncatedText = ({ text, limit = 25, ...props }) => {
   const isTruncated = text && text.length > limit;
@@ -7,9 +7,9 @@ const TruncatedText = ({ text, limit = 25, ...props }) => {
 
   return (
     <Tooltip label={text} isDisabled={!isTruncated} hasArrow>
-      <Text 
-        as="span" 
-        cursor={isTruncated ? "help" : "default"} 
+      <Text
+        as="span"
+        cursor={isTruncated ? "help" : "default"}
         whiteSpace="nowrap"
         {...props}
       >

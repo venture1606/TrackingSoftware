@@ -12,6 +12,7 @@ import {
   Text as ChakraText,
   VStack,
 } from "@chakra-ui/react";
+import { Icon } from "@iconify/react";
 import { DownloadIcon } from "@chakra-ui/icons";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -173,6 +174,7 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
   const [selectedProcess, setSelectedProcess] = useState("");
   const [isMerged, setIsMerged] = useState(false);
   const [originalMainTable, setOriginalMainTable] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   const currentDepartment = departments.find(
     (d) => d.name.toLowerCase() === department?.toLowerCase(),
@@ -306,6 +308,7 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
             value={selectedProcess}
             onChange={(e) => {
               const val = e.target.value;
+              setIsAdding(false); // Reset adding state when process changes
               if (val === "") {
                 navigate(`/department/${department}`);
               } else {
@@ -333,11 +336,24 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
           </Select>
         </Box>
 
+        {selectedProcess && !isViewOnly && (
+          <Button
+            leftIcon={<Icon icon="material-symbols:add-rounded" />}
+            onClick={() => setIsAdding(!isAdding)}
+            colorScheme={isAdding ? "red" : "blue"}
+            variant="solid"
+            size="sm"
+          >
+            {isAdding ? "Cancel Add" : "Add Data"}
+          </Button>
+        )}
+
         {selectedProcess === "Procurement Register" && (
           <Button
             onClick={handleSortMerge}
             colorScheme={isMerged ? "red" : "purple"}
             variant="solid"
+            size="sm"
           >
             {isMerged ? "Undo Sort" : "Sort Data"}
           </Button>
@@ -351,6 +367,8 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
             process={mainTableData}
             isView={isViewOnly || selectedProcess === "Products"}
             refresh={handleRefresh}
+            isAddingNewRow={isAdding}
+            setIsAddingNewRow={setIsAdding}
           />
         )}
       </Box>
