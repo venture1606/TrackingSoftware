@@ -217,7 +217,10 @@ function Login() {
                   Operational Contributor (Creating Access)
                 </option>
                 <option value="edit">
-                  Administrative Management (Editing Access)
+                  Operational Controller (Editing Access)
+                </option>
+                <option value="admin">
+                  Administrative Management (Full Access)
                 </option>
               </select>
             </div>
@@ -237,6 +240,8 @@ function Login() {
                         "sales",
                         "purchase",
                         "maintainance",
+                        "stores",
+                        "hr",
                       ].length
                     }
                     onChange={(e) => {
@@ -247,6 +252,8 @@ function Login() {
                         "sales",
                         "purchase",
                         "maintainance",
+                        "stores",
+                        "hr",
                       ];
                       setForm((prev) => ({
                         ...prev,
@@ -265,6 +272,8 @@ function Login() {
                   { value: "sales", label: "Sales & Marketing" },
                   { value: "purchase", label: "Procurement & Stores" },
                   { value: "maintainance", label: "Facility Management" },
+                  { value: "stores", label: "Stores Management" },
+                  { value: "hr", label: "Human Resources" },
                 ].map((dept) => (
                   <label key={dept.value} className="CheckboxLabel">
                     <input

@@ -99,7 +99,7 @@ function Auth() {
         setMessage({
           status: "success",
           description: "Logged In Succesfully",
-          message: `Welcome ${user.userName}`,
+          message: `Welcome ${user.name}`,
         }),
       );
 
@@ -193,10 +193,44 @@ function Auth() {
     // This is now legacy, using useAllUsers hook instead
   };
 
+  const handleDeleteUser = async (email) => {
+    setLoading(true);
+    try {
+      const response = await axios.delete(`${URL}/delete`, {
+        data: { email },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      dispatch(
+        setMessage({
+          status: "success",
+          description: response.data.message,
+          message: "Account Deleted",
+        }),
+      );
+      return true;
+    } catch (error) {
+      console.log(error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description: error.response?.data?.message || "Deletion Failed",
+          message: "Error",
+        }),
+      );
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     handleRegister,
     handleLogin,
     handleLogout,
+    handleDeleteUser,
     handleForgotPassword,
     handleGetAllUser,
     loading,

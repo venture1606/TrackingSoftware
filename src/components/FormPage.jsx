@@ -27,12 +27,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 // Importing API
-import { 
-  useUpdateProcessData, 
-  useDeleteProcessData, 
-  useProcessById, 
-  useAddProcessData 
+import {
+  useUpdateProcessData,
+  useDeleteProcessData,
+  useProcessById,
+  useAddProcessData,
 } from "../services/Process";
+import { usePermissions } from "../services/permissions";
 
 // importing components
 import Loading from "../hooks/Loading";
@@ -54,7 +55,14 @@ import { setDetailingProducts } from "../redux/slices/department";
 
 const URL = process.env.REACT_APP_PROCESS_URL;
 
-function FormPage({ process, isView = false, currentBomId = null, isDefault = false, rowDataId = null, refresh }) {
+function FormPage({
+  process,
+  isView = false,
+  currentBomId = null,
+  isDefault = false,
+  rowDataId = null,
+  refresh,
+}) {
   const queryClient = useQueryClient();
   const updateMutation = useUpdateProcessData();
   const deleteMutation = useDeleteProcessData();
@@ -70,11 +78,18 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
   } = ItemsData;
 
   const dispatch = useDispatch();
+  const { isEditor, isCreator, isViewer } = usePermissions();
   const detailingProducts = useSelector(
-    (state) => state.department.detailingProducts
+    (state) => state.department.detailingProducts,
   );
   const stateProcess = useSelector((state) => state.department.process);
   const userDetails = useSelector((state) => state.auth.userDetails);
+
+  // Computed permissions
+  const canModify = !isView && !isViewer;
+  const canEdit = canModify && isEditor;
+  const canCreate = canModify && (isEditor || isCreator);
+  const canDelete = canModify && isEditor;
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -82,7 +97,7 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
   const [rowIds, setRowIds] = useState([]);
 
   // Inline Editing State
-  const [editingRowIds, setEditingRowIds] = useState([]); 
+  const [editingRowIds, setEditingRowIds] = useState([]);
   const [editingRowId, setEditingRowId] = useState(null);
   const [newRowKey, setNewRowKey] = useState(0); // Key to force re-render/reset of new row
 
@@ -102,10 +117,13 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
   ];
 
   // Determine BOM process ID for detailing logic
-  const bomProcessId = (process?.process === "Products" && stateProcess) 
-    ? stateProcess.find((item) => item.process === "Bill of Materials - BOM")?._id || 
-      stateProcess.find((item) => item.process === "Bill of Materials - BOM")?.id
-    : null;
+  const bomProcessId =
+    process?.process === "Products" && stateProcess
+      ? stateProcess.find((item) => item.process === "Bill of Materials - BOM")
+          ?._id ||
+        stateProcess.find((item) => item.process === "Bill of Materials - BOM")
+          ?.id
+      : null;
 
   // Fetch BOM data if needed
   const { data: bomData } = useProcessById(bomProcessId);
@@ -127,26 +145,29 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
     let badgeColor = "gray.100";
     let textColor = "gray.600";
     let dotColor = "gray.500";
-    
+
     if (!value) return { badgeColor, textColor, dotColor };
 
     const lowerVal = value.toLowerCase();
     if (lowerVal.includes("waiting") || lowerVal.includes("planning")) {
-        badgeColor = "#fffaf0"; // orangeish
-        textColor = "#dd6b20";
-        dotColor = "#dd6b20";
-    } else if (lowerVal.includes("prototype") || lowerVal.includes("progress")) {
-        badgeColor = "#ebf8ff"; // blueish
-        textColor = "#3182ce";
-        dotColor = "#3182ce";
+      badgeColor = "#fffaf0"; // orangeish
+      textColor = "#dd6b20";
+      dotColor = "#dd6b20";
+    } else if (
+      lowerVal.includes("prototype") ||
+      lowerVal.includes("progress")
+    ) {
+      badgeColor = "#ebf8ff"; // blueish
+      textColor = "#3182ce";
+      dotColor = "#3182ce";
     } else if (lowerVal.includes("complete") || lowerVal.includes("done")) {
-        badgeColor = "#f0fff4"; // greenish
-        textColor = "#38a169";
-        dotColor = "#38a169";
+      badgeColor = "#f0fff4"; // greenish
+      textColor = "#38a169";
+      dotColor = "#38a169";
     } else if (lowerVal.includes("pending")) {
-        badgeColor = "#fff5f5"; // reddish
-        textColor = "#e53e3e";
-        dotColor = "#e53e3e";
+      badgeColor = "#fff5f5"; // reddish
+      textColor = "#e53e3e";
+      dotColor = "#e53e3e";
     }
     return { badgeColor, textColor, dotColor };
   };
@@ -161,16 +182,16 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
     }
 
     if (process?.process === "Products" && bomData) {
-          const filteredData = currentBomId
-            ? {
-                ...bomData,
-                data: bomData?.data?.filter(
-                  (row) => row.rowDataId === currentBomId
-                ),
-              }
-            : bomData;
+      const filteredData = currentBomId
+        ? {
+            ...bomData,
+            data: bomData?.data?.filter(
+              (row) => row.rowDataId === currentBomId,
+            ),
+          }
+        : bomData;
 
-          dispatch(setDetailingProducts(filteredData));
+      dispatch(setDetailingProducts(filteredData));
     }
   }, [process, bomData, currentBomId, dispatch]);
 
@@ -181,12 +202,16 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
 
   const handleConfirmDelete = () => {
     if (deleteTargetIdx === null) return;
-    
+
     const rowIdx = deleteTargetIdx;
     const updatedRows = [...rows];
     const updatedRowIds = [...rowIds];
 
-    deleteMutation.mutate({ rowId: rowIds[rowIdx], id: process?.id, userId: userDetails?._id });
+    deleteMutation.mutate({
+      rowId: rowIds[rowIdx],
+      id: process?.id,
+      userId: userDetails?._id,
+    });
 
     updatedRows.splice(rowIdx, 1);
     updatedRowIds.splice(rowIdx, 1);
@@ -198,45 +223,44 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
 
   const handleSaveEdit = async (items, rowId, rowIdx) => {
     try {
-        await updateMutation.mutateAsync({
-            rowId,
-            items,
-            id: process?.id,
-        });
-        setEditingRowId(null);
-        // Optimistic update:
-        const updatedRows = [...rows];
-        
-        const newRow = (process?.header || []).map(h => {
-            const item = items.find(i => i.key === h);
-            return item || { key: h, value: "", process: "value" };
-        });
-        updatedRows[rowIdx] = newRow;
-        setRows(updatedRows);
+      await updateMutation.mutateAsync({
+        rowId,
+        items,
+        id: process?.id,
+      });
+      setEditingRowId(null);
+      // Optimistic update:
+      const updatedRows = [...rows];
 
-        if (refresh) {
-            refresh();
-        }
+      const newRow = (process?.header || []).map((h) => {
+        const item = items.find((i) => i.key === h);
+        return item || { key: h, value: "", process: "value" };
+      });
+      updatedRows[rowIdx] = newRow;
+      setRows(updatedRows);
 
+      if (refresh) {
+        refresh();
+      }
     } catch (e) {
-        console.error("Failed to save edit", e);
+      console.error("Failed to save edit", e);
     }
   };
 
   const handleSaveNew = async (items) => {
-      try {
-          await addMutation.mutateAsync({
-              items,
-              id: process?.id,
-              ...(isDefault && { rowDataId: rowDataId})
-          });
-          setNewRowKey(prev => prev + 1); // Reset new row form
-          // if (isDefault && refresh) {
-              refresh();
-          // }
-      } catch (e) {
-          console.error("Failed to add new data", e);
-      }
+    try {
+      await addMutation.mutateAsync({
+        items,
+        id: process?.id,
+        ...(isDefault && { rowDataId: rowDataId }),
+      });
+      setNewRowKey((prev) => prev + 1); // Reset new row form
+      // if (isDefault && refresh) {
+      refresh();
+      // }
+    } catch (e) {
+      console.error("Failed to add new data", e);
+    }
   };
 
   const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
@@ -251,183 +275,271 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
     }
 
     try {
-        const response = await queryClient.fetchQuery({
-            queryKey: ['process', id],
-            queryFn: async () => {
-                const res = await axios.get(`${URL}/${id}`, {
-                    headers: {
-                      Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                });
-                return res.data.data;
+      const response = await queryClient.fetchQuery({
+        queryKey: ["process", id],
+        queryFn: async () => {
+          const res = await axios.get(`${URL}/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            staleTime: 1000 * 60
-        });
+          });
+          return res.data.data;
+        },
+        staleTime: 1000 * 60,
+      });
 
-        setPopupData({
-            parentProcess: process?.process,
-            row,
-            rowIdx,
-            cellIdx,
-            nestedProcess: response || null,
-            rowDataId,
-        });
-        onOpen();
+      setPopupData({
+        parentProcess: process?.process,
+        row,
+        rowIdx,
+        cellIdx,
+        nestedProcess: response || null,
+        rowDataId,
+      });
+      onOpen();
     } catch (error) {
-        console.error("Error fetching nested process:", error);
+      console.error("Error fetching nested process:", error);
     }
   };
 
   // Removed renderImagePopUp - now using ImageCompo
 
-  const loading = updateMutation.isPending || deleteMutation.isPending || addMutation.isPending;
+  const loading =
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    addMutation.isPending;
 
   const gridTemplateColumns = process?.header
-    ? process.header.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + (!isView ? " 160px" : "")
+    ? process.header
+        .map((h) =>
+          h === "DETAILING PRODUCT"
+            ? "minmax(450px, 4fr)"
+            : "minmax(150px, 1fr)",
+        )
+        .join(" ") + (canModify ? " 160px" : "")
     : `repeat(${process?.header?.length || 1}, 150px) max-content`;
 
-  const Row = useCallback(({ index, style }) => {
-    const row = rows[index];
-    const rowId = rowIds[index];
-    const isEditing = editingRowId === rowId;
+  const Row = useCallback(
+    ({ index, style }) => {
+      const row = rows[index];
+      const rowId = rowIds[index];
+      const isEditing = editingRowId === rowId;
 
-    if (isEditing) {
+      if (isEditing) {
+        return (
+          <div style={{ ...style, marginBottom: "10px" }}>
+            <EditableRow
+              key={rowId}
+              headers={process?.header}
+              initialData={row}
+              currentBomId={currentBomId}
+              onSave={(items) => handleSaveEdit(items, rowId, index)}
+              onCancel={() => setEditingRowId(null)}
+              gridTemplateColumns={gridTemplateColumns}
+            />
+          </div>
+        );
+      }
+
       return (
-        <div style={{ ...style, marginBottom: "10px" }}>
-          <EditableRow
-            key={rowId}
-            headers={process?.header}
-            initialData={row}
-            currentBomId={currentBomId}
-            onSave={(items) => handleSaveEdit(items, rowId, index)}
-            onCancel={() => setEditingRowId(null)}
-            gridTemplateColumns={gridTemplateColumns}
-          />
-        </div>
-      );
-    }
+        <div style={{ ...style }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: gridTemplateColumns,
+              gap: "20px",
+              backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9", // Striped layout
+              padding: "8px 10px",
+              borderBottom: "1px solid #edf2f7",
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
+            {row.map((cell, cellIdx) => {
+              if (
+                cell.key === "DETAILING PRODUCT" &&
+                Array.isArray(cell.value)
+              ) {
+                return (
+                  <DetailingProductCompo
+                    key={cellIdx}
+                    bomIds={cell.value}
+                    detailingProducts={detailingProducts}
+                    ShownArray={ShownArray}
+                  />
+                );
+              }
 
-    return (
-      <div style={{ ...style }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: gridTemplateColumns,
-          gap: "20px",
-          backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9", // Striped layout
-          padding: "8px 10px",
-          borderBottom: "1px solid #edf2f7",
-          alignItems: "center",
-          height: "100%"
-        }}>
-          {row.map((cell, cellIdx) => {
-            if (cell.key === "DETAILING PRODUCT" && Array.isArray(cell.value)) {
-              return (
-                <DetailingProductCompo 
-                  key={cellIdx}
-                  bomIds={cell.value}
-                  detailingProducts={detailingProducts}
-                  ShownArray={ShownArray}
-                />
+              if (
+                ArrayValuesProcess.includes(cell.key) &&
+                Array.isArray(cell.value)
+              ) {
+                return (
+                  <div key={cellIdx} style={{ textAlign: "center" }}>
+                    <ArrayDisplayCompo values={cell.value} />
+                  </div>
+                );
+              }
+
+              if (ImageUploadArray.includes(cell.key)) {
+                return (
+                  <ImagePreviewCompo
+                    key={cellIdx}
+                    url={cell.value}
+                    isView={true}
+                    onClick={() => setImagePopupUrl(cell.value)}
+                  />
+                );
+              }
+
+              if (
+                [
+                  "Planning",
+                  "In Progress",
+                  "Completed",
+                  "Pending",
+                  "Waiting For Order",
+                  "In Prototype",
+                  "Complete",
+                  "Not Feasible",
+                  "Order Confirmed",
+                  "Under Process",
+                  "Supplied to Customer",
+                ].includes(cell.value)
+              ) {
+                return (
+                  <StatusBadgeCompo
+                    key={cellIdx}
+                    value={cell.value}
+                    getStatusStyle={getStatusStyle}
+                  />
+                );
+              }
+
+              // Format date fields from epoch to DD/MM/YYYY
+              const isDateField = DateFieldsArray.some(
+                (d) => d.trim().toLowerCase() === cell.key.trim().toLowerCase(),
               );
-            }
+              const displayValue = isDateField
+                ? formatEpochToDate(cell.value)
+                : cell.value;
 
-            if (ArrayValuesProcess.includes(cell.key) && Array.isArray(cell.value)) {
               return (
-                <div key={cellIdx} style={{ textAlign: "center" }}>
-                   <ArrayDisplayCompo values={cell.value} />
+                <div
+                  key={cellIdx}
+                  className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`}
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#2d3748",
+                    fontWeight: "500",
+                    textAlign: "center",
+                  }}
+                >
+                  {cell?.process === "multiSelect" ||
+                  (typeof cell.value === "string" &&
+                    cell.value.startsWith("processId -")) ? (
+                    <ActionButtonCompo
+                      cell={cell}
+                      label={
+                        DefaultSelectProcess.includes(cell.key)
+                          ? "View"
+                          : cell.key === "BREAK HOUR" ||
+                              cell.key === "ACTION PLAN" ||
+                              cell.key === "ACTION TAKEN"
+                            ? cell.process || "0"
+                            : "UPDATE"
+                      }
+                      colorScheme={
+                        ColorProcess.includes(cell.key)
+                          ? `${cell.process !== "value" ? `${cell.process}` : "red"}`
+                          : "blue"
+                      }
+                      onClick={() =>
+                        handleCellButtonClick(row, index, cellIdx, cell.key)
+                      }
+                    />
+                  ) : (
+                    <TruncatedText text={displayValue} limit={25} />
+                  )}
                 </div>
               );
-            }
+            })}
 
-            if (ImageUploadArray.includes(cell.key)) {
-              return (
-                <ImagePreviewCompo 
-                  key={cellIdx}
-                  url={cell.value}
-                  isView={true}
-                  onClick={() => setImagePopupUrl(cell.value)}
-                />
-              );
-            }
-            
-            if (["Planning", "In Progress", "Completed", "Pending", "Waiting For Order", "In Prototype", "Complete", "Not Feasible", "Order Confirmed", "Under Process", "Supplied to Customer"].includes(cell.value)) {
-                 return (
-                   <StatusBadgeCompo 
-                     key={cellIdx}
-                     value={cell.value}
-                     getStatusStyle={getStatusStyle}
-                   />
-                );
-            }
-
-            // Format date fields from epoch to DD/MM/YYYY
-            const isDateField = DateFieldsArray.some(
-              (d) => d.trim().toLowerCase() === cell.key.trim().toLowerCase()
-            );
-            const displayValue = isDateField
-              ? formatEpochToDate(cell.value)
-              : cell.value;
-
-            return (
-              <div key={cellIdx} className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`} style={{ fontSize: "0.8rem", color: "#2d3748", fontWeight: "500", textAlign: "center" }}>
-                {cell?.process === "multiSelect" || (typeof cell.value === "string" && cell.value.startsWith("processId -")) ? (
-                  <ActionButtonCompo 
-                    cell={cell}
-                    label={DefaultSelectProcess.includes(cell.key) ? "View" : cell.key === "BREAK HOUR" || cell.key === "ACTION PLAN" || cell.key === "ACTION TAKEN" ? cell.process || "0" : "UPDATE"}
-                    colorScheme={ColorProcess.includes(cell.key) ? `${cell.process !== "value" ? `${cell.process}` : "red"}` : "blue"}
-                    onClick={() => handleCellButtonClick(row, index, cellIdx, cell.key)}
-                  />
-                ) : (
-                    <TruncatedText text={displayValue} limit={25} />
-                )}
-              </div>
-            );
-          })}
-
-          {!isView && (
-            <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-               <IconButton
+            {canModify && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
+                {canEdit && (
+                  <IconButton
                     icon={<EditIcon />}
                     size="sm"
                     variant="ghost"
                     colorScheme="gray"
                     onClick={() => setEditingRowId(rowIds[index])}
                     aria-label="Edit"
-               />
-               <IconButton
+                  />
+                )}
+                {canDelete && (
+                  <IconButton
                     icon={<DeleteIcon />}
                     size="sm"
                     variant="ghost"
                     colorScheme="gray"
                     onClick={() => handleDeleteRow(index)}
                     aria-label="Delete"
-               />
-            </div>
-          )}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    );
-  }, [rows, rowIds, editingRowId, process?.header, currentBomId, gridTemplateColumns, detailingProducts, isView, getStatusStyle]);
+      );
+    },
+    [
+      rows,
+      rowIds,
+      editingRowId,
+      process?.header,
+      currentBomId,
+      gridTemplateColumns,
+      detailingProducts,
+      isView,
+      getStatusStyle,
+    ],
+  );
 
   return (
-    <div style={{ position: "relative", backgroundColor: "#f7f9fc", padding: "10px", borderRadius: "10px", height: "100%" }}>
+    <div
+      style={{
+        position: "relative",
+        backgroundColor: "#f7f9fc",
+        padding: "10px",
+        borderRadius: "10px",
+        height: "100%",
+      }}
+    >
       <div
         ref={tableContainerRef}
         className="FormPageContainer"
-        style={{ 
-          overflowX: "auto", 
+        style={{
+          overflowX: "auto",
           overflowY: "auto", // Enable vertical scroll for the container
-          maxWidth: "100%", 
+          maxWidth: "100%",
           maxHeight: "calc(100vh - 250px)", // Set a max height for the table area
           display: "flex",
           flexDirection: "column",
           position: "relative",
-          borderRadius: "8px"
+          borderRadius: "8px",
         }}
       >
         <div style={{ minWidth: "fit-content", flex: 1 }}>
           {/* Sticky Header Row */}
-          <div style={{
+          <div
+            style={{
               position: "sticky",
               top: 0,
               zIndex: 15,
@@ -436,80 +548,105 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
               gridTemplateColumns: gridTemplateColumns,
               gap: "20px",
               padding: "10px", // Denser header
-              borderBottom: "2px solid #e2e8f0"
-          }}>
-              {process && process.header?.length > 0 ? (
-                  <>
-                    {process.header.map((col, idx) => (
-                      <div key={idx} style={{ 
-                        fontWeight: "bold", 
-                        color: "#718096", 
-                        fontSize: "0.75rem", 
-                        textTransform: "uppercase",
-                        textAlign: "center"
-                      }}>
-                        {col}
-                      </div>
-                    ))}
-                    {!isView && <div style={{ fontWeight: "bold", color: "#718096", fontSize: "0.75rem", textTransform: "uppercase", textAlign: "center", minWidth: "max-content", padding: "0 15px" }}>
-                        Actions
-                    </div>}
-                  </>
-                ) : (
-                  <div>No Process Selected</div>
+              borderBottom: "2px solid #e2e8f0",
+            }}
+          >
+            {process && process.header?.length > 0 ? (
+              <>
+                {process.header.map((col, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      fontWeight: "bold",
+                      color: "#718096",
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      textAlign: "center",
+                    }}
+                  >
+                    {col}
+                  </div>
+                ))}
+                {canModify && (
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      color: "#718096",
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      textAlign: "center",
+                      minWidth: "max-content",
+                      padding: "0 15px",
+                    }}
+                  >
+                    Actions
+                  </div>
                 )}
+              </>
+            ) : (
+              <div>No Process Selected</div>
+            )}
           </div>
 
           {/* Data Rows with Virtualization */}
           <div style={{ minWidth: "fit-content" }}>
-              {rows && rows.length > 0 ? (
-                <List
-                  height={Math.min(500, rows.length * 55)} // Reduced row factor
-                  itemCount={rows.length}
-                  itemSize={55} // Compact height
-                  width="100%"
-                  style={{ overflowX: "hidden" }} // Horizontal scroll is handled by FormPageContainer
-                >
-                  {Row}
-                </List>
-              ) : (
-                 null
-              )}
+            {rows && rows.length > 0 ? (
+              <List
+                height={Math.min(500, rows.length * 55)} // Reduced row factor
+                itemCount={rows.length}
+                itemSize={55} // Compact height
+                width="100%"
+                style={{ overflowX: "hidden" }} // Horizontal scroll is handled by FormPageContainer
+              >
+                {Row}
+              </List>
+            ) : null}
           </div>
-          
+
           {rows.length === 0 && !process?.header && (
-              <div style={{ padding: "20px", textAlign: "center", fontStyle: "italic", color: "gray" }}>No Process Selected</div>
+            <div
+              style={{
+                padding: "20px",
+                textAlign: "center",
+                fontStyle: "italic",
+                color: "gray",
+              }}
+            >
+              No Process Selected
+            </div>
           )}
 
           {/* Sticky Add New Row at the bottom */}
-          {!isView && process?.header?.length > 0 && (
-              <div style={{ 
-                position: "sticky", 
-                bottom: 0, 
-                backgroundColor: "#f7f9fc", 
-                zIndex: 15, 
+          {canCreate && process?.header?.length > 0 && (
+            <div
+              style={{
+                position: "sticky",
+                bottom: 0,
+                backgroundColor: "#f7f9fc",
+                zIndex: 15,
                 padding: "20px 10px",
                 marginTop: "10px",
                 borderTop: "1px solid #e2e8f0",
-                boxShadow: "0 -4px 6px rgba(0,0,0,0.02)"
-              }}>
-                  <EditableRow
-                      key={`new-row-${newRowKey}`}
-                      headers={process.header}
-                      isNew={true}
-                      currentBomId={currentBomId}
-                      onSave={handleSaveNew}
-                      onCancel={() => setNewRowKey(prev => prev + 1)} // Reset form
-                      gridTemplateColumns={gridTemplateColumns}
-                  />
-              </div>
+                boxShadow: "0 -4px 6px rgba(0,0,0,0.02)",
+              }}
+            >
+              <EditableRow
+                key={`new-row-${newRowKey}`}
+                headers={process.header}
+                isNew={true}
+                currentBomId={currentBomId}
+                onSave={handleSaveNew}
+                onCancel={() => setNewRowKey((prev) => prev + 1)} // Reset form
+                gridTemplateColumns={gridTemplateColumns}
+              />
+            </div>
           )}
         </div>
       </div>
 
       <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
 
-      <ConfirmDialog 
+      <ConfirmDialog
         isOpen={isDeleteAlertOpen}
         onClose={() => setIsDeleteAlertOpen(false)}
         onConfirm={handleConfirmDelete}
@@ -517,7 +654,10 @@ function FormPage({ process, isView = false, currentBomId = null, isDefault = fa
         message="Are you sure you want to delete this record? This action cannot be undone."
       />
 
-      <ImageCompo imageUrl={imagePopupUrl} onClose={() => setImagePopupUrl(null)} />
+      <ImageCompo
+        imageUrl={imagePopupUrl}
+        onClose={() => setImagePopupUrl(null)}
+      />
       {loading && <Loading />}
     </div>
   );

@@ -1,16 +1,16 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { 
-    Button, 
-    Select, 
-    Box, 
-    IconButton,
-    Tooltip,
-    Center,
-    Spinner,
-    Text as ChakraText,
-    VStack
+import {
+  Button,
+  Select,
+  Box,
+  IconButton,
+  Tooltip,
+  Center,
+  Spinner,
+  Text as ChakraText,
+  VStack,
 } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -28,12 +28,13 @@ import "../styles/departmentpage.css";
 
 // importing API's
 import { useDepartments } from "../services/Department";
-import { 
-  useProcessesByDepartmentId, 
-  useProcessById, 
-  useSearchSelectOptions 
+import {
+  useProcessesByDepartmentId,
+  useProcessById,
+  useSearchSelectOptions,
 } from "../services/Process";
 import { setMainTableData, setProcess } from "../redux/slices/department";
+import { usePermissions } from "../services/permissions";
 
 // utility: transform process object → FormPage format
 const transformProcess = (process) => {
@@ -48,7 +49,7 @@ const transformProcess = (process) => {
           key: cell.key,
           value: cell.value,
           process: cell.process || null,
-        }))
+        })),
       ) || [],
     rowIds: process.data?.map((row) => row._id) || [],
     rowDataIds: process.data?.map((row) => row.rowDataId) || [],
@@ -90,7 +91,7 @@ const combineSimilarRows = (mainTableData) => {
       key: k,
       value: rowObj[k].value,
       process: rowObj[k].process,
-    }))
+    })),
   );
 
   return {
@@ -103,7 +104,9 @@ const PageLoader = () => (
   <Center h="100%" w="100%" bg="white" borderRadius="xl">
     <VStack spacing={4}>
       <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
-      <ChakraText color="gray.500" fontWeight="medium">Loading process data...</ChakraText>
+      <ChakraText color="gray.500" fontWeight="medium">
+        Loading process data...
+      </ChakraText>
     </VStack>
   </Center>
 );
@@ -112,11 +115,33 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   const params = useParams();
   const department = propDept || params.department;
   const processId = propProcId || params.processId;
+  const { hasAccessToDepartment, isViewer } = usePermissions();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (department && !hasAccessToDepartment(department)) {
+      navigate("/"); // Redirect unauthorized users
+    }
+  }, [department, hasAccessToDepartment, navigate]);
 
   return (
-    <div className="AppRightContainer DepartmentPageContainer" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px", width: "100%", overflow: "hidden" }}>
+    <div
+      className="AppRightContainer DepartmentPageContainer"
+      style={{
+        padding: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        width: "100%",
+        overflow: "hidden",
+      }}
+    >
       <Suspense fallback={<Loading />}>
-        <DepartmentPageContent department={department} processId={processId} />
+        <DepartmentPageContent
+          department={department}
+          processId={processId}
+          isViewOnly={isViewer}
+        />
       </Suspense>
     </div>
   );
@@ -129,7 +154,7 @@ const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 });
 
-function DepartmentPageContent({ department, processId }) {
+function DepartmentPageContent({ department, processId, isViewOnly }) {
   const dispatch = useDispatch();
   const mainTableData = useSelector((state) => state.department.mainTableData);
   const navigate = useNavigate();
@@ -150,13 +175,16 @@ function DepartmentPageContent({ department, processId }) {
   const [originalMainTable, setOriginalMainTable] = useState(null);
 
   const currentDepartment = departments.find(
-    (d) => d.name.toLowerCase() === department?.toLowerCase()
+    (d) => d.name.toLowerCase() === department?.toLowerCase(),
   );
 
   const { data: processes } = useSuspenseQuery({
     queryKey: ["processesByDepartment", currentDepartment?._id],
     queryFn: async () => {
-      const response = await axios.get(`${PROC_URL}/department/${currentDepartment?._id}`, getAuthHeaders());
+      const response = await axios.get(
+        `${PROC_URL}/department/${currentDepartment?._id}`,
+        getAuthHeaders(),
+      );
       return response.data.data;
     },
   });
@@ -179,13 +207,18 @@ function DepartmentPageContent({ department, processId }) {
   }, [processId, processes]);
 
   const foundProcess = processes.find((p) => p.process === selectedProcess);
-  const selectedProcessId = foundProcess ? (foundProcess._id || foundProcess.id) : null;
+  const selectedProcessId = foundProcess
+    ? foundProcess._id || foundProcess.id
+    : null;
 
   const { data: processDataRaw, refetch: refetchProcess } = useSuspenseQuery({
     queryKey: ["process", selectedProcessId],
     queryFn: async () => {
       if (!selectedProcessId) return null;
-      const response = await axios.get(`${PROC_URL}/${selectedProcessId}`, getAuthHeaders());
+      const response = await axios.get(
+        `${PROC_URL}/${selectedProcessId}`,
+        getAuthHeaders(),
+      );
       return response.data.data;
     },
   });
@@ -223,92 +256,102 @@ function DepartmentPageContent({ department, processId }) {
 
   return (
     <>
-      <HeaderSection 
-          title={selectedProcess || `${currentDepartment?.name || department} Analysis`} 
-          description={selectedProcess ? `Manage and track ${selectedProcess.toLowerCase()} specifications and statuses.` : `Overview and department-level analysis for ${department}.`}
+      <HeaderSection
+        title={
+          selectedProcess || `${currentDepartment?.name || department} Analysis`
+        }
+        description={
+          selectedProcess
+            ? `Manage and track ${selectedProcess.toLowerCase()} specifications and statuses.`
+            : `Overview and department-level analysis for ${department}.`
+        }
       >
-          {selectedProcess && (
-            <>
-              <SearchCompo 
-                  placeholder="Search records..." 
-                  onSearch={(term) => console.log("Searching for:", term)} 
+        {selectedProcess && (
+          <>
+            <SearchCompo
+              placeholder="Search records..."
+              onSearch={(term) => console.log("Searching for:", term)}
+            />
+
+            <FilterCompo
+              filters={["Completed", "Pending", "In Progress"]}
+              onFilterChange={(val) => console.log("Filter:", val)}
+            />
+
+            <Tooltip label="Export Data">
+              <IconButton
+                icon={<DownloadIcon />}
+                size="sm"
+                variant="solid"
+                bg="white"
+                color="gray.600"
+                border="1px solid"
+                borderColor="gray.200"
+                _hover={{
+                  bg: "gray.50",
+                  boxShadow: "sm",
+                  borderColor: "gray.300",
+                  color: "blue.500",
+                }}
+                transition="all 0.2s"
+                aria-label="Export Data"
               />
-              
-              <FilterCompo 
-                  filters={["Completed", "Pending", "In Progress"]} 
-                  onFilterChange={(val) => console.log("Filter:", val)}
-              />
+            </Tooltip>
+          </>
+        )}
 
-              <Tooltip label="Export Data">
-                <IconButton 
-                    icon={<DownloadIcon />} 
-                    size="sm"
-                    variant="solid" 
-                    bg="white"
-                    color="gray.600"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    _hover={{
-                        bg: "gray.50",
-                        boxShadow: "sm",
-                        borderColor: "gray.300",
-                        color: "blue.500"
-                    }}
-                    transition="all 0.2s"
-                    aria-label="Export Data"
-                />
-              </Tooltip>
-            </>
-          )}
+        <Box width="180px">
+          <Select
+            placeholder="Select Process"
+            value={selectedProcess}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "") {
+                navigate(`/department/${department}`);
+              } else {
+                const processObj = processes.find((p) => p.process === val);
+                if (processObj) {
+                  navigate(
+                    `/department/${department}/${processObj._id || processObj.id}`,
+                  );
+                } else {
+                  navigate(`/department/${department}`);
+                }
+              }
+            }}
+            bg="white"
+            borderColor="gray.300"
+            size="sm"
+            fontSize="xs"
+            borderRadius="md"
+          >
+            {currentDepartment?.process.map((subProc, index) => (
+              <option key={index} value={subProc}>
+                {subProc}
+              </option>
+            ))}
+          </Select>
+        </Box>
 
-          <Box width="180px">
-              <Select
-                  placeholder="Select Process"
-                  value={selectedProcess}
-                  onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "") {
-                          navigate(`/department/${department}`);
-                      } else {
-                          const processObj = processes.find((p) => p.process === val);
-                          if (processObj) {
-                              navigate(`/department/${department}/${processObj._id || processObj.id}`);
-                          } else {
-                               navigate(`/department/${department}`);
-                          }
-                      }
-                  }}
-                  bg="white"
-                  borderColor="gray.300"
-                  size="sm"
-                  fontSize="xs"
-                  borderRadius="md"
-              >
-                  {currentDepartment?.process.map((subProc, index) => (
-                      <option key={index} value={subProc}>{subProc}</option>
-                  ))}
-              </Select>
-          </Box>
-
-          {selectedProcess === "Procurement Register" && (
-            <Button
-              onClick={handleSortMerge}
-              colorScheme={isMerged ? "red" : "purple"}
-              variant="solid"
-            >
-              {isMerged ? "Undo Sort" : "Sort Data"}
-            </Button>
-          )}
+        {selectedProcess === "Procurement Register" && (
+          <Button
+            onClick={handleSortMerge}
+            colorScheme={isMerged ? "red" : "purple"}
+            variant="solid"
+          >
+            {isMerged ? "Undo Sort" : "Sort Data"}
+          </Button>
+        )}
       </HeaderSection>
-      
+
       <Box flex="1" overflow="hidden" display="flex" flexDirection="column">
         {selectedProcess && (
-           <FormPage
-             key={selectedProcess}
-             process={mainTableData}
-             isView={selectedProcess === "Products"}
-             refresh={handleRefresh}
-           />
+          <FormPage
+            key={selectedProcess}
+            process={mainTableData}
+            isView={isViewOnly || selectedProcess === "Products"}
+            refresh={handleRefresh}
+          />
         )}
       </Box>
     </>

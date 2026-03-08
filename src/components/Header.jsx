@@ -42,7 +42,7 @@ function Header() {
       <div className='HeaderRightContainer'>
         <div className='HeaderUserDetails'>
           <DetailsPopOver DetailsContent={userDetails} />
-          <span className='HeaderUserName'>{userDetails?.userName}</span>
+          <span className='HeaderUserName'>{userDetails?.name}</span>
         </div>
         <Icon icon={"eos-icons:admin-outlined"} className="HeaderIcon" onClick={() => navigate("/admin")}/>
         <Icon icon={"uil:exit"} className="HeaderIcon" onClick={handleLogoutClick}/>
