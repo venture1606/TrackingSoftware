@@ -169,7 +169,8 @@
   ],
   "ArrayValuesProcess": [
     "REVISION",
-    "PART REV NO"
+    "PART REV NO",
+    "REV NO"
   ],
   "SelectOptionsArray": [
     {

@@ -312,13 +312,13 @@ const EditableRow = ({
       style={{
         display: "grid",
         gridTemplateColumns: gridTemplateColumns,
-        gap: "20px",
+        gap: "0",
         backgroundColor: "white",
-        padding: "15px 10px",
+        padding: "0",
         borderRadius: "8px",
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         border: "1px solid #3182ce", // Highlight edit mode
-        alignItems: "center",
+        alignItems: "stretch", // Changed from center
         marginBottom: "10px",
       }}
     >
@@ -332,7 +332,18 @@ const EditableRow = ({
         const isError = errorFields.includes(field.key);
 
         return (
-          <div key={idx}>
+          <div
+            key={idx}
+            style={{
+              borderRight: "1px solid #edf2f7",
+              padding: "8px 10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              maxWidth: "100%",
+              overflow: "hidden",
+            }}
+          >
             {/* Render logic based on process type */}
             {field.process === "processId" ? (
               <Input
@@ -358,7 +369,7 @@ const EditableRow = ({
                 </SimpleGrid>
               </CheckboxGroup>
             ) : field.process === "arrayInput" ? (
-              <Stack spacing={1}>
+              <Stack spacing={1} width="100%">
                 {field.value.map((val, subIdx) => (
                   <div key={subIdx} style={{ display: "flex", gap: "5px" }}>
                     <Input
@@ -391,7 +402,7 @@ const EditableRow = ({
                 </Button>
               </Stack>
             ) : field.process === "select" ? (
-              <Stack spacing={1}>
+              <Stack spacing={1} width="100%">
                 <Select
                   size="sm"
                   fontSize="xs"
@@ -492,7 +503,7 @@ const EditableRow = ({
                 placeholder={field.key}
               />
             ) : field.process === "image" ? (
-              <Stack spacing={2} align="center">
+              <Stack spacing={2} align="center" width="100%">
                 <input
                   type="file"
                   accept="image/*"
@@ -577,8 +588,9 @@ const EditableRow = ({
           aria-label="Save"
           px={isNew ? 4 : 2}
           width="100%"
+          boxShadow="sm"
         >
-          {isNew ? "Add" : "Save"}
+          {isNew ? "Add Row" : "Save"}
         </Button>
         <Button
           // leftIcon={!isNew && <CloseIcon />}

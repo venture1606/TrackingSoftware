@@ -317,10 +317,10 @@ function FormPage({
         .map((h) =>
           h === "DETAILING PRODUCT"
             ? "minmax(450px, 4fr)"
-            : "minmax(150px, 1fr)",
+            : "minmax(100px, 1fr)",
         )
         .join(" ") + (canModify ? " 160px" : "")
-    : `repeat(${process?.header?.length || 1}, 150px) max-content`;
+    : `repeat(${process?.header?.length || 1}, 100px) max-content`;
 
   const Row = useCallback(
     ({ index, style }) => {
@@ -350,11 +350,11 @@ function FormPage({
             style={{
               display: "grid",
               gridTemplateColumns: gridTemplateColumns,
-              gap: "20px",
+              gap: "0",
               backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9", // Striped layout
-              padding: "8px 10px",
+              padding: "0",
               borderBottom: "1px solid #edf2f7",
-              alignItems: "center",
+              alignItems: "stretch",
               height: "100%",
             }}
           >
@@ -364,12 +364,25 @@ function FormPage({
                 Array.isArray(cell.value)
               ) {
                 return (
-                  <DetailingProductCompo
+                  <div
                     key={cellIdx}
-                    bomIds={cell.value}
-                    detailingProducts={detailingProducts}
-                    ShownArray={ShownArray}
-                  />
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <DetailingProductCompo
+                      key={cellIdx}
+                      bomIds={cell.value}
+                      detailingProducts={detailingProducts}
+                      ShownArray={ShownArray}
+                    />
+                  </div>
                 );
               }
 
@@ -378,7 +391,18 @@ function FormPage({
                 Array.isArray(cell.value)
               ) {
                 return (
-                  <div key={cellIdx} style={{ textAlign: "center" }}>
+                  <div
+                    key={cellIdx}
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
                     <ArrayDisplayCompo values={cell.value} />
                   </div>
                 );
@@ -386,12 +410,25 @@ function FormPage({
 
               if (ImageUploadArray.includes(cell.key)) {
                 return (
-                  <ImagePreviewCompo
+                  <div
                     key={cellIdx}
-                    url={cell.value}
-                    isView={true}
-                    onClick={() => setImagePopupUrl(cell.value)}
-                  />
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <ImagePreviewCompo
+                      key={cellIdx}
+                      url={cell.value}
+                      isView={true}
+                      onClick={() => setImagePopupUrl(cell.value)}
+                    />
+                  </div>
                 );
               }
 
@@ -411,11 +448,24 @@ function FormPage({
                 ].includes(cell.value)
               ) {
                 return (
-                  <StatusBadgeCompo
+                  <div
                     key={cellIdx}
-                    value={cell.value}
-                    getStatusStyle={getStatusStyle}
-                  />
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <StatusBadgeCompo
+                      key={cellIdx}
+                      value={cell.value}
+                      getStatusStyle={getStatusStyle}
+                    />
+                  </div>
                 );
               }
 
@@ -436,31 +486,48 @@ function FormPage({
                     color: "#2d3748",
                     fontWeight: "500",
                     textAlign: "center",
+                    borderRight: "1px solid #edf2f7",
+                    padding: "8px 10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {cell?.process === "multiSelect" ||
                   (typeof cell.value === "string" &&
                     cell.value.startsWith("processId -")) ? (
-                    <ActionButtonCompo
-                      cell={cell}
-                      label={
-                        DefaultSelectProcess.includes(cell.key)
-                          ? "View"
-                          : cell.key === "BREAK HOUR" ||
-                              cell.key === "ACTION PLAN" ||
-                              cell.key === "ACTION TAKEN"
-                            ? cell.process || "0"
-                            : "UPDATE"
-                      }
-                      colorScheme={
-                        ColorProcess.includes(cell.key)
-                          ? `${cell.process !== "value" ? `${cell.process}` : "red"}`
-                          : "blue"
-                      }
-                      onClick={() =>
-                        handleCellButtonClick(row, index, cellIdx, cell.key)
-                      }
-                    />
+                    <div
+                      style={{
+                        maxWidth: "100%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      <ActionButtonCompo
+                        cell={cell}
+                        label={
+                          DefaultSelectProcess.includes(cell.key)
+                            ? "View"
+                            : cell.key === "BREAK HOUR" ||
+                                cell.key === "ACTION PLAN" ||
+                                cell.key === "ACTION TAKEN"
+                              ? cell.process || "0"
+                              : "UPDATE"
+                        }
+                        colorScheme={
+                          ColorProcess.includes(cell.key)
+                            ? `${cell.process !== "value" ? `${cell.process}` : "red"}`
+                            : "blue"
+                        }
+                        onClick={() =>
+                          handleCellButtonClick(row, index, cellIdx, cell.key)
+                        }
+                      />
+                    </div>
                   ) : (
                     <TruncatedText text={displayValue} limit={25} />
                   )}
@@ -473,7 +540,9 @@ function FormPage({
                 style={{
                   display: "flex",
                   justifyContent: "center",
+                  alignItems: "center",
                   gap: "8px",
+                  padding: "8px 10px",
                 }}
               >
                 {canEdit && (
@@ -549,9 +618,10 @@ function FormPage({
               backgroundColor: "#f7f9fc",
               display: "grid",
               gridTemplateColumns: gridTemplateColumns,
-              gap: "20px",
-              padding: "10px", // Denser header
+              gap: "0",
+              padding: "0", // Padding removed to align with rows
               borderBottom: "2px solid #e2e8f0",
+              alignItems: "stretch",
             }}
           >
             {process && process.header?.length > 0 ? (
@@ -565,9 +635,24 @@ function FormPage({
                       fontSize: "0.75rem",
                       textTransform: "uppercase",
                       textAlign: "center",
+                      borderRight: "1px solid #e2e8f0",
+                      padding: "12px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
                     }}
                   >
-                    {col}
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {col}
+                    </span>
                   </div>
                 ))}
                 {canModify && (
@@ -579,7 +664,10 @@ function FormPage({
                       textTransform: "uppercase",
                       textAlign: "center",
                       minWidth: "max-content",
-                      padding: "0 15px",
+                      padding: "12px 15px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     Actions
