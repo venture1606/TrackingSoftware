@@ -55,12 +55,12 @@ function App() {
 
   return (
     <div className="AppContainer">
-      {isLoggedIn ? (
-        <div className="AppEntireContainer">
-          <Header />
-          <div className="AppContentContainer">
-            <SideBar />
-            <Suspense fallback={<Loading />}>
+      <Suspense fallback={<Loading />}>
+        {isLoggedIn ? (
+          <div className="AppEntireContainer">
+            <Header />
+            <div className="AppContentContainer">
+              <SideBar />
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -83,12 +83,12 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ShowProduct />} />
               </Routes>
-            </Suspense>
+            </div>
           </div>
-        </div>
-      ) : (
-        <Login />
-      )}
+        ) : (
+          <Login />
+        )}
+      </Suspense>
       <Indication message={message} />
     </div>
   );

@@ -1,4 +1,5 @@
-import React, { useState, Suspense, lazy, useEffect } from 'react';
+import { useDashboard } from '../services/Process';
+import React, { useState, Suspense, lazy } from 'react';
 import {
   Box,
   SimpleGrid,
@@ -11,8 +12,6 @@ import {
   Alert,
   AlertIcon,
 } from '@chakra-ui/react';
-import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
 
 // importing common components
 import StatCard from '../components/dashboard/StatCard';
@@ -29,57 +28,30 @@ const GaugeChart = lazy(() => import('../components/dashboard/GaugeChart'));
 
 const URL = process.env.REACT_APP_PROCESS_URL || 'http://localhost:3008/api/v1/process';
 
-const fetchDashboardData = async (filters) => {
-  try {
-    // Assuming a POST endpoint that takes filters for various sections
-    // If it's a GET, it might be /dashboard or /getMainDashBoardDetails
-    // We send filters as payload
-    const response = await axios.post(`${URL}/dashboard`, { filters });
-    
-    // Fallback parsing just in case it returns the shape requested
-    if (response.data && response.data.success) {
-      return response.data;
-    }
-    return response.data;
-  } catch (err) {
-    // If the API fails or doesn't exist, we return a fallback based on the user's provided JSON structure
-    console.warn("API failed, using fallback data format", err);
-    return {
-      success: true,
-      data: [
-        { productionPlanProcess: { pendingDetails: [], reportGraph: [] } },
-        { productionReportProcess: { totalFiltered: 0, completeTrend: [], oeeShift: { shift1: 85, shift2: 78, shift3: 90 } } },
-        { rejectReportProcess: { totalFiltered: 0, data: [], chartResult: 15 } },
-        { reworkReportProcess: { totalFiltered: 0, data: [] } },
-        { dispatchProcess: { totalFiltered: 0, data: [] } },
-        { npdRegisterProcess: { totalFiltered: 0, monthWise: [], yearWise: [] } },
-        { productsProcess: { partNoCount: {} } },
-        { calibrationReportProcess: { totalFiltered: 0, data: [], doneCount: 0, dueCount: 0 } },
-        { incomingInspectionProcess: { totalFiltered: 0, data: [] } },
-        { customerComplientRegisterProcess: { totalFiltered: 0, data: [] } },
-        { customerListProcess: { totalFiltered: 0, data: [] } },
-        { quotationListProcess: { totalFiltered: 0, data: [] } },
-        { orderListProcess: { totalFiltered: 0, data: [] } },
-        { procurementProcess: { totalFiltered: 0, data: [] } },
-        { stockDataProcess: { totalFiltered: 0, data: [] } }
-      ]
-    };
-  }
-};
 
 function Dashboard() {
-  // State to hold filters for each individual card/section
-  const [sectionFilters, setSectionFilters] = useState({});
-
-  const { data: apiData, isLoading, isError, refetch } = useQuery({
-    queryKey: ['dashboardData', sectionFilters],
-    queryFn: () => fetchDashboardData(sectionFilters),
-    // we could debounce this, but react-query handles it well enough
-    keepPreviousData: true,
+  // State to hold global filters
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    salesPerson: '',
+    location: ''
   });
 
+  // Convert filters to what the backend expects (epoch for dates)
+  const apiFilters = {
+    ...filters,
+    startDate: filters.startDate ? new Date(filters.startDate).getTime() : undefined,
+    endDate: filters.endDate ? new Date(filters.endDate).getTime() : undefined,
+    // Ensure "All" is treated as empty string or undefined
+    salesPerson: filters.salesPerson === 'All' ? '' : filters.salesPerson,
+    location: filters.location === 'All' ? '' : filters.location,
+  };
+
+  const { data: apiResponse, isLoading, isError, refetch } = useDashboard(apiFilters);
+
   // Extract data sections gracefully
-  const rawData = apiData?.data || [];
+  const rawData = apiResponse?.data || [];
   
   const getProcessData = (key) => {
     const section = rawData.find(item => item[key] !== undefined);
@@ -103,17 +75,22 @@ function Dashboard() {
   const stockData = getProcessData('stockDataProcess');
 
   const handleApplyFilter = (section) => (filterValues) => {
-    setSectionFilters(prev => ({
+    // Current Dashboard structure uses per-card filters, but we map them to global filters 
+    // to match current backend capabilities.
+    setFilters(prev => ({
       ...prev,
-      [section]: filterValues
+      startDate: filterValues.startDate || prev.startDate,
+      endDate: filterValues.endDate || prev.endDate,
+      ...(filterValues.fields || {})
     }));
   };
 
   const hasFilter = (section) => {
-    return !!sectionFilters[section];
+    // Basic check for active filters
+    return !!(filters.startDate || filters.endDate || filters.salesPerson || filters.location);
   };
 
-  if (isLoading && !apiData) {
+  if (isLoading && !apiResponse) {
     return (
       <Flex justify="center" align="center" h="100vh">
         <Spinner size="xl" color="blue.500" />
@@ -121,15 +98,16 @@ function Dashboard() {
     );
   }
 
-  // Fallback map data arrays for charting
-  const formatTableData = (data, keys) => {
+  // Helper to format rows from process.items array into a flat object
+  const formatProcessTableData = (data, mapping) => {
     if (!Array.isArray(data)) return [];
-    return data.map(item => {
-      let row = {};
-      keys.forEach(k => {
-        row[k] = item[k] || '-';
+    return data.map(row => {
+      let formatted = {};
+      Object.entries(mapping).forEach(([uiKey, backendKey]) => {
+        const item = row.items?.find(i => i.key === backendKey);
+        formatted[uiKey] = item ? item.value : '-';
       });
-      return row;
+      return formatted;
     });
   };
 
@@ -165,7 +143,13 @@ function Dashboard() {
             <Box maxH="220px" overflowY="auto">
                 <TableChart 
                   headers={['PLAN NO', 'PART NO', 'PART NAME', 'QTY', 'CUSTOMER']}
-                  data={formatTableData(productionPlan.pendingDetails, ['planNo', 'partNo', 'partName', 'planQty', 'customerName'])}
+                  data={formatProcessTableData(productionPlan.pendingDetails, {
+                    planNo: 'PLAN NO',
+                    partNo: 'PART NO',
+                    partName: 'PART NAME',
+                    planQty: 'PLAN QTY',
+                    customerName: 'CUSTOMER'
+                  })}
                   keys={['planNo', 'partNo', 'partName', 'planQty', 'customerName']}
                 />
             </Box>
@@ -188,7 +172,7 @@ function Dashboard() {
               xAxisKey="partNo"
               height={220}
               dataKeys={[
-                { key: "sumPlanQty", name: "Total Plan Qty", color: "#3182ce" }
+                { key: "planQty", name: "Total Plan Qty", color: "#3182ce" }
               ]}
             />
           </Suspense>
@@ -196,49 +180,32 @@ function Dashboard() {
 
         {/* 3. Production Report - Complete trend (OEE 7/15/30 days) */}
          <StatCard 
-          title="Production Report - OEE Trend" 
+          title="Production Report - Total" 
           headerRight={
              <DashboardCardFilter 
-                 onApply={handleApplyFilter('productionReportAvg')} 
-                 hasActiveFilter={hasFilter('productionReportAvg')}
-             />
-          }
-        >
-          <Suspense fallback={<ChartSkeleton type="chart" />}>
-            <BarChart 
-              data={productionReport.completeTrend || []}
-              xAxisKey="dayLabel" // assuming e.g., '7 Days', '15 Days', '30 Days'
-              height={220}
-              dataKeys={[
-                { key: "avgOee", name: "Avg OEE %", color: "#48bb78" }
-              ]}
-            />
-          </Suspense>
-        </StatCard>
-
-        {/* 4. Production Report - Shift OEE */}
-         <StatCard 
-          title="Production Report - Shift OEE(%)" 
-          headerRight={
-             <DashboardCardFilter 
-                 onApply={handleApplyFilter('productionReportShift')} 
-                 hasActiveFilter={hasFilter('productionReportShift')}
-                 fields={[
-                     { name: 'machine', label: 'Machine', options: ['Machine A', 'Machine B'] },
-                     { name: 'operatedBy', label: 'Operated By', options: ['Operator 1', 'Operator 2'] }
-                 ]}
+                 onApply={handleApplyFilter('productionReport')} 
+                 hasActiveFilter={hasFilter('productionReport')}
              />
           }
         >
           <Suspense fallback={<ChartSkeleton type="circles" />}>
-             {/* If shifted OEE returns a dictionary { shift1: 80, shift2: 90 } */}
-            <CircleChart data={productionReport.oeeShift || { "Shift 1": 0, "Shift 2": 0, "Shift 3": 0 }} type="attendance" />
+              <VStack justify="center" h="100%">
+                  <Text fontSize="6xl" fontWeight="black" color="green.500">
+                      {productionReport.totalFiltered || 0}
+                  </Text>
+                  <Text fontSize="sm" color="gray.500" fontWeight="bold">
+                      TOTAL REPORTS
+                  </Text>
+              </VStack>
           </Suspense>
         </StatCard>
 
+        {/* 4. Production Report - Shift OEE */}
+        {/* 4. Production Report (Hidden Trend/Shift as backend only returns count) */}
+
         {/* 5. Reject Report - Unclosed & Trend */}
         <StatCard 
-          title="Reject Report - Rework Trend (Unclosed)" 
+          title="Reject Report - Details" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('rejectReport')} 
@@ -249,9 +216,12 @@ function Dashboard() {
           <Suspense fallback={<ChartSkeleton type="table" />}>
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
-                  headers={['PART NO', 'PART NAME', 'QTY', 'DESCRIPTION']}
-                  data={formatTableData(rejectReport.data, ['partNo', 'partName', 'qty', 'problemDescription'])}
-                  keys={['partNo', 'partName', 'qty', 'problemDescription']}
+                  headers={['PART NO', 'REJECT QTY']}
+                  data={formatProcessTableData(rejectReport.data, {
+                    partNo: 'PART NO',
+                    qty: 'REJECT QTY'
+                  })}
+                  keys={['partNo', 'qty']}
                 />
              </Box>
           </Suspense>
@@ -269,7 +239,7 @@ function Dashboard() {
         >
           <Suspense fallback={<ChartSkeleton type="circles" />}>
              <GaugeChart 
-                 value={rejectReport.chartResult || 0} // Using reject qty over actual sum
+                 value={(rejectReport.chartResult || 0) * 100} // Convert ratio to percentage
                  max={100} 
                  label="Reject Rate %" 
              />
@@ -289,9 +259,13 @@ function Dashboard() {
           <Suspense fallback={<ChartSkeleton type="table" />}>
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
-                  headers={['PART NO', 'PART NAME', 'QTY', 'DESCRIPTION']}
-                  data={formatTableData(reworkReport.data, ['partNo', 'partName', 'qty', 'problemDescription'])}
-                  keys={['partNo', 'partName', 'qty', 'problemDescription']}
+                  headers={['PART NO', 'PART NAME', 'QTY']}
+                  data={formatProcessTableData(reworkReport.data, {
+                    partNo: 'PART NO',
+                    partName: 'PART NAME',
+                    qty: 'QTY'
+                  })}
+                  keys={['partNo', 'partName', 'qty']}
                 />
              </Box>
           </Suspense>
@@ -299,24 +273,25 @@ function Dashboard() {
 
         {/* 8. Dispatch - Bar chart */}
          <StatCard 
-          title="Dispatch by Month" 
+          title="Dispatch Data" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('dispatch')} 
                  hasActiveFilter={hasFilter('dispatch')}
-                 fields={[{ name: 'partNo', label: 'Part No', options: ['P1', 'P2'] }]}
              />
           }
         >
-          <Suspense fallback={<ChartSkeleton type="chart" />}>
-            <BarChart 
-              data={dispatch.data || []}
-              xAxisKey="month" // x-axis month
-              height={220}
-              dataKeys={[
-                { key: "qty", name: "Dispatch Qty", color: "#805ad5" }
-              ]}
-            />
+          <Suspense fallback={<ChartSkeleton type="table" />}>
+             <Box maxH="220px" overflowY="auto">
+                <TableChart 
+                  headers={['PART NO', 'DATE']}
+                  data={(dispatch.data || []).map(row => ({
+                    partNo: row.partNo,
+                    date: new Date(Number(row.date)).toLocaleDateString()
+                  }))}
+                  keys={['partNo', 'date']}
+                />
+             </Box>
           </Suspense>
         </StatCard>
 
@@ -391,7 +366,7 @@ function Dashboard() {
 
         {/* 12. Incoming Inspection */}
         <StatCard 
-          title="Incoming Inspection (!= Done)" 
+          title="Incoming Inspection (Pending)" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('incoming')} 
@@ -403,7 +378,13 @@ function Dashboard() {
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
                   headers={['PART NO', 'CATEGORY', 'NAME', 'QTY', 'CODE']}
-                  data={formatTableData(incoming.data, ['partNo', 'itemCategory', 'itemName', 'qty', 'itemCode'])}
+                  data={formatProcessTableData(incoming.data, {
+                    partNo: 'PART NO',
+                    itemCategory: 'ITEM CATEGORY',
+                    itemName: 'ITEM NAME',
+                    qty: 'QTY',
+                    itemCode: 'ITEM CODE'
+                  })}
                   keys={['partNo', 'itemCategory', 'itemName', 'qty', 'itemCode']}
                 />
              </Box>
@@ -412,7 +393,7 @@ function Dashboard() {
 
         {/* 13. Customer Compliant Registered */}
         <StatCard 
-          title="Customer Complaint (Supplied vs Failed)" 
+          title="Customer Complaints Ratio" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('customerComplaint')} 
@@ -422,12 +403,14 @@ function Dashboard() {
         >
           <Suspense fallback={<ChartSkeleton type="chart" />}>
             <BarChart 
-              data={customerComplaint.data || []}
-              xAxisKey="month" // or year
+              data={(customerComplaint.data || []).map(row => ({
+                date: new Date(Number(row.date)).toLocaleDateString(),
+                ratio: (row.ratio * 100).toFixed(2)
+              }))}
+              xAxisKey="date"
               height={220}
               dataKeys={[
-                { key: "suppliedQty", name: "Supplied", color: "#3182ce" },
-                { key: "failedQty", name: "Failed", color: "#e53e3e" }
+                { key: "ratio", name: "Fail Ratio %", color: "#e53e3e" }
               ]}
             />
           </Suspense>
@@ -454,7 +437,11 @@ function Dashboard() {
              <Box maxH="180px" overflowY="auto">
                 <TableChart 
                   headers={['NAME', 'SALES PERSON', 'LOCATION']}
-                  data={formatTableData(customerList.data, ['name', 'salesPerson', 'location'])}
+                  data={formatProcessTableData(customerList.data, {
+                    name: 'NAME',
+                    salesPerson: 'SALES PERSON',
+                    location: 'LOCATION'
+                  })}
                   keys={['name', 'salesPerson', 'location']}
                 />
              </Box>
@@ -475,11 +462,15 @@ function Dashboard() {
              {/* Simple count representation */}
              <HStack w="100%" h="100%" justify="space-evenly" align="center">
                  <VStack bg="gray.50" p={4} borderRadius="lg" minW="100px">
-                     <Text fontSize="2xl" fontWeight="black" color="purple.600">{quotationList.waitingForQuote || 0}</Text>
+                     <Text fontSize="2xl" fontWeight="black" color="purple.600">
+                        {(quotationList.data || []).filter(row => row.items.find(i => i.key === 'STATUS')?.value === 'Waiting for Quote').length}
+                     </Text>
                      <Text fontSize="10px" fontWeight="bold" color="gray.500" textAlign="center">WAITING FOR<br/>QUOTE</Text>
                  </VStack>
                  <VStack bg="gray.50" p={4} borderRadius="lg" minW="100px">
-                     <Text fontSize="2xl" fontWeight="black" color="cyan.600">{quotationList.waitingOrder || 0}</Text>
+                     <Text fontSize="2xl" fontWeight="black" color="cyan.600">
+                        {(quotationList.data || []).filter(row => row.items.find(i => i.key === 'STATUS')?.value === 'Waiting for Order').length}
+                     </Text>
                      <Text fontSize="10px" fontWeight="bold" color="gray.500" textAlign="center">WAITING<br/>ORDER</Text>
                  </VStack>
              </HStack>
@@ -488,7 +479,7 @@ function Dashboard() {
 
         {/* 16. Order List */}
         <StatCard 
-          title="Order List (!= Closed)" 
+          title="Order List (Active)" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('orders')} 
@@ -500,7 +491,12 @@ function Dashboard() {
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
                   headers={['CUSTOMER', 'PART NO', 'PART NAME', 'QTY']}
-                  data={formatTableData(orderList.data, ['customerName', 'partNo', 'partName', 'qty'])}
+                  data={formatProcessTableData(orderList.data, {
+                    customerName: 'CUSTOMER',
+                    partNo: 'PART NO',
+                    partName: 'PART NAME',
+                    qty: 'QTY'
+                  })}
                   keys={['customerName', 'partNo', 'partName', 'qty']}
                 />
              </Box>
@@ -509,7 +505,7 @@ function Dashboard() {
 
         {/* 17. Procurement Register */}
         <StatCard 
-          title="Procurement (Pending Qty)" 
+          title="Procurement Register" 
           headerRight={
              <DashboardCardFilter 
                  onApply={handleApplyFilter('procurement')} 
@@ -520,9 +516,12 @@ function Dashboard() {
           <Suspense fallback={<ChartSkeleton type="table" />}>
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
-                  headers={['ITEM CODE', 'PENDING QTY', 'PAYMENT PENDING']}
-                  data={formatTableData(procurement.data, ['itemCode', 'pendingQty', 'paymentPending'])}
-                  keys={['itemCode', 'pendingQty', 'paymentPending']}
+                  headers={['PENDING QTY', 'PAYMENT PENDING']}
+                  data={(procurement.data || []).map(row => ({
+                    pendingQty: row.pendingQty,
+                    paymentStatus: row.paymentStatus
+                  }))}
+                  keys={['pendingQty', 'paymentStatus']}
                 />
              </Box>
           </Suspense>
@@ -543,7 +542,11 @@ function Dashboard() {
              <Box maxH="220px" overflowY="auto">
                 <TableChart 
                   headers={['ITEM CODE', 'NAME', 'STOCK COUNT']}
-                  data={formatTableData(stockData.data, ['itemCode', 'itemName', 'stockCount'])}
+                  data={formatProcessTableData(stockData.data, {
+                    itemCode: 'ITEM CODE',
+                    itemName: 'NAME',
+                    stockCount: 'STOCK COUNT'
+                  })}
                   keys={['itemCode', 'itemName', 'stockCount']}
                 />
              </Box>

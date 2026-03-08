@@ -348,6 +348,21 @@ export const useDeleteProcessData = () => {
   });
 };
 
+export const useDashboard = (filters = {}) => {
+  return useQuery({
+    queryKey: ["dashboard", filters],
+    queryFn: async () => {
+      const response = await axios.post(
+        `${URL}/dashboard`,
+        filters,
+        getAuthHeaders(),
+      );
+      return response.data;
+    },
+    placeholderData: (previousData) => previousData,
+  });
+};
+
 // Default export acting as a hook for backward compatibility if needed,
 // though we encourage using individual hooks.
 function Process() {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import {
   setToken,
   setUserDetails,
   setLogin,
+  setLogout,
 } from "../redux/slices/auth";
 import { setMessage } from "../redux/slices/common";
 
@@ -40,6 +41,7 @@ function Auth() {
 
   const [loading, setLoading] = useState(false);
   const [isOtpCorrect, setisOtpCorrect] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleRegister = async (credentials) => {
     setLoading(true);
@@ -130,20 +132,26 @@ function Auth() {
         setMessage({
           status: "success",
           description: "Logged Out Successfully",
-          message: `${userDetails.userName} Goodbye`,
+          message: `${userDetails?.userName || "User"} Goodbye`,
         }),
       );
 
-      dispatch(setLogin(false));
+      startTransition(() => {
+        dispatch(setLogout());
+      });
     } catch (error) {
       console.log(error);
       dispatch(
         setMessage({
           status: "error",
           description: "Logout Failed",
-          message: "Error",
+          message: error.response?.data?.message || "Error",
         }),
       );
+      // Still logout locally if API fails
+      startTransition(() => {
+        dispatch(setLogout());
+      });
     } finally {
       setLoading(false);
     }
