@@ -15,7 +15,9 @@ function SideBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { DepartmentsListName, SideHeadersList } = ItemsData;
-  const { accessibleDepartments, hasAccessToDepartment } = usePermissions();
+
+  const { accessibleDepartments, hasAccessToDepartment, isAdmin } =
+    usePermissions();
 
   // Filter departments based on user permissions
   const filteredDepartments = useMemo(() => {
@@ -59,7 +61,7 @@ function SideBar() {
   };
 
   const navItems = useMemo(() => {
-    return [
+    const items = [
       { label: "Dashboard", path: "/dashboard", icon: "duo-icons:dashboard" },
       ...SideHeadersList.map((header, idx) => ({
         label: header,
@@ -68,7 +70,17 @@ function SideBar() {
         isDropdown: idx === 1, // Department index
       })),
     ];
-  }, [SideHeadersList, icons]);
+
+    if (isAdmin) {
+      items.push({
+        label: "Create Account",
+        path: "/create-account",
+        icon: "mdi:account-plus",
+      });
+    }
+
+    return items;
+  }, [SideHeadersList, icons, isAdmin]);
 
   return (
     <MotionBox

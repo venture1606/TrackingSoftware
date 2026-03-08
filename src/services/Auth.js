@@ -58,15 +58,47 @@ function Auth() {
           message: `Welcome ${user.userName}`,
         }),
       );
+      return true;
     } catch (error) {
       console.log(error);
       dispatch(
         setMessage({
           status: "error",
           description: "Account Registration Failed",
-          message: error.response?.data?.message,
+          message: error.response?.data?.message || "An error occurred",
         }),
       );
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminCreateAccount = async (credentials) => {
+    setLoading(true);
+    try {
+      // Use the registration endpoint but DON'T update current session
+      await axios.post(`${URL}/register`, credentials);
+
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "New Account Provisioned Successfully",
+          message: "Creation Success",
+        }),
+      );
+      return true;
+    } catch (error) {
+      console.log(error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description:
+            error.response?.data?.message || "Account Creation Failed",
+          message: "Creation Error",
+        }),
+      );
+      return false;
     } finally {
       setLoading(false);
     }
@@ -231,6 +263,7 @@ function Auth() {
     handleLogin,
     handleLogout,
     handleDeleteUser,
+    handleAdminCreateAccount,
     handleForgotPassword,
     handleGetAllUser,
     loading,

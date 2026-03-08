@@ -1,0 +1,353 @@
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setMessage } from "../redux/slices/common";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  FormControl,
+  FormLabel,
+  Heading,
+  Input,
+  Select,
+  SimpleGrid,
+  Text,
+  VStack,
+  HStack,
+  useColorModeValue,
+  Divider,
+} from "@chakra-ui/react";
+import { Icon } from "@iconify/react";
+
+// Importing Api
+import Auth from "../services/Auth";
+import { usePermissions } from "../services/permissions";
+
+// Importing common components
+import Loading from "../hooks/Loading";
+
+function CreateAccount() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { handleAdminCreateAccount, loading } = Auth();
+  const { isAdmin } = usePermissions();
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const subTextColor = useColorModeValue("gray.600", "gray.400");
+
+  // Redirect if not admin
+  React.useEffect(() => {
+    if (!isAdmin) {
+      navigate("/");
+    }
+  }, [isAdmin, navigate]);
+
+  // Form state
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    name: "",
+    employeeId: "",
+    role: "",
+    department: [],
+    accessLevel: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleDepartmentChange = (deptValue) => {
+    setForm((prev) => {
+      const currentDepts = prev.department || [];
+      const newDepts = currentDepts.includes(deptValue)
+        ? currentDepts.filter((d) => d !== deptValue)
+        : [...currentDepts, deptValue];
+      return { ...prev, department: newDepts };
+    });
+  };
+
+  const allPossibleDepts = [
+    "design",
+    "quality",
+    "production",
+    "sales",
+    "purchase",
+    "maintainance",
+    "stores",
+    "hr",
+  ];
+
+  const deptCheckboxes = [
+    { value: "design", label: "Design and Development" },
+    { value: "quality", label: "Quality Assurance" },
+    { value: "production", label: "Production Management" },
+    { value: "sales", label: "Sales & Marketing" },
+    { value: "purchase", label: "Procurement & Stores" },
+    { value: "maintainance", label: "Facility Management" },
+    { value: "stores", label: "Stores Management" },
+    { value: "hr", label: "Human Resources" },
+  ];
+
+  const handleCreateAccount = (e) => {
+    e.preventDefault();
+
+    if (!form.email.toLowerCase().endsWith("@adlhre.com")) {
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Please use a valid company email address (@adlhre.com)",
+          message: "Invalid Domain",
+        }),
+      );
+      return;
+    }
+
+    if (form.department.length === 0 || !form.accessLevel) {
+      dispatch(
+        setMessage({
+          status: "error",
+          description:
+            "Please select at least one Department and an Access Level",
+          message: "Missing Fields",
+        }),
+      );
+      return;
+    }
+
+    handleAdminCreateAccount(form).then((success) => {
+      if (success) {
+        setForm({
+          email: "",
+          password: "",
+          name: "",
+          employeeId: "",
+          role: "",
+          department: [],
+          accessLevel: "",
+        });
+      }
+    });
+  };
+
+  if (loading) return <Loading />;
+  if (!isAdmin) return null;
+
+  return (
+    <div className="AppRightContainer">
+      <Box p={6} maxW="1200px" mx="auto">
+        <VStack align="flex-start" spacing={1} mb={8}>
+          <Heading size="lg" color="brand.900" fontWeight="800">
+            User Management
+          </Heading>
+          <Text color={subTextColor}>
+            Administrative portal to provision and authorize new system users.
+          </Text>
+        </VStack>
+
+        <Box
+          bg={bgColor}
+          borderRadius="xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          overflow="hidden"
+        >
+          <Box
+            p={6}
+            borderBottom="1px solid"
+            borderColor={borderColor}
+            bg="gray.50"
+          >
+            <HStack spacing={4}>
+              <Icon
+                icon="mdi:account-plus"
+                fontSize="24px"
+                color="var(--primary-color)"
+              />
+              <Heading size="md">Register New Account</Heading>
+            </HStack>
+          </Box>
+
+          <form onSubmit={handleCreateAccount}>
+            <VStack spacing={8} p={8} align="stretch">
+              {/* Personal Information */}
+              <VStack align="stretch" spacing={4}>
+                <Heading
+                  size="xs"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="gray.500"
+                >
+                  Authentication & Identity
+                </Heading>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">Full Name</FormLabel>
+                    <Input
+                      name="name"
+                      placeholder="e.g. John Doe"
+                      value={form.name}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">Business Email</FormLabel>
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="user@adlhre.com"
+                      value={form.email}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">Secure Password</FormLabel>
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="••••••••"
+                      value={form.password}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">Employee ID</FormLabel>
+                    <Input
+                      name="employeeId"
+                      placeholder="ADL-XXX"
+                      value={form.employeeId}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">
+                      Professional Designation
+                    </FormLabel>
+                    <Input
+                      name="role"
+                      placeholder="e.g. Production Manager"
+                      value={form.role}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel fontWeight="600">
+                      System Authorization Level
+                    </FormLabel>
+                    <Select
+                      name="accessLevel"
+                      placeholder="Select Level"
+                      value={form.accessLevel}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                    >
+                      <option value="read">
+                        Review & Insight (Read Access)
+                      </option>
+                      <option value="create">
+                        Operational Contributor (Creating Access)
+                      </option>
+                      <option value="edit">
+                        Operational Controller (Editing Access)
+                      </option>
+                      <option value="admin">
+                        Administrative Management (Full Access)
+                      </option>
+                    </Select>
+                  </FormControl>
+                </SimpleGrid>
+              </VStack>
+
+              <Divider />
+
+              {/* Departmental Access */}
+              <VStack align="stretch" spacing={4}>
+                <Flex justify="space-between" align="center">
+                  <Heading
+                    size="xs"
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    color="gray.500"
+                  >
+                    Departmental Scope Authorization
+                  </Heading>
+                  <Checkbox
+                    isChecked={
+                      form.department.length === allPossibleDepts.length
+                    }
+                    isIndeterminate={
+                      form.department.length > 0 &&
+                      form.department.length < allPossibleDepts.length
+                    }
+                    onChange={(e) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        department: e.target.checked ? allPossibleDepts : [],
+                      }));
+                    }}
+                    colorScheme="blue"
+                  >
+                    Select All
+                  </Checkbox>
+                </Flex>
+
+                <Box
+                  bg="gray.50"
+                  p={6}
+                  borderRadius="xl"
+                  border="1px dashed"
+                  borderColor="gray.200"
+                >
+                  <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={4}>
+                    {deptCheckboxes.map((dept) => (
+                      <Checkbox
+                        key={dept.value}
+                        isChecked={form.department.includes(dept.value)}
+                        onChange={() => handleDepartmentChange(dept.value)}
+                        colorScheme="blue"
+                      >
+                        <Text fontSize="sm">{dept.label}</Text>
+                      </Checkbox>
+                    ))}
+                  </SimpleGrid>
+                </Box>
+              </VStack>
+
+              <Flex justify="flex-end" pt={4}>
+                <Button
+                  type="submit"
+                  size="lg"
+                  colorScheme="blue"
+                  px={12}
+                  borderRadius="xl"
+                  leftIcon={<Icon icon="mdi:account-check" />}
+                  boxShadow="lg"
+                  _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+                  transition="all 0.2s"
+                >
+                  Confirm & Provision Account
+                </Button>
+              </Flex>
+            </VStack>
+          </form>
+        </Box>
+      </Box>
+    </div>
+  );
+}
+
+export default CreateAccount;

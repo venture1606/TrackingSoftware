@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense, lazy } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Routes, Route, useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Importing the hooks
 import Indication from "./hooks/Indication";
@@ -28,6 +29,7 @@ const Manufacturing = lazy(() => import("./pages/Manufacturing"));
 const Stock = lazy(() => import("./pages/Stock"));
 const Development = lazy(() => import("./pages/Development"));
 const Master = lazy(() => import("./pages/Master"));
+const CreateAccount = lazy(() => import("./pages/CreateAccount"));
 
 function App() {
   const dispatch = useDispatch();
@@ -35,6 +37,23 @@ function App() {
 
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn); // This should be replaced with actual authentication logic
   let message = useSelector((state) => state.common.message);
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          dispatch(setLogout());
+          navigate("/login");
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -81,6 +100,7 @@ function App() {
                 <Route path="/new development" element={<Development />} />
                 <Route path="/master" element={<Master />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/create-account" element={<CreateAccount />} />
                 <Route path="/products/:id" element={<ShowProduct />} />
               </Routes>
             </div>
