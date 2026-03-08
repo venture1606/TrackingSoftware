@@ -211,13 +211,15 @@ const EditableRow = ({
 
     // Cleanup on unmount or header change
     return () => setFormData([]);
-  }, [
-    headers,
-    initialData,
-    DefaultHeaderAndProcessId,
-    SelectOptionsArray,
-    groupItem,
-  ]);
+  }, [headers, initialData, DefaultHeaderAndProcessId]);
+
+  // Separate effect for updating options when SelectOptionsArray or groupItem changes
+  useEffect(() => {
+    if (formData.length > 0) {
+      const updatedData = refreshOptions(formData);
+      setFormData(updatedData);
+    }
+  }, [SelectOptionsArray, groupItem]);
 
   const handleValueChange = (index, val, subIndex = null) => {
     const newData = [...formData];
@@ -253,11 +255,16 @@ const EditableRow = ({
     const errors = [];
     for (const field of formData) {
       if (MandatoryFields.includes(field.key)) {
+        let val = field.value;
+        if (val === "others") {
+          val = field.otherValue || "";
+        }
+
         const isEmpty =
-          !field.value ||
-          (Array.isArray(field.value) && field.value.length === 0) ||
-          (Array.isArray(field.value) && field.value.every((v) => !v.trim())) ||
-          (typeof field.value === "string" && !field.value.trim());
+          !val ||
+          (Array.isArray(val) && val.length === 0) ||
+          (Array.isArray(val) && val.every((v) => !v && !String(v).trim())) ||
+          (typeof val === "string" && !val.trim());
 
         if (isEmpty) {
           errors.push(field.key);
@@ -273,17 +280,22 @@ const EditableRow = ({
 
     // Format for save
     const items = formData.map((field) => {
-      if (field.process === "image" && field.value?.file) {
-        return { ...field, value: field.value.file };
+      let val = field.value;
+      if (val === "others" && field.otherValue) {
+        val = field.otherValue;
+      }
+
+      if (field.process === "image" && val?.file) {
+        return { ...field, value: val.file };
       }
       // Convert date fields to epoch milliseconds string
-      if (field.process === "date" && field.value) {
-        const epoch = new Date(field.value).getTime();
+      if (field.process === "date" && val) {
+        const epoch = new Date(val).getTime();
         if (!isNaN(epoch)) {
           return { ...field, value: String(epoch) };
         }
       }
-      return field;
+      return { ...field, value: val };
     });
 
     onSave(items);
@@ -452,12 +464,26 @@ const EditableRow = ({
                       if (customVal) {
                         const newData = [...formData];
                         newData[idx].value = customVal;
+
+                        // Add to local options so the Select can display it
+                        if (
+                          newData[idx].options &&
+                          !newData[idx].options.includes(customVal)
+                        ) {
+                          newData[idx].options = [
+                            ...newData[idx].options,
+                            customVal,
+                          ];
+                        }
+
                         delete newData[idx].otherValue;
                         setFormData(newData);
+
+                        // Also update global/shared options
                         dispatch(
                           updateSelectOptions({
                             key: field.key,
-                            value: [...field.options, customVal],
+                            value: [...(field.options || []), customVal],
                           }),
                         );
                       }
@@ -575,6 +601,8 @@ const EditableRow = ({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
+          alignItems: "center",
+          justifyContent: "center",
           gap: "4px",
           width: "100%",
           padding: "0 5px",
