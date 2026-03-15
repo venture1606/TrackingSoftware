@@ -377,7 +377,10 @@
     "NPD FORM",
     "EVALUATE",
     "IMAGE",
-    "CERTIFICATE"
+    "CERTIFICATE",
+    "SERVICE REPORT",
+    "FILE UPLOAD",
+    "T-REPORT"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
@@ -391,7 +394,11 @@
     "EXPIRY DATE",
     "NEXT RENEVAL",
     "UPDATED DATE",
-    "REVIEW DATE"
+    "REVIEW DATE",
+    "COMMISIONING DATE",
+    "DATE OF RELELIVING",
+    "T-PLAN",
+    "T-ACTUAL"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
@@ -404,6 +411,12 @@
   "TimeArrays": [
     "START TIME",
     "END TIME"
+  ],
+  "ToggleFieldsArray": [
+    "CONTROL COPY",
+    "VERIFIED COPY",
+    "PHOTO COPY",
+    "REJECT COPY"
   ],
   "NumberFields":[
     "QTY",

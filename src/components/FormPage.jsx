@@ -20,7 +20,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AttachmentIcon } from "@chakra-ui/icons";
-import { FixedSizeList as List } from "react-window";
+import { VariableSizeList as List } from "react-window";
 import TruncatedText from "./TruncatedText";
 import { useDispatch, useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
@@ -107,6 +107,7 @@ function FormPage({
   const [deleteTargetIdx, setDeleteTargetIdx] = useState(null);
 
   const tableContainerRef = useRef(null);
+  const listRef = useRef(null);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -196,6 +197,33 @@ function FormPage({
       dispatch(setDetailingProducts(filteredData));
     }
   }, [process, bomData, currentBomId, dispatch]);
+
+  const getItemSize = useCallback(
+    (index) => {
+      const row = rows[index];
+      if (!row) return 60;
+
+      const detailingCell = row.find((c) => c.key === "DETAILING PRODUCT");
+      if (
+        detailingCell &&
+        Array.isArray(detailingCell.value) &&
+        detailingCell.value.length > 0
+      ) {
+        const count = detailingCell.value.length;
+        // Each sub-row is roughly 32px, header is 35px, plus padding
+        const estimate = count * 32 + 65;
+        return Math.min(250, Math.max(70, estimate));
+      }
+      return 60;
+    },
+    [rows],
+  );
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.resetAfterIndex(0);
+    }
+  }, [rows, getItemSize]);
 
   const handleDeleteRow = (rowIdx) => {
     setDeleteTargetIdx(rowIdx);
@@ -345,7 +373,7 @@ function FormPage({
       }
 
       return (
-        <div style={{ ...style }}>
+        <div style={{ ...style, paddingBottom: "2px" }}>
           <div
             style={{
               display: "grid",
@@ -679,13 +707,16 @@ function FormPage({
             )}
           </div>
 
-          {/* Data Rows with Virtualization */}
           <div style={{ minWidth: "fit-content" }}>
             {rows && rows.length > 0 ? (
               <List
-                height={Math.min(500, rows.length * 55)} // Reduced row factor
+                ref={listRef}
+                height={Math.min(
+                  500,
+                  rows.reduce((acc, _, i) => acc + getItemSize(i), 0),
+                )}
                 itemCount={rows.length}
-                itemSize={55} // Compact height
+                itemSize={getItemSize}
                 width="100%"
                 style={{ overflowX: "hidden" }} // Horizontal scroll is handled by FormPageContainer
               >

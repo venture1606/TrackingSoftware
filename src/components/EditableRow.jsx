@@ -15,6 +15,7 @@ import {
   Text,
   Center,
   SimpleGrid,
+  Switch,
 } from "@chakra-ui/react";
 import {
   CheckIcon,
@@ -60,6 +61,7 @@ const EditableRow = ({
     TimeArrays,
     NumberFields,
     MandatoryFields,
+    ToggleFieldsArray,
   } = ItemsData;
 
   const noEditableFields = DataCheck?.noEditableFields || [];
@@ -127,6 +129,10 @@ const EditableRow = ({
         return "time";
       if (NumberFields.some((h) => h.trim().toLowerCase() === lowerKey))
         return "number";
+      if (
+        ToggleFieldsArray.some((h) => h.trim().toLowerCase() === lowerKey)
+      )
+        return "toggle";
       if (
         DefaultHeaderAndProcessId.some(
           (item) => item.tableHeader.trim().toLowerCase() === lowerKey,
@@ -201,6 +207,8 @@ const EditableRow = ({
             process: "select",
             options: selectMatch?.value || [],
           };
+        } else if (process === "toggle") {
+          value = "NO";
         }
 
         return { key, value, process };
@@ -580,6 +588,20 @@ const EditableRow = ({
                   </Box>
                 )}
               </Stack>
+            ) : field.process === "toggle" ? (
+              <Flex align="center" gap={3}>
+                <Text fontSize="xs" fontWeight="bold">
+                  {field.value === "YES" ? "YES" : "NO"}
+                </Text>
+                <Switch
+                  size="sm"
+                  isChecked={field.value === "YES"}
+                  onChange={(e) =>
+                    handleValueChange(idx, e.target.checked ? "YES" : "NO")
+                  }
+                  colorScheme="green"
+                />
+              </Flex>
             ) : (
               <Input
                 size="sm"

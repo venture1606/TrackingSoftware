@@ -31,16 +31,17 @@ const DetailingProductCompo = ({ bomIds, detailingProducts, ShownArray }) => {
   return (
     <Box 
       className="DetailingTableContainer" 
-      maxH="200px" 
+      maxH="210px" 
+      w="100%"
       overflowY="auto" 
-      borderRadius="lg" 
+      borderRadius="md" 
       border="1px solid" 
-      borderColor="gray.100"
+      borderColor="gray.200"
       bg="gray.50"
-      p={2}
+      p={1}
     >
-      <Table size="xs" variant="simple" bg="white" borderRadius="md" overflow="hidden">
-        <Thead bg="gray.100">
+      <Table size="xs" variant="simple" bg="white" borderRadius="sm" w="100%">
+        <Thead bg="gray.100" position="sticky" top={0} zIndex={1}>
           <Tr>
             {detailingProducts?.headers?.map(
               (header, hIdx) =>

@@ -154,6 +154,22 @@ export const useSearchSelectOptions = () => {
         },
         { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
         { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "MHC STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "CR-STATUS", value: ["ACTIVE", "INACTIVE"] },
+        { key: "CL STATUS", value: ["ACTIVE", "INACTIVE"] },
+        { key: "RR STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "ORDER STATUS", value: ["OPEN", "CLOSED"] },
+        {
+          key: "FR STATUS",
+          value: [
+            "ENQUIRY",
+            "REGULAR VISIT",
+            "ORDER CONFIRM",
+            "NEW PROJECTS",
+            "COMPLAINT",
+            "NEW CUSTOMER",
+          ],
+        },
         {
           key: "NPD STATUS",
           value: [

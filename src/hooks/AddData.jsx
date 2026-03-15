@@ -19,6 +19,7 @@ import {
   Box,
   Text,
   Center,
+  Switch,
 } from "@chakra-ui/react";
 import { RepeatIcon, AttachmentIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -55,6 +56,7 @@ function AddData({
     TimeArrays,
     NumberFields,
     MandatoryFields,
+    ToggleFieldsArray,
   } = ItemsData;
 
   const initialRef = useRef(null);
@@ -117,6 +119,7 @@ function AddData({
         if (ImageUploadArray.some(h => h.trim().toLowerCase() === lowerKey)) return "image";
         if (TimeArrays.some(h => h.trim().toLowerCase() === lowerKey)) return "time";
         if (NumberFields.some(h => h.trim().toLowerCase() === lowerKey)) return "number";
+        if (ToggleFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) return "toggle";
         if (DefaultHeaderAndProcessId.some(item => item.tableHeader.trim().toLowerCase() === lowerKey)) return "processId";
         if (SelectOptionsArray.some(item => item.key.trim().toLowerCase() === lowerKey)) return "select";
         return "value";
@@ -137,6 +140,8 @@ function AddData({
              } else if (process === "select") {
                  const selectMatch = SelectOptionsArray.find(item => item.key.trim().toLowerCase() === key.trim().toLowerCase());
                  value = selectMatch?.value.some(v => v.toLowerCase() === "red") ? "Red" : "";
+             } else if (process === "toggle") {
+                 value = "NO";
              } else {
                  value = "";
              }
@@ -294,6 +299,14 @@ function AddData({
           key,
           value: "",
           process: "number",
+        };
+      }
+
+      if (ToggleFieldsArray.includes(key)) {
+        return {
+          key,
+          value: "NO",
+          process: "toggle",
         };
       }
 
@@ -653,6 +666,19 @@ function AddData({
                       errorFields.includes(field.key) ? "2px" : undefined
                     }
                   />
+                ) : field.process === "toggle" ? (
+                  <Flex align="center" gap={3}>
+                    <Text fontSize="sm" fontWeight="bold">
+                      {field.value === "YES" ? "YES" : "NO"}
+                    </Text>
+                    <Switch
+                      isChecked={field.value === "YES"}
+                      onChange={(e) =>
+                        handleValueChange(idx, e.target.checked ? "YES" : "NO")
+                      }
+                      colorScheme="green"
+                    />
+                  </Flex>
                 ) : (
                   <Input
                     ref={idx === 0 ? initialRef : null}
