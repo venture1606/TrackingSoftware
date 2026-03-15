@@ -541,7 +541,6 @@ function FormPage({
                           DefaultSelectProcess.includes(cell.key)
                             ? "View"
                             : cell.key === "BREAK HOUR" ||
-                                cell.key === "ACTION PLAN" ||
                                 cell.key === "ACTION TAKEN"
                               ? cell.process || "0"
                               : "UPDATE"

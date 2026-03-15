@@ -86,7 +86,7 @@
       "processId": "MR/R/005A"
     },
     {
-      "tableHeader": "NEXT SCHEDULE",
+      "tableHeader": "AUDIT",
       "processId": "QA/F/005A"
     },
     {
@@ -398,7 +398,9 @@
     "COMMISIONING DATE",
     "DATE OF RELELIVING",
     "T-PLAN",
-    "T-ACTUAL"
+    "T-ACTUAL",
+    "DONE",
+    "DUE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"

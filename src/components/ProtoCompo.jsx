@@ -8,22 +8,19 @@ import {
   Select,
   Tooltip,
 } from "@chakra-ui/react";
-import { EditIcon, CheckIcon, AddIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 
 const ProtoCompo = ({
   nested,
   rows,
   isView,
-  editingProtoCell,
-  handleProtoStatusChange,
-  handleProtoSaveClick,
-  setEditingProtoCell,
+  handleProtoInlineSave,
   colorCoordinatesProto,
   getStatusStyle,
   handleAddDataSave,
   DefaultTemplateForProtoProcess,
 }) => {
-  const gridTemplateColumns = `60px repeat(${nested.header?.length || 1}, 180px)`;
+  const gridTemplateColumns = "60px 1fr 200px";
 
   return (
     <Box 
@@ -40,85 +37,128 @@ const ProtoCompo = ({
       <Box 
         display="grid" 
         gridTemplateColumns={gridTemplateColumns} 
-        gap={6} 
+        gap={4} 
         mb={4} 
         px={4} 
         minW="fit-content"
+        bg="gray.100"
+        borderRadius="lg"
       >
         <Text 
           fontWeight="800" 
-          color="gray.400" 
+          color="gray.600" 
           fontSize="xs" 
           textTransform="uppercase" 
           textAlign="center" 
-          py={2}
+          py={3}
           letterSpacing="wider"
         >
           SL.NO
         </Text>
-        {nested.header.map((col, idx) => (
-          <Text 
-            key={idx} 
-            fontWeight="800" 
-            color="gray.400" 
-            fontSize="xs" 
-            textTransform="uppercase"
-            minW="180px"
-            textAlign="center"
-            py={2}
-            letterSpacing="wider"
-          >
-            {col}
-          </Text>
-        ))}
+        <Text 
+          fontWeight="800" 
+          color="gray.600" 
+          fontSize="xs" 
+          textTransform="uppercase"
+          textAlign="left"
+          py={3}
+          letterSpacing="wider"
+        >
+          PROCESS
+        </Text>
+        <Text 
+          fontWeight="800" 
+          color="gray.600" 
+          fontSize="xs" 
+          textTransform="uppercase"
+          textAlign="center"
+          py={3}
+          letterSpacing="wider"
+        >
+          STATUS
+        </Text>
       </Box>
 
       {/* Data Rows */}
-      {nested.value.length > 0 ? (
+      {rows && rows.length > 0 ? (
         <Box minW="fit-content" px={2}>
           {rows.map((row, rowIdx) => (
-            <Box 
-              key={rowIdx}
-              display="grid" 
-              gridTemplateColumns={gridTemplateColumns} 
-              gap={6} 
-              bg="white" 
-              py={4} 
-              px={4} 
-              mb={3}
-              borderRadius="xl" 
-              boxShadow="sm" 
-              border="1px solid"
-              borderColor="gray.50"
-              alignItems="center"
-              _hover={{ boxShadow: "md", borderColor: "blue.100" }}
-              transition="all 0.2s"
-              minW="fit-content"
-            >
-              {/* SL.NO */}
-              <Text fontSize="sm" fontWeight="bold" color="gray.500" textAlign="center">
-                {String(rowIdx + 1).padStart(2, '0')}
-              </Text>
-
-              {/* Dynamic Columns */}
+            <React.Fragment key={rowIdx}>
               {row.map((cell, colIdx) => {
-                const isEditing = editingProtoCell?.rowIdx === rowIdx && editingProtoCell?.colIdx === colIdx;
+                const slNo = rowIdx * row.length + colIdx + 1;
                 const { badgeColor, textColor, dotColor } = getStatusStyle(cell.value);
 
                 return (
-                  <Flex key={`${rowIdx}-${colIdx}`} justify="center" align="center" minW="180px">
-                    {isEditing ? (
-                      <Flex align="center" gap={2} w="100%">
+                  <Box 
+                    key={`${rowIdx}-${colIdx}`}
+                    display="grid" 
+                    gridTemplateColumns={gridTemplateColumns} 
+                    gap={4} 
+                    bg="white" 
+                    py={3} 
+                    px={4} 
+                    mb={2}
+                    borderRadius="lg" 
+                    boxShadow="sm" 
+                    border="1px solid"
+                    borderColor="gray.50"
+                    alignItems="center"
+                    _hover={{ boxShadow: "md", borderColor: "blue.100" }}
+                    transition="all 0.2s"
+                  >
+                    {/* SL.NO */}
+                    <Text fontSize="sm" fontWeight="bold" color="gray.500" textAlign="center">
+                      {String(slNo).padStart(2, '0')}
+                    </Text>
+
+                    {/* PROCESS NAME */}
+                    <Text fontSize="sm" fontWeight="600" color="gray.700">
+                      {cell.key}
+                    </Text>
+
+                    {/* STATUS SELECT */}
+                    <Box>
+                      {isView ? (
+                        <Flex align="center" gap={2} justify="center">
+                           <Box
+                              display="inline-flex"
+                              alignItems="center"
+                              px={4}
+                              py={1.5}
+                              borderRadius="full"
+                              bg={badgeColor}
+                              border="1px solid"
+                              borderColor={badgeColor === "#fff" ? "gray.200" : badgeColor}
+                              color={textColor}
+                              fontSize="xs"
+                              fontWeight="bold"
+                              whiteSpace="nowrap"
+                              shadow="sm"
+                            >
+                              <Box
+                                w="6px"
+                                h="6px"
+                                borderRadius="50%"
+                                bg={dotColor}
+                                mr={2}
+                              />
+                              {cell.value || "Pending"}
+                            </Box>
+                        </Flex>
+                      ) : (
                         <Select
                           size="sm"
-                          value={cell.value}
-                          onChange={(e) => handleProtoStatusChange(e, rowIdx, colIdx)}
-                          borderRadius="lg"
+                          value={cell.value || ""}
+                          onChange={(e) => handleProtoInlineSave(e.target.value, rowIdx, colIdx)}
+                          borderRadius="md"
                           bg="white"
                           fontSize="xs"
                           fontWeight="600"
                           cursor="pointer"
                           focusBorderColor="blue.400"
+                          borderColor={badgeColor}
+                          borderWidth="1px"
+                          _focus={{ boxShadow: "none" }}
                         >
                           <option value="">Select Status</option>
                           {colorCoordinatesProto.map((option) => (
@@ -127,63 +167,12 @@ const ProtoCompo = ({
                             </option>
                           ))}
                         </Select>
-                        <Tooltip label="Save Status">
-                          <IconButton
-                            size="xs"
-                            icon={<CheckIcon />}
-                            colorScheme="green"
-                            onClick={() => handleProtoSaveClick(rowIdx)}
-                            aria-label="Save status"
-                            borderRadius="md"
-                          />
-                        </Tooltip>
-                      </Flex>
-                    ) : (
-                      <Flex align="center" gap={2}>
-                        <Box
-                          display="inline-flex"
-                          alignItems="center"
-                          px={4}
-                          py={1.5}
-                          borderRadius="full"
-                          bg={badgeColor}
-                          border="1px solid"
-                          borderColor={badgeColor === "#fff" ? "gray.200" : badgeColor}
-                          color={textColor}
-                          fontSize="xs"
-                          fontWeight="bold"
-                          whiteSpace="nowrap"
-                          shadow="sm"
-                        >
-                          <Box
-                            w="6px"
-                            h="6px"
-                            borderRadius="50%"
-                            bg={dotColor}
-                            mr={2}
-                          />
-                          {cell.value || "Select"}
-                        </Box>
-                        {!isView && (
-                          <Tooltip label="Change Status">
-                            <IconButton
-                              size="xs"
-                              variant="ghost"
-                              icon={<EditIcon />}
-                              color="gray.400"
-                              _hover={{ color: "blue.500", bg: "blue.50" }}
-                              onClick={() => setEditingProtoCell({ rowIdx, colIdx })}
-                              aria-label="Edit status"
-                              borderRadius="md"
-                            />
-                          </Tooltip>
-                        )}
-                      </Flex>
-                    )}
-                  </Flex>
+                      )}
+                    </Box>
+                  </Box>
                 );
               })}
-            </Box>
+            </React.Fragment>
           ))}
         </Box>
       ) : (

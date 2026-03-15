@@ -155,9 +155,11 @@ export const useSearchSelectOptions = () => {
         { key: "PAYMENT", value: ["OPEN", "CLOSED"] },
         { key: "CR STATUS", value: ["OPEN", "CLOSED"] },
         { key: "MHC STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "AUDIT STATUS", value: ["OPEN", "CLOSED"] },
         { key: "CR-STATUS", value: ["ACTIVE", "INACTIVE"] },
         { key: "CL STATUS", value: ["ACTIVE", "INACTIVE"] },
         { key: "RR STATUS", value: ["OPEN", "CLOSED"] },
+        { key: "REVISION STATUS", value: ["INREVISION", "REVISED"] },
         { key: "ORDER STATUS", value: ["OPEN", "CLOSED"] },
         {
           key: "FR STATUS",
@@ -267,10 +269,11 @@ export const useAddProcessData = () => {
       );
     },
     onError: (error) => {
+      console.log(error);
       dispatch(
         setMessage({
           status: "error",
-          description: "Failed to add data.",
+          description: `${error.response.data.errorMessage}`,
           message: error.message,
         }),
       );
@@ -317,10 +320,11 @@ export const useUpdateProcessData = () => {
       queryClient.invalidateQueries(["process", variables.id]);
     },
     onError: (error) => {
+      console.log(error);
       dispatch(
         setMessage({
           status: "error",
-          description: "Failed to update data.",
+          description: `${error.response.data.errorMessage}`,
           message: error.message,
         }),
       );
@@ -356,7 +360,7 @@ export const useDeleteProcessData = () => {
       dispatch(
         setMessage({
           status: "error",
-          description: "Failed to delete data.",
+          description: `${error.response.data.errorMessage}`,
           message: error.message,
         }),
       );

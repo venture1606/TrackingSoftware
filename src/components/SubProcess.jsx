@@ -336,6 +336,32 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     setRows(updatedRows);
   };
 
+  const handleProtoInlineSave = async (newValue, rowIdx, colIdx) => {
+    try {
+      const updatedRows = [...rows];
+      updatedRows[rowIdx] = [...updatedRows[rowIdx]];
+      updatedRows[rowIdx][colIdx] = {
+        ...updatedRows[rowIdx][colIdx],
+        value: newValue,
+      };
+      
+      setRows(updatedRows);
+
+      await handleUpdateData({
+        rowId: rowIds[rowIdx],
+        items: updatedRows[rowIdx],
+        id: nested.id,
+      });
+
+      setNested((prev) => ({
+        ...prev,
+        value: updatedRows,
+      }));
+    } catch (err) {
+      console.error("Failed to save inline status", err);
+    }
+  };
+
   const getStatusStyle = (value) => {
     let badgeColor = "gray.100";
     let textColor = "gray.600";
@@ -393,10 +419,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       nested={nested}
       rows={rows}
       isView={isView}
-      editingProtoCell={editingProtoCell}
-      handleProtoStatusChange={handleProtoStatusChange}
-      handleProtoSaveClick={handleProtoSaveClick}
-      setEditingProtoCell={setEditingProtoCell}
+      handleProtoInlineSave={handleProtoInlineSave}
       colorCoordinatesProto={colorCoordinatesProto}
       getStatusStyle={getStatusStyle}
       handleAddDataSave={handleAddDataSave}
