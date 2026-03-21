@@ -23,6 +23,7 @@ import Loading from "../hooks/Loading";
 import HeaderSection from "../components/HeaderSection";
 import SearchCompo from "../components/SearchCompo";
 import FilterCompo from "../components/FilterCompo";
+import DepartmentDashboard from "./DepartmentDashboard";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -360,8 +361,8 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
         )}
       </HeaderSection>
 
-      <Box flex="1" overflow="hidden" display="flex" flexDirection="column">
-        {selectedProcess && (
+      <Box flex="1" overflowY="auto" display="flex" flexDirection="column">
+        {selectedProcess ? (
           <FormPage
             key={selectedProcess}
             process={mainTableData}
@@ -370,6 +371,8 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
             isAddingNewRow={isAdding}
             setIsAddingNewRow={setIsAdding}
           />
+        ) : (
+          <DepartmentDashboard Content={department} />
         )}
       </Box>
     </>
