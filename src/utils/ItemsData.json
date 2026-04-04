@@ -380,7 +380,8 @@
     "CERTIFICATE",
     "SERVICE REPORT",
     "FILE UPLOAD",
-    "T-REPORT"
+    "T-REPORT",
+    "MASTER PIECE UPLOAD"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
@@ -400,7 +401,8 @@
     "T-PLAN",
     "T-ACTUAL",
     "DONE",
-    "DUE"
+    "DUE",
+    "DATE OF JOINING"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
