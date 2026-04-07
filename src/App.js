@@ -1,32 +1,35 @@
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense, lazy } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Routes, Route, useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Importing the hooks
 import Indication from "./hooks/Indication";
+import Loading from "./hooks/Loading";
 import { isTokenValid } from "./utils/authUtils";
 
 // importing components
 import Header from "./components/Header";
 import SideBar from "./components/SideBar";
 
-// importing the pages
-import Login from "./pages/Login";
-import Admin from "./pages/Admin";
-import Dashboard from "./pages/Dashboard";
-import DepartmentPage from "./pages/DepartmentPage";
-import Products from "./pages/Products";
-import ShowProduct from "./pages/ShowProduct";
-import Qms from "./pages/Qms";
-import SalesOrder from "./pages/SalesOrder";
-import Purchase from "./pages/Purchase";
-import Manufacturing from "./pages/Manufacturing";
-import Stock from "./pages/Stock";
-import Development from "./pages/Development";
-import Master from "./pages/Master";
-
 // importing API's
 import { setLogin, setLogout } from "./redux/slices/auth";
+
+// Lazy loading pages for performance
+const Login = lazy(() => import("./pages/Login"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DepartmentPage = lazy(() => import("./pages/DepartmentPage"));
+const Products = lazy(() => import("./pages/Products"));
+const ShowProduct = lazy(() => import("./pages/ShowProduct"));
+const Qms = lazy(() => import("./pages/Qms"));
+const SalesOrder = lazy(() => import("./pages/SalesOrder"));
+const Purchase = lazy(() => import("./pages/Purchase"));
+const Manufacturing = lazy(() => import("./pages/Manufacturing"));
+const Stock = lazy(() => import("./pages/Stock"));
+const Development = lazy(() => import("./pages/Development"));
+const Master = lazy(() => import("./pages/Master"));
+const CreateAccount = lazy(() => import("./pages/CreateAccount"));
 
 function App() {
   const dispatch = useDispatch();
@@ -34,6 +37,23 @@ function App() {
 
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn); // This should be replaced with actual authentication logic
   let message = useSelector((state) => state.common.message);
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          dispatch(setLogout());
+          navigate("/login");
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -54,38 +74,41 @@ function App() {
 
   return (
     <div className="AppContainer">
-      {isLoggedIn ? (
-        <div className="AppEntireContainer">
-          <Header />
-          <div className="AppContentContainer">
-            <SideBar />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route
-                path="/department/:department"
-                element={<DepartmentPageWrapper />}
-              />
-              <Route
-                path="/department/:department/:processId"
-                element={<DepartmentPageWrapper />}
-              />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/quality management system" element={<Qms />} />
-              <Route path="/sales order" element={<SalesOrder />} />
-              <Route path="/purchase" element={<Purchase />} />
-              <Route path="/manufacturing" element={<Manufacturing />} />
-              <Route path="/stock" element={<Stock />} />
-              <Route path="/new development" element={<Development />} />
-              <Route path="/master" element={<Master />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:id" element={<ShowProduct />} />
-            </Routes>
+      <Suspense fallback={<Loading />}>
+        {isLoggedIn ? (
+          <div className="AppEntireContainer">
+            <Header />
+            <div className="AppContentContainer">
+              <SideBar />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route
+                  path="/department/:department"
+                  element={<DepartmentPageWrapper />}
+                />
+                <Route
+                  path="/department/:department/:processId"
+                  element={<DepartmentPageWrapper />}
+                />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/quality management system" element={<Qms />} />
+                <Route path="/sales order" element={<SalesOrder />} />
+                <Route path="/purchase" element={<Purchase />} />
+                <Route path="/manufacturing" element={<Manufacturing />} />
+                <Route path="/stock" element={<Stock />} />
+                <Route path="/new development" element={<Development />} />
+                <Route path="/master" element={<Master />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/create-account" element={<CreateAccount />} />
+                <Route path="/products/:id" element={<ShowProduct />} />
+              </Routes>
+            </div>
           </div>
-        </div>
-      ) : (
-        <Login />
-      )}
+        ) : (
+          <Login />
+        )}
+      </Suspense>
       <Indication message={message} />
     </div>
   );

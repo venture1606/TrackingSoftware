@@ -1,42 +1,36 @@
-import React, { useState } from 'react'
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setMessage } from "../redux/slices/common";
+import { setDepartments } from "../redux/slices/department";
 
-import axios from 'axios'
-import { useSelector, useDispatch } from 'react-redux'
-import { setMessage } from '../redux/slices/common';
-import { setDepartments } from '../redux/slices/department';
+const URL = process.env.REACT_APP_DEPARTMENT_URL;
+
+export const useDepartments = () => {
+  const dispatch = useDispatch();
+
+  return useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/all`);
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Departments fetched successfully",
+          message: "Fetched",
+        }),
+      );
+      dispatch(setDepartments(data));
+    },
+    refetchOnWindowFocus: false,
+  });
+};
 
 function Department() {
-    const [loading, setLoading] = useState(false);
-    const departments = useSelector((state) => state.department.departments);
-    const dispatch = useDispatch();
-
-    const URL = 'https://adl-server.onrender.com/api/v1/department';
-
-    const handleGetAllDepartments = async () => {
-        if (departments.length > 0) return;
-        setLoading(true);
-        try {
-            const response = await axios.get(`${URL}/all`);
-
-            dispatch(setMessage({
-                status: 'success',
-                description: 'Departments fetched successfully',
-                message: 'Fetched'
-            }))
-
-            dispatch(setDepartments(response.data.data));
-
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-  return {
-    loading,
-    handleGetAllDepartments
-  }
+  return {};
 }
 
-export default Department
+export default Department;

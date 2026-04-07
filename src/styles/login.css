@@ -4,86 +4,242 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f8fa;
+  background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+  padding: 40px 20px;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Shared form styles */
+/* Form container */
 .LoginForm,
-.CreateAccountForm,
-.ForgotPasswordForm {
-  background: #fff;
-  padding: 32px 28px;
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+.CreateAccountForm {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  min-width: 320px;
+  width: 100%;
+  max-width: 420px;
+  transition: all 0.3s ease-in-out;
 }
 
-.LoginForm h2,
-.CreateAccountForm h2,
-.ForgotPasswordForm h2 {
-  margin-bottom: 18px;
-  color: #222e3c;
-  font-weight: 600;
+.CreateAccountForm {
+  max-width: 700px;
+}
+
+.LoginLogo {
+  width: 80px;
+  height: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.LoginHeader {
   text-align: center;
+  margin-bottom: 40px;
 }
 
-.LoginForm input,
-.CreateAccountForm input,
-.ForgotPasswordForm input,
-.CreateAccountForm select {
-  margin-bottom: 16px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
-  outline: none;
-  transition: border 0.2s;
+.LoginHeader h2 {
+  font-size: 28px;
+  color: #102a43;
+  font-weight: 800;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
-.LoginForm input:focus,
-.CreateAccountForm input:focus,
-.ForgotPasswordForm input:focus,
-.LoginForm select:focus {
-  border-color: #31415a;
+.LoginHeader p {
+  color: #627d98;
+  font-size: 15px;
+  font-weight: 500;
 }
 
-.LoginForm button,
-.CreateAccountForm button,
-.ForgotPasswordForm button {
-  padding: 10px 0;
-  background: #222e3c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 10px;
-  transition: background 0.15s;
+/* Layout for fields */
+.FormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 30px;
 }
 
-.LoginForm button:hover,
-.CreateAccountForm button:hover,
-.ForgotPasswordForm button:hover {
-  background: #31415a;
+@media (max-width: 650px) {
+  .FormGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
-.LoginLinks {
+.InputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.FullWidth {
+  grid-column: 1 / -1;
+}
+
+.InputGroup label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334e68;
+  margin-left: 4px;
+}
+
+.LabelWithAction {
   display: flex;
   justify-content: space-between;
-  font-size: 0.97rem;
-  color: #31415a;
+  align-items: center;
+  padding-right: 4px;
 }
 
-.LoginLinks span {
+.SelectAll {
+  margin: 0 !important;
+  font-weight: 600 !important;
+  color: #3182ce !important;
+}
+
+.InputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.InputIcon {
+  position: absolute;
+  left: 14px;
+  color: #829ab1;
+  font-size: 20px;
+}
+
+.InputGroup input,
+.InputGroup select {
+  width: 100%;
+  padding: 13px 18px;
+  background-color: #f0f4f8;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #102a43;
+  transition: all 0.25s ease;
+}
+
+.InputWithIcon input {
+  padding-left: 46px;
+}
+
+.InputGroup input:hover,
+.InputGroup select:hover {
+  background-color: #e1e8ed;
+}
+
+.InputGroup input:focus,
+.InputGroup select:focus {
+  outline: none;
+  border-color: #3182ce;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.1);
+}
+
+.CheckboxGroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  background-color: #f0f4f8;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #d9e2ec;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.CheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px !important;
+  color: #334e68;
+  font-weight: 500;
   cursor: pointer;
-  text-decoration: underline;
-  margin-left: 8px;
-  margin-right: 8px;
-  transition: color 0.15s;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.LoginLinks span:hover {
-  color: #222e3c;
+.CheckboxLabel:hover {
+  background-color: #d9e2ec;
+  color: #102a43;
+}
+
+.CheckboxLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3182ce;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.PrimaryButton {
+  background-color: #102a43;
+  color: #ffffff;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.PrimaryButton:hover {
+  background-color: #243b53;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.PrimaryButton:active {
+  transform: translateY(0);
+}
+
+.LoginFooter {
+  text-align: center;
+  margin-top: 30px;
+  color: #627d98;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.LinkButton {
+  background: none;
+  border: none;
+  color: #3182ce;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.2s ease;
+}
+
+.LinkButton:hover {
+  color: #2c5282;
+  text-decoration: underline;
+}
+
+/* Scrollbar styling */
+.CheckboxGroup::-webkit-scrollbar {
+  width: 6px;
+}
+
+.CheckboxGroup::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.CheckboxGroup::-webkit-scrollbar-thumb {
+  background: #bccadc;
+  border-radius: 10px;
+}
+
+.CheckboxGroup::-webkit-scrollbar-thumb:hover {
+  background: #9fb3c8;
 }

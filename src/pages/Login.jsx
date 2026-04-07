@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { Icon } from "@iconify/react";
 
 // Importing Api
-import Auth from '../services/Auth';
+import Auth from "../services/Auth";
 
 // Importing the styles.
-import '../styles/login.css';
-import Loading from '../hooks/Loading';
+import "../styles/login.css";
+import Loading from "../hooks/Loading";
+import Logo from "../assets/logo.jpg";
 
 function Login() {
-  const [isCreateAccount, setIsCreateAccount] = useState(false);
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
-
-  const { handleRegister, handleLogin, handleForgotPassword, loading } = Auth();
+  const { handleLogin, loading } = Auth();
 
   // Form state
-  const [form, setForm] = useState({ email: '', password: '', name: '', employeeId: '', role: '', access: '' });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,124 +27,62 @@ function Login() {
     handleLogin(form);
   };
 
-  const handleCreateAccount = (e) => {
-    e.preventDefault();
-    handleRegister(form);
-  };
-
-  const handleForgotPasswordSubmit = (e) => {
-    e.preventDefault();
-    handleForgotPassword(form);
-  };
-
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <div className='LoginContainer'>
-      {!isCreateAccount && !isForgotPassword && (
-        <form className='LoginForm' onSubmit={handleLoginSubmit}>
-          <h2>Login</h2>
-          <input
-            type='email'
-            name='email'
-            placeholder='Email'
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type='password'
-            name='password'
-            placeholder='Password'
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <button type='submit'>Login</button>
-          <div className='LoginLinks'>
-            <span onClick={() => setIsForgotPassword(true)}>Forgot Password?</span>
-            <span onClick={() => setIsCreateAccount(true)}>Create Account</span>
+    <div className="LoginContainer">
+      <form className="LoginForm" onSubmit={handleLoginSubmit}>
+        <div className="LoginHeader">
+          <img src={Logo} alt="ADL Logo" className="LoginLogo" />
+          <h2>Welcome Back</h2>
+          <p>Please enter your details to sign in</p>
+        </div>
+        <div className="InputGroup">
+          <label>Business Email</label>
+          <div className="InputWithIcon">
+            <Icon icon="mdi:email-outline" className="InputIcon" />
+            <input
+              type="email"
+              name="email"
+              placeholder="email@adlhre.com"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
           </div>
-        </form>
-      )}
-
-      {isCreateAccount && (
-        <form className='CreateAccountForm' onSubmit={handleCreateAccount}>
-          <h2>Create Account</h2>
-          <input
-            type='text'
-            name='name'
-            placeholder='Name'
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type='email'
-            name='email'
-            placeholder='Email'
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type='password'
-            name='password'
-            placeholder='Password'
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <input 
-            type='text'
-            name='employeeId'
-            placeholder='Employee ID'
-            value={form.employeeId}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type='text'
-            name='role'
-            placeholder='Role'
-            value={form.role}
-            onChange={handleChange}
-            required
-          />
-          <select>
-            <option value='design and development'>Design and Development</option>
-            <option value='quality'>Quality</option>
-            <option value='production'>Production</option>
-            <option value='sales'>Sales</option>
-            <option value='purchase'>Purchase & Store</option>
-            <option value='maintainance'>Maintainance</option>
-          </select>
-          <button type='submit'>Sign Up</button>
-          <div className='LoginLinks'>
-            <span onClick={() => setIsCreateAccount(false)}>Back to Login</span>
+        </div>
+        <div className="InputGroup">
+          <label>Password</label>
+          <div className="InputWithIcon">
+            <Icon icon="mdi:lock-outline" className="InputIcon" />
+            <input
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
           </div>
-        </form>
-      )}
-
-      {isForgotPassword && (
-        <form className='ForgotPasswordForm' onSubmit={handleForgotPasswordSubmit}>
-          <h2>Forgot Password</h2>
-          <input
-            type='email'
-            name='email'
-            placeholder='Enter your email'
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <button type='submit'>Reset Password</button>
-          <div className='LoginLinks'>
-            <span onClick={() => setIsForgotPassword(false)}>Back to Login</span>
-          </div>
-        </form>
-      )}
+        </div>
+        <button type="submit" className="PrimaryButton">
+          Sign In
+        </button>
+        <div className="LoginFooter">
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "#64748b",
+              textAlign: "center",
+              marginTop: "1rem",
+            }}
+          >
+            Internal Enterprise Resources Tracking Software
+          </p>
+        </div>
+      </form>
     </div>
   );
 }

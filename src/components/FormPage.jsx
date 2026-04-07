@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Table,
   Thead,
@@ -15,16 +15,37 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
+  IconButton,
+  Flex,
+  Text,
 } from "@chakra-ui/react";
+import { EditIcon, DeleteIcon, AttachmentIcon } from "@chakra-ui/icons";
+import { VariableSizeList as List } from "react-window";
+import TruncatedText from "./TruncatedText";
 import { useDispatch, useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 
 // Importing API
-import Process from "../services/Process";
+import {
+  useUpdateProcessData,
+  useDeleteProcessData,
+  useProcessById,
+  useAddProcessData,
+} from "../services/Process";
+import { usePermissions } from "../services/permissions";
 
 // importing components
 import Loading from "../hooks/Loading";
 import SubProcess from "./SubProcess"; // modal for nested process
-import FormDialog from "../hooks/FormDialog";
+import EditableRow from "./EditableRow";
+import DetailingProductCompo from "./DetailingProductCompo";
+import ArrayDisplayCompo from "./ArrayDisplayCompo";
+import ImagePreviewCompo from "./ImagePreviewCompo";
+import StatusBadgeCompo from "./StatusBadgeCompo";
+import ActionButtonCompo from "./ActionButtonCompo";
+import ConfirmDialog from "./ConfirmDialog";
+import ImageCompo from "./ImageCompo";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -32,43 +53,64 @@ import "../styles/departmentpage.css";
 import ItemsData from "../utils/ItemsData.json";
 import { setDetailingProducts } from "../redux/slices/department";
 
-function FormPage({ process, isView = false, currentBomId = null }) {
-  const {
-    loading,
-    handleGetSingleProcess,
-    handleUpdateData,
-    handleDeleteData,
-  } = Process();
+const URL = process.env.REACT_APP_PROCESS_URL;
+
+function FormPage({
+  process,
+  isView = false,
+  currentBomId = null,
+  isDefault = false,
+  rowDataId = null,
+  refresh,
+  isAddingNewRow = false,
+  setIsAddingNewRow,
+}) {
+  const queryClient = useQueryClient();
+  const updateMutation = useUpdateProcessData();
+  const deleteMutation = useDeleteProcessData();
+  const addMutation = useAddProcessData();
 
   const {
     ArrayValuesProcess,
     DefaultSelectProcess,
     ImageUploadArray,
     ShownArray,
-    ColorProcess
+    ColorProcess,
+    DateFieldsArray,
   } = ItemsData;
 
   const dispatch = useDispatch();
+  const { isEditor, isCreator, isViewer, isAdmin } = usePermissions();
   const detailingProducts = useSelector(
-    (state) => state.department.detailingProducts
+    (state) => state.department.detailingProducts,
   );
   const stateProcess = useSelector((state) => state.department.process);
   const userDetails = useSelector((state) => state.auth.userDetails);
+
+  // Computed permissions
+  const canModify = !isView && !isViewer;
+  const canEdit = canModify && (isEditor || isAdmin);
+  const canCreate = canModify && (isEditor || isCreator || isAdmin);
+  const canDelete = canModify && (isEditor || isAdmin);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
   const [imagePopupUrl, setImagePopupUrl] = useState(null);
   const [rowIds, setRowIds] = useState([]);
 
+  // Inline Editing State
+  const [editingRowIds, setEditingRowIds] = useState([]);
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [newRowKey, setNewRowKey] = useState(0); // Key to force re-render/reset of new row
+
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [deleteTargetIdx, setDeleteTargetIdx] = useState(null);
+
   const tableContainerRef = useRef(null);
+  const listRef = useRef(null);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  // For FormDialog modal
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formRowIdx, setFormRowIdx] = useState(null);
-  const [formInitialData, setFormInitialData] = useState({});
 
   const colorCoordinates = [
     { label: "In Progress", color: "#ffb176" },
@@ -76,6 +118,62 @@ function FormPage({ process, isView = false, currentBomId = null }) {
     { label: "Completed", color: "#92ff89" },
     { label: "Planning", color: "#89b8ff" },
   ];
+
+  // Determine BOM process ID for detailing logic
+  const bomProcessId =
+    process?.process === "Products" && stateProcess
+      ? stateProcess.find((item) => item.process === "Bill of Materials - BOM")
+          ?._id ||
+        stateProcess.find((item) => item.process === "Bill of Materials - BOM")
+          ?.id
+      : null;
+
+  // Fetch BOM data if needed
+  const { data: bomData } = useProcessById(bomProcessId);
+
+  // Convert epoch milliseconds string → DD/MM/YYYY for display
+  const formatEpochToDate = (value) => {
+    if (!value) return value;
+    const num = Number(value);
+    if (isNaN(num) || String(value).trim() === "") return value; // not a number, return as-is
+    const d = new Date(num);
+    if (isNaN(d.getTime())) return value;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const getStatusStyle = (value) => {
+    let badgeColor = "gray.100";
+    let textColor = "gray.600";
+    let dotColor = "gray.500";
+
+    if (!value) return { badgeColor, textColor, dotColor };
+
+    const lowerVal = value.toLowerCase();
+    if (lowerVal.includes("waiting") || lowerVal.includes("planning")) {
+      badgeColor = "#fffaf0"; // orangeish
+      textColor = "#dd6b20";
+      dotColor = "#dd6b20";
+    } else if (
+      lowerVal.includes("prototype") ||
+      lowerVal.includes("progress")
+    ) {
+      badgeColor = "#ebf8ff"; // blueish
+      textColor = "#3182ce";
+      dotColor = "#3182ce";
+    } else if (lowerVal.includes("complete") || lowerVal.includes("done")) {
+      badgeColor = "#f0fff4"; // greenish
+      textColor = "#38a169";
+      dotColor = "#38a169";
+    } else if (lowerVal.includes("pending")) {
+      badgeColor = "#fff5f5"; // reddish
+      textColor = "#e53e3e";
+      dotColor = "#e53e3e";
+    }
+    return { badgeColor, textColor, dotColor };
+  };
 
   useEffect(() => {
     if (process?.value && process?.header) {
@@ -86,89 +184,114 @@ function FormPage({ process, isView = false, currentBomId = null }) {
       setRowIds([]);
     }
 
-    if (process?.process === "Products" && stateProcess) {
-      const fetchDetailingProducts = async () => {
-        const bomProcess = stateProcess.find(
-          (item) => item.process === "Bill of Materials - BOM"
-        );
-        if (bomProcess) {
-          const response = await handleGetSingleProcess(bomProcess.id);
+    if (process?.process === "Products" && bomData) {
+      const filteredData = currentBomId
+        ? {
+            ...bomData,
+            data: bomData?.data?.filter(
+              (row) => row.rowDataId === currentBomId,
+            ),
+          }
+        : bomData;
 
-          // ✅ Filter detailing products by the current BOM ID
-          const filteredData = currentBomId
-            ? {
-                ...response,
-                data: response?.data?.filter(
-                  (row) => row.rowDataId === currentBomId
-                ),
-              }
-            : response;
-
-          dispatch(setDetailingProducts(filteredData));
-        }
-      };
-      fetchDetailingProducts();
+      dispatch(setDetailingProducts(filteredData));
     }
-  }, [process, stateProcess, currentBomId]);
+  }, [process, bomData, currentBomId, dispatch]);
 
-  const getRowData = (row) => {
-    const obj = {};
-    process.header.forEach((col) => {
-      const cell = row.find((item) => item.key === col);
-      obj[col] = cell ? cell.value : "";
-    });
-    return obj;
-  };
+  const getItemSize = useCallback(
+    (index) => {
+      const row = rows[index];
+      if (!row) return 60;
 
-  const objectToRow = (data, oldRow) => {
-    const dataMap = Array.isArray(data)
-      ? data.reduce((acc, item) => ({ ...acc, [item.key]: item.value }), {})
-      : data;
+      const detailingCell = row.find((c) => c.key === "DETAILING PRODUCT");
+      if (
+        detailingCell &&
+        Array.isArray(detailingCell.value) &&
+        detailingCell.value.length > 0
+      ) {
+        const count = detailingCell.value.length;
+        // Each sub-row is roughly 32px, header is 35px, plus padding
+        const estimate = count * 32 + 65;
+        return Math.min(250, Math.max(70, estimate));
+      }
+      return 60;
+    },
+    [rows],
+  );
 
-    return process.header.map((col, idx) => {
-      const existingCell = oldRow.find((item) => item.key === col) || oldRow[idx];
-      return {
-        ...existingCell,
-        value: dataMap[col] !== undefined ? dataMap[col] : "",
-      };
-    });
-  };
-
-  const handleEditClick = (rowIdx) => {
-    setFormRowIdx(rowIdx);
-    setFormInitialData(getRowData(rows[rowIdx]));
-    setIsFormOpen(true);
-  };
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.resetAfterIndex(0);
+    }
+  }, [rows, getItemSize]);
 
   const handleDeleteRow = (rowIdx) => {
+    setDeleteTargetIdx(rowIdx);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTargetIdx === null) return;
+
+    const rowIdx = deleteTargetIdx;
     const updatedRows = [...rows];
     const updatedRowIds = [...rowIds];
 
-    handleDeleteData({ rowId: rowIds[rowIdx], id: process.id, userId: userDetails?._id });
+    deleteMutation.mutate({
+      rowId: rowIds[rowIdx],
+      id: process?.id,
+      userId: userDetails?._id,
+    });
 
-    // ✅ Remove both the row and its corresponding ID
     updatedRows.splice(rowIdx, 1);
     updatedRowIds.splice(rowIdx, 1);
 
-    // ✅ Update both arrays to keep indexes in sync
     setRows(updatedRows);
     setRowIds(updatedRowIds);
+    setDeleteTargetIdx(null);
   };
 
-  const handleFormSubmit = async (items) => {
-    const updatedRows = [...rows];
-    await handleUpdateData({
-      rowId: rowIds[formRowIdx],
-      items,
-      id: process.id,
-    });
-    updatedRows[formRowIdx] = objectToRow(
-      items,
-      rows[formRowIdx]
-    );
-    setRows(updatedRows);
-    setIsFormOpen(false);
-    setFormRowIdx(null);
+  const handleSaveEdit = async (items, rowId, rowIdx) => {
+    try {
+      await updateMutation.mutateAsync({
+        rowId,
+        items,
+        id: process?.id,
+      });
+      setEditingRowId(null);
+      // Optimistic update:
+      const updatedRows = [...rows];
+
+      const newRow = (process?.header || []).map((h) => {
+        const item = items.find((i) => i.key === h);
+        return item || { key: h, value: "", process: "value" };
+      });
+      updatedRows[rowIdx] = newRow;
+      setRows(updatedRows);
+
+      if (refresh) {
+        refresh();
+      }
+    } catch (e) {
+      console.error("Failed to save edit", e);
+    }
+  };
+
+  const handleSaveNew = async (items) => {
+    try {
+      await addMutation.mutateAsync({
+        items,
+        id: process?.id,
+        ...(isDefault && { rowDataId: rowDataId }),
+      });
+      setNewRowKey((prev) => prev + 1); // Reset new row form
+      if (setIsAddingNewRow) {
+        setIsAddingNewRow(false);
+      }
+      refresh();
+    } catch (e) {
+      console.error("Failed to add new data", e);
+    }
   };
 
   const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
@@ -177,378 +300,488 @@ function FormPage({ process, isView = false, currentBomId = null }) {
 
     let id;
     if (cell.key === "DETAILING PRODUCT") {
-      id = process.id;
+      id = process?.id;
     } else {
       id = cell.value.split("processId -")[1]?.trim();
     }
 
-    const response = await handleGetSingleProcess(id);
+    try {
+      const response = await queryClient.fetchQuery({
+        queryKey: ["process", id],
+        queryFn: async () => {
+          const res = await axios.get(`${URL}/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          return res.data.data;
+        },
+        staleTime: 1000 * 60,
+      });
 
-    setPopupData({
-      parentProcess: process.process,
-      row,
-      rowIdx,
-      cellIdx,
-      nestedProcess: response || null,
-      rowDataId,
-    });
-    onOpen();
+      setPopupData({
+        parentProcess: process?.process,
+        row,
+        rowIdx,
+        cellIdx,
+        nestedProcess: response || null,
+        rowDataId,
+      });
+      onOpen();
+    } catch (error) {
+      console.error("Error fetching nested process:", error);
+    }
   };
 
-  const renderImagePopUp = () => {
-    if (!imagePopupUrl) return null;
+  // Removed renderImagePopUp - now using ImageCompo
 
-    const isFileObject =
-      typeof imagePopupUrl === "object" && imagePopupUrl instanceof File;
-    const imageSrc = isFileObject
-      ? URL.createObjectURL(imagePopupUrl)
-      : imagePopupUrl;
+  const loading =
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    addMutation.isPending;
 
-    return (
-      <Modal
-        isOpen={!!imagePopupUrl}
-        onClose={() => setImagePopupUrl(null)}
-        size="xl"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Uploaded Image</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt="Uploaded"
-                style={{ width: "100%", borderRadius: "8px" }}
-              />
-            ) : (
-              "Please reload to see the image"
+  const gridTemplateColumns = process?.header
+    ? process.header
+        .map((h) =>
+          h === "DETAILING PRODUCT"
+            ? "minmax(450px, 4fr)"
+            : "minmax(100px, 1fr)",
+        )
+        .join(" ") + (canModify ? " 160px" : "")
+    : `repeat(${process?.header?.length || 1}, 100px) max-content`;
+
+  const Row = useCallback(
+    ({ index, style }) => {
+      const row = rows[index];
+      const rowId = rowIds[index];
+      const isEditing = editingRowId === rowId;
+
+      if (isEditing) {
+        return (
+          <div style={{ ...style, marginBottom: "10px" }}>
+            <EditableRow
+              key={rowId}
+              headers={process?.header}
+              initialData={row}
+              currentBomId={currentBomId}
+              onSave={(items) => handleSaveEdit(items, rowId, index)}
+              onCancel={() => setEditingRowId(null)}
+              gridTemplateColumns={gridTemplateColumns}
+            />
+          </div>
+        );
+      }
+
+      return (
+        <div style={{ ...style, paddingBottom: "2px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: gridTemplateColumns,
+              gap: "0",
+              backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9", // Striped layout
+              padding: "0",
+              borderBottom: "1px solid #edf2f7",
+              alignItems: "stretch",
+              height: "100%",
+            }}
+          >
+            {row.map((cell, cellIdx) => {
+              if (
+                cell.key === "DETAILING PRODUCT" &&
+                Array.isArray(cell.value)
+              ) {
+                return (
+                  <div
+                    key={cellIdx}
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <DetailingProductCompo
+                      key={cellIdx}
+                      bomIds={cell.value}
+                      detailingProducts={detailingProducts}
+                      ShownArray={ShownArray}
+                    />
+                  </div>
+                );
+              }
+
+              if (
+                ArrayValuesProcess.includes(cell.key) &&
+                Array.isArray(cell.value)
+              ) {
+                return (
+                  <div
+                    key={cellIdx}
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <ArrayDisplayCompo values={cell.value} />
+                  </div>
+                );
+              }
+
+              if (ImageUploadArray.includes(cell.key)) {
+                return (
+                  <div
+                    key={cellIdx}
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <ImagePreviewCompo
+                      key={cellIdx}
+                      url={cell.value}
+                      isView={true}
+                      onClick={() => setImagePopupUrl(cell.value)}
+                    />
+                  </div>
+                );
+              }
+
+              if (
+                [
+                  "Planning",
+                  "In Progress",
+                  "Completed",
+                  "Pending",
+                  "Waiting For Order",
+                  "In Prototype",
+                  "Complete",
+                  "Not Feasible",
+                  "Order Confirmed",
+                  "Under Process",
+                  "Supplied to Customer",
+                ].includes(cell.value)
+              ) {
+                return (
+                  <div
+                    key={cellIdx}
+                    style={{
+                      borderRight: "1px solid #edf2f7",
+                      padding: "8px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <StatusBadgeCompo
+                      key={cellIdx}
+                      value={cell.value}
+                      getStatusStyle={getStatusStyle}
+                    />
+                  </div>
+                );
+              }
+
+              // Format date fields from epoch to DD/MM/YYYY
+              const isDateField = DateFieldsArray.some(
+                (d) => d.trim().toLowerCase() === cell.key.trim().toLowerCase(),
+              );
+              const displayValue = isDateField
+                ? formatEpochToDate(cell.value)
+                : cell.value;
+
+              return (
+                <div
+                  key={cellIdx}
+                  className={`RowsField ${cell.key === "IN" ? "Green" : cell.key === "OUT" ? "Red" : ""}`}
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#2d3748",
+                    fontWeight: "500",
+                    textAlign: "center",
+                    borderRight: "1px solid #edf2f7",
+                    padding: "8px 10px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {cell?.process === "multiSelect" ||
+                  (typeof cell.value === "string" &&
+                    cell.value.startsWith("processId -")) ? (
+                    <div
+                      style={{
+                        maxWidth: "100%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      <ActionButtonCompo
+                        cell={cell}
+                        label={
+                          DefaultSelectProcess.includes(cell.key)
+                            ? "View"
+                            : cell.key === "BREAK HOUR" ||
+                                cell.key === "ACTION TAKEN"
+                              ? cell.process || "0"
+                              : "UPDATE"
+                        }
+                        colorScheme={
+                          ColorProcess.includes(cell.key)
+                            ? `${cell.process !== "value" ? `${cell.process}` : "red"}`
+                            : "blue"
+                        }
+                        onClick={() =>
+                          handleCellButtonClick(row, index, cellIdx, cell.key)
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <TruncatedText text={displayValue} limit={25} />
+                  )}
+                </div>
+              );
+            })}
+
+            {canModify && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 10px",
+                }}
+              >
+                {canEdit && (
+                  <IconButton
+                    icon={<EditIcon />}
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="gray"
+                    onClick={() => setEditingRowId(rowIds[index])}
+                    aria-label="Edit"
+                  />
+                )}
+                {canDelete && (
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="gray"
+                    onClick={() => handleDeleteRow(index)}
+                    aria-label="Delete"
+                  />
+                )}
+              </div>
             )}
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              onClick={() => {
-                if (isFileObject) URL.revokeObjectURL(imageSrc);
-                setImagePopupUrl(null);
-              }}
-            >
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  };
-
-  const scrollLeft = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
-  };
-
-  const scrollRight = () => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
-  };
+          </div>
+        </div>
+      );
+    },
+    [
+      rows,
+      rowIds,
+      editingRowId,
+      process?.header,
+      currentBomId,
+      gridTemplateColumns,
+      detailingProducts,
+      isView,
+      getStatusStyle,
+    ],
+  );
 
   return (
-    <div style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "10px",
-          marginBottom: "10px",
-        }}
-      >
-        <Button
-          // leftIcon={<ChevronLeftIcon />}
-          colorScheme="blue"
-          size="sm"
-          onClick={scrollLeft}
-        >
-          Left
-        </Button>
-        <Button
-          // rightIcon={<ChevronRightIcon />}
-          colorScheme="blue"
-          size="sm"
-          onClick={scrollRight}
-        >
-          Right
-        </Button>
-      </div>
+    <div
+      style={{
+        position: "relative",
+        backgroundColor: "#f7f9fc",
+        padding: "10px",
+        borderRadius: "10px",
+        height: "100%",
+      }}
+    >
       <div
         ref={tableContainerRef}
         className="FormPageContainer"
-        style={{ overflowX: "auto", maxWidth: "100%" }}
+        style={{
+          overflowX: "auto",
+          overflowY: "auto", // Enable vertical scroll for the container
+          maxWidth: "100%",
+          maxHeight: "calc(100vh - 250px)", // Set a max height for the table area
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+          borderRadius: "8px",
+        }}
       >
-        <Table size="sm" showColumnBorder stickyHeader variant="striped">
-          <Thead className="TableHeader">
-            <Tr>
-              {process && process.header?.length > 0 ? (
-                <>
-                  {process.header.map((col, idx) => (
-                    <Th key={idx} className="TableHeaderContent">
+        <div style={{ minWidth: "fit-content", flex: 1 }}>
+          {/* Sticky Header Row */}
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 15,
+              backgroundColor: "#f7f9fc",
+              display: "grid",
+              gridTemplateColumns: gridTemplateColumns,
+              gap: "0",
+              padding: "0", // Padding removed to align with rows
+              borderBottom: "2px solid #e2e8f0",
+              alignItems: "stretch",
+            }}
+          >
+            {process && process.header?.length > 0 ? (
+              <>
+                {process.header.map((col, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      fontWeight: "bold",
+                      color: "#718096",
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      textAlign: "center",
+                      borderRight: "1px solid #e2e8f0",
+                      padding: "12px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {col}
-                    </Th>
-                  ))}
-                  {!isView && <Th className="TableHeaderContent">Action</Th>}
-                  {!isView && <Th className="TableHeaderContent">Delete</Th>}
-                </>
-              ) : (
-                <Th className="TableHeaderContent">No Process Selected</Th>
-              )}
-            </Tr>
-          </Thead>
-
-          <Tbody className="TableBody">
-            {rows && rows.length > 0 ? (
-              rows.map((row, rowIdx) => (
-                <Tr key={rowIdx}>
-                  {row.map((cell, cellIdx) => {
-                    // 🧩 Detailing Product Display Logic
-                    if (
-                      cell.key === "DETAILING PRODUCT" &&
-                      Array.isArray(cell.value)
-                    ) {
-                      // Gather all BOM rows first
-                      const bomRows = cell.value
-                        .map((bomId) =>
-                          detailingProducts?.data?.find((d) => d._id === bomId)
-                        )
-                        .filter(Boolean); // remove undefined rows
-
-                      if (bomRows.length === 0) {
-                        return (
-                          <Td key={cellIdx} className="RowsField">
-                            No data available
-                          </Td>
-                        );
-                      }
-
-                      return (
-                        <Td key={cellIdx} className="RowsField">
-                          <div className="FormPageContainer">
-                            <Table size="xs" variant="striped">
-                              <Thead className="TableHeader">
-                                <Tr>
-                                  {detailingProducts?.headers?.map(
-                                    (header, hIdx) =>
-                                      ShownArray.includes(header) && (
-                                        <Th
-                                          key={hIdx}
-                                          className="TableHeaderContent"
-                                        >
-                                          {header}
-                                        </Th>
-                                      )
-                                  )}
-                                </Tr>
-                              </Thead>
-                              <Tbody className="TableBody">
-                                {bomRows.map((bomRow, idx) => (
-                                  <Tr key={idx} className="RowsField">
-                                    {detailingProducts?.headers?.map(
-                                      (header, hIdx) => {
-                                        if (!ShownArray.includes(header))
-                                          return null;
-                                        const item = bomRow.items.find(
-                                          (i) => i.key === header
-                                        );
-                                        return (
-                                          <Td
-                                            key={hIdx}
-                                            className="RowsField"
-                                            style={{ padding: "12px" }}
-                                          >
-                                            {item?.value || "-"}
-                                          </Td>
-                                        );
-                                      }
-                                    )}
-                                  </Tr>
-                                ))}
-                              </Tbody>
-                            </Table>
-                          </div>
-                        </Td>
-                      );
-                    }
-
-                    // ⚙️ Existing array display logic (keep intact)
-                    if (
-                      ArrayValuesProcess.includes(cell.key) &&
-                      Array.isArray(cell.value)
-                    ) {
-                      return (
-                        <Td key={cellIdx} className="RowsField">
-                          {cell.value.map((rev, revIdx) => (
-                            <span
-                              key={revIdx}
-                              style={{
-                                margin: "0 4px",
-                                border: "1px solid black",
-                                padding: "8px",
-                                backgroundColor:
-                                  revIdx === cell.value.length - 1
-                                    ? "green"
-                                    : "transparent",
-                                color:
-                                  revIdx === cell.value.length - 1
-                                    ? "white"
-                                    : "black",
-                              }}
-                            >
-                              {rev}
-                            </span>
-                          ))}
-                        </Td>
-                      );
-                    }
-
-                    // 🔹 Image Upload handling
-                    if (ImageUploadArray.includes(cell.key) && cell.value) {
-                      return (
-                        <Td key={cellIdx} className="RowsField">
-                          <Button
-                            size="sm"
-                            colorScheme="blue"
-                            onClick={() => setImagePopupUrl(cell.value)}
-                          >
-                            View
-                          </Button>
-                        </Td>
-                      );
-                    }
-
-                    return (
-                      <Td key={cellIdx} className="RowsField">
-                        {cell?.process === "multiSelect" ||
-                        (typeof cell.value === "string" &&
-                          cell.value.startsWith("processId -")) ? (
-                          <Button
-                            sx={{
-                              width: "55px",
-                              fontSize: "12px",
-                              height: "30px",
-                            }}
-                            colorScheme={`${
-                              ColorProcess.includes(cell.key)
-                                ? `${
-                                    cell.process !== "value"
-                                      ? `${cell.process}`
-                                      : "red"
-                                  }`
-                                : "blue"
-                            }`}
-                            onClick={() =>
-                              handleCellButtonClick(
-                                row,
-                                rowIdx,
-                                cellIdx,
-                                cell.key
-                              )
-                            }
-                          >
-                            {DefaultSelectProcess.includes(cell.key)
-                              ? "View"
-                              : cell.key === "BREAK HOUR"
-                              ? cell.process
-                                ? cell.process
-                                : "0"
-                              : "UPDATE"}
-                          </Button>
-                        ) : [
-                            "Planning",
-                            "In Progress",
-                            "Completed",
-                            "Pending",
-                          ].includes(cell.value) ? (
-                          <Td className="RowsField ProtoStatusIndicationRow">
-                            <div
-                              className="ProtoStatusIndication"
-                              style={{
-                                backgroundColor:
-                                  colorCoordinates.find(
-                                    (c) => c.label === cell.value
-                                  )?.color || "gray",
-                              }}
-                            ></div>
-                            <span>{cell.value}</span>
-                          </Td>
-                        ) : (
-                          <Td
-                            className={`RowsField ${
-                              cell.key === "IN"
-                                ? "Green"
-                                : cell.key === "OUT"
-                                ? "Red"
-                                : ""
-                            }`}
-                          >
-                            {cell.value}
-                          </Td>
-                        )}
-                      </Td>
-                    );
-                  })}
-
-                  {!isView && (
-                    <Td className="RowsField">
-                      <Button
-                        size="sm"
-                        className="IconButtonStyle"
-                        onClick={() => handleEditClick(rowIdx)}
-                      >
-                        Edit
-                      </Button>
-                    </Td>
-                  )}
-                  {!isView && (
-                    <Td className="RowsField">
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        className="IconButtonStyle"
-                        onClick={() => handleDeleteRow(rowIdx)}
-                      >
-                        Delete
-                      </Button>
-                    </Td>
-                  )}
-                </Tr>
-              ))
+                    </span>
+                  </div>
+                ))}
+                {canModify && (
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      color: "#718096",
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      textAlign: "center",
+                      minWidth: "max-content",
+                      padding: "12px 15px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    Actions
+                  </div>
+                )}
+              </>
             ) : (
-              <Tr>
-                <Td colSpan={(process?.header?.length || 1) + 2}>No Data</Td>
-              </Tr>
+              <div>No Process Selected</div>
             )}
-          </Tbody>
-        </Table>
+          </div>
+
+          <div style={{ minWidth: "fit-content" }}>
+            {rows && rows.length > 0 ? (
+              <List
+                ref={listRef}
+                height={Math.min(
+                  500,
+                  rows.reduce((acc, _, i) => acc + getItemSize(i), 0),
+                )}
+                itemCount={rows.length}
+                itemSize={getItemSize}
+                width="100%"
+                style={{ overflowX: "hidden" }} // Horizontal scroll is handled by FormPageContainer
+              >
+                {Row}
+              </List>
+            ) : null}
+          </div>
+
+          {rows.length === 0 && !process?.header && (
+            <div
+              style={{
+                padding: "20px",
+                textAlign: "center",
+                fontStyle: "italic",
+                color: "gray",
+              }}
+            >
+              No Process Selected
+            </div>
+          )}
+
+          {/* Sticky Add New Row at the bottom */}
+          {canCreate && process?.header?.length > 0 && isAddingNewRow && (
+            <div
+              style={{
+                position: "sticky",
+                bottom: 0,
+                backgroundColor: "#f7f9fc",
+                zIndex: 15,
+                padding: "20px 10px",
+                marginTop: "10px",
+                borderTop: "1px solid #e2e8f0",
+                boxShadow: "0 -4px 6px rgba(0,0,0,0.02)",
+              }}
+            >
+              <EditableRow
+                key={`new-row-${newRowKey}`}
+                headers={process.header}
+                isNew={true}
+                currentBomId={currentBomId}
+                onSave={handleSaveNew}
+                onCancel={() => {
+                  setNewRowKey((prev) => prev + 1);
+                  if (setIsAddingNewRow) setIsAddingNewRow(false);
+                }} // Reset form and close
+                gridTemplateColumns={gridTemplateColumns}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
 
-      {isFormOpen && (
-        <FormDialog
-          IndicationText="Edit Row"
-          FormArray={process.header.map((col) => ({
-            label: col,
-            key: col,
-          }))}
-          handleSubmit={(data) => handleFormSubmit(data)}
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          initialData={formInitialData}
-          loading={loading}
-          mode="form"
-        />
-      )}
+      <ConfirmDialog
+        isOpen={isDeleteAlertOpen}
+        onClose={() => setIsDeleteAlertOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Row"
+        message="Are you sure you want to delete this record? This action cannot be undone."
+      />
 
-      {renderImagePopUp()}
+      <ImageCompo
+        imageUrl={imagePopupUrl}
+        onClose={() => setImagePopupUrl(null)}
+      />
       {loading && <Loading />}
     </div>
   );

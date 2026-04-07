@@ -1,16 +1,15 @@
-import React, { useState } from 'react'
-import axios from 'axios';
-import { useDispatch } from 'react-redux';
+import { useState } from "react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
 
-import { setProducts, setSingleProduct } from '../redux/slices/product';
-import { setMessage } from '../redux/slices/common';
+import { setProducts, setSingleProduct } from "../redux/slices/product";
+import { setMessage } from "../redux/slices/common";
 
 function Product() {
+  const URL = process.env.REACT_APP_PRODUCT_URL;
 
-    const URL = 'https://adl-server.onrender.com/api/v1/product';
-
-    const dispatch = useDispatch();
-    const [ loading, setLoading ] = useState(false);
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
 
   const handleGetAllProducts = async () => {
     setLoading(true);
@@ -40,17 +39,19 @@ function Product() {
   const handleCreateProduct = async (productData) => {
     setLoading(true);
     try {
-        const response = await axios.post(`${URL}/create`, productData, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+      const response = await axios.post(`${URL}/create`, productData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-        dispatch(setMessage({ 
-            status: 'success', 
-            description: 'Product created successfully!',
-            message: `${response.data.data.name || 'productName'} has been created.`
-        }));
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Product created successfully!",
+          message: `${response.data.data.name || "productName"} has been created.`,
+        }),
+      );
     } catch (error) {
       console.error("Error creating product:", error);
     } finally {
@@ -75,20 +76,19 @@ function Product() {
     try {
       const response = await axios.delete(`${URL}/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
-      dispatch(setMessage({ 
-          status: 'success', 
-          description: 'Product deleted successfully!',
-          message: `${response.data.data.name || 'productName'} has been deleted.`
-      }));
-
+      dispatch(
+        setMessage({
+          status: "success",
+          description: "Product deleted successfully!",
+          message: `${response.data.data.name || "productName"} has been deleted.`,
+        }),
+      );
     } catch (error) {
-      
-        console.error("Error deleting product:", error);
-        
+      console.error("Error deleting product:", error);
     } finally {
       setLoading(false);
     }
@@ -97,21 +97,27 @@ function Product() {
   const handleAddGraphData = async ({ newData }) => {
     setLoading(true);
     try {
-        const response = await axios.post(`${URL}/graph/${newData._id}`, {graph: newData.graph}, {
+      const response = await axios.post(
+        `${URL}/graph/${newData._id}`,
+        { graph: newData.graph },
+        {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        dispatch(setSingleProduct(response.data.data));
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      dispatch(setSingleProduct(response.data.data));
     } catch (error) {
-        console.error("Error adding graph data:", error);
-        dispatch(setMessage({ 
-            status: 'error', 
-            description: 'Failed to add graph data.',
-            message: error.message
-        }));
+      console.error("Error adding graph data:", error);
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Failed to add graph data.",
+          message: error.message,
+        }),
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -122,8 +128,8 @@ function Product() {
     handleUpdateProduct,
     handleDeleteProduct,
     handleAddGraphData,
-    loading
-  }
+    loading,
+  };
 }
 
-export default Product
+export default Product;

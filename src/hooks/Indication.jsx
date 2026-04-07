@@ -1,5 +1,5 @@
 // Indication.js
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useToast } from '@chakra-ui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearMessage } from '../redux/slices/common';

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Table,
   Thead,
@@ -18,29 +18,34 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
-import { setProcess } from '../redux/slices/department';
-import ItemsData from '../utils/ItemsData';
-
-import Department from '../services/Department';
-import Process from '../services/Process';
-import SubProcess from '../components/SubProcess';
+import { setProcess } from "../redux/slices/department";
+import ItemsData from "../utils/ItemsData";
+import { useDepartments } from "../services/Department";
+import { useAllProcesses, useSearchSelectOptions } from "../services/Process";
+import Process from "../services/Process";
+import SubProcess from "../components/SubProcess";
+import Loading from "../hooks/Loading";
 
 function Qms() {
   const dispatch = useDispatch();
 
-  const departments = useSelector(state => state.department.departments);
-  const allProcesses = useSelector(state => state.department.allProcesses);
+  // Queries
+  const { data: departmentsData, isLoading: deptsLoading } = useDepartments();
+  const { data: allProcessesData, isLoading: procsLoading } = useAllProcesses();
+  useSearchSelectOptions();
+
+  const departments = departmentsData || [];
+  const allProcesses = allProcessesData || [];
 
   const { ImageUploadArray } = ItemsData;
 
-  const { handleGetAllDepartments } = Department();
-  const { handlegetAllProcess, handleGetSingleProcess } = Process();
+  const { handleGetSingleProcess } = Process();
 
-  const [selectedDept, setSelectedDept] = useState('');
+  const [selectedDept, setSelectedDept] = useState("");
   const [filteredProcesses, setFilteredProcesses] = useState([]);
-  const [selectedProcessName, setSelectedProcessName] = useState('');
+  const [selectedProcessName, setSelectedProcessName] = useState("");
   const [selectedProcess, setSelectedProcess] = useState(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -50,21 +55,17 @@ function Qms() {
   const [imagePopupUrl, setImagePopupUrl] = useState(null);
 
   useEffect(() => {
-    handleGetAllDepartments();
-  }, []);
-
-  useEffect(() => {
-    handlegetAllProcess();
-  }, []);
-
-  dispatch(setProcess(allProcesses));
+    if (allProcesses.length > 0) {
+      dispatch(setProcess(allProcesses));
+    }
+  }, [allProcesses, dispatch]);
 
   // Filter processes based on selected department
   useEffect(() => {
     if (selectedDept) {
-      const deptObj = departments.find(d => d.name === selectedDept);
+      const deptObj = departments.find((d) => d.name === selectedDept);
       setFilteredProcesses(deptObj ? deptObj.process : []);
-      setSelectedProcessName('');
+      setSelectedProcessName("");
       setSelectedProcess(null);
     } else {
       setFilteredProcesses([]);
@@ -74,19 +75,23 @@ function Qms() {
   // Update selected process object
   useEffect(() => {
     if (selectedProcessName) {
-      const procObj = allProcesses.find(p => p.process === selectedProcessName);
+      const procObj = allProcesses.find(
+        (p) => p.process === selectedProcessName,
+      );
       setSelectedProcess(procObj || null);
     }
   }, [selectedProcessName, allProcesses]);
+
+  if (deptsLoading || procsLoading) return <Loading />;
 
   const handleViewSubProcess = async (row, cell) => {
     let id;
 
     // If DETAILING PRODUCT -> open current process ID
-    if (cell.key === 'DETAILING PRODUCT') {
+    if (cell.key === "DETAILING PRODUCT") {
       id = selectedProcess.id;
-    } else if (cell.value?.startsWith('processId -')) {
-      id = cell.value.split('processId -')[1].trim();
+    } else if (cell.value?.startsWith("processId -")) {
+      id = cell.value.split("processId -")[1].trim();
     }
 
     if (!id) return;
@@ -107,7 +112,11 @@ function Qms() {
     if (!imagePopupUrl) return null;
 
     return (
-      <Modal isOpen={!!imagePopupUrl} onClose={() => setImagePopupUrl(null)} size="xl">
+      <Modal
+        isOpen={!!imagePopupUrl}
+        onClose={() => setImagePopupUrl(null)}
+        size="xl"
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Uploaded Image</ModalHeader>
@@ -133,14 +142,16 @@ function Qms() {
     <div className="AppRightContainer">
       <h1>QMS</h1>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         <Select
           value={selectedDept}
           onChange={(e) => setSelectedDept(e.target.value)}
         >
           <option value="">-- Select Department --</option>
-          {departments.map(dept => (
-            <option key={dept._id} value={dept.name}>{dept.name}</option>
+          {departments.map((dept) => (
+            <option key={dept._id} value={dept.name}>
+              {dept.name}
+            </option>
           ))}
         </Select>
 
@@ -151,7 +162,9 @@ function Qms() {
         >
           <option value="">-- Select Process --</option>
           {filteredProcesses.map((proc, idx) => (
-            <option key={idx} value={proc}>{proc}</option>
+            <option key={idx} value={proc}>
+              {proc}
+            </option>
           ))}
         </Select>
       </div>
@@ -162,18 +175,20 @@ function Qms() {
           <Table size="sm" variant="striped">
             <Thead className="TableHeader">
               <Tr>
-                {selectedProcess.headers.map(header => (
-                  <Th key={header} className="TableHeaderContent">{header}</Th>
+                {selectedProcess.headers.map((header) => (
+                  <Th key={header} className="TableHeaderContent">
+                    {header}
+                  </Th>
                 ))}
                 <Th className="TableHeaderContent">Updated By</Th>
                 <Th className="TableHeaderContent">Created At</Th>
               </Tr>
             </Thead>
             <Tbody className="TableBody">
-              {selectedProcess.data.map(row => (
+              {selectedProcess.data.map((row) => (
                 <Tr key={row._id}>
-                  {selectedProcess.headers.map(header => {
-                    const cell = row.items.find(i => i.key === header);
+                  {selectedProcess.headers.map((header) => {
+                    const cell = row.items.find((i) => i.key === header);
                     if (!cell) return <Td key={header}>-</Td>;
 
                     // 🔹 Image Upload Handling
@@ -192,7 +207,10 @@ function Qms() {
                     }
 
                     // Handle DETAILING PRODUCT or nested processes
-                    if (cell.key === 'DETAILING PRODUCT' || cell.value?.startsWith('processId -')) {
+                    if (
+                      cell.key === "DETAILING PRODUCT" ||
+                      cell.value?.startsWith("processId -")
+                    ) {
                       return (
                         <Td key={header} className="RowsField">
                           <Button
@@ -207,15 +225,30 @@ function Qms() {
                     }
 
                     // MultiSelect fields
-                    if (cell.process === 'multiSelect' && Array.isArray(cell.value)) {
-                      return <Td key={header} className="RowsField">{cell.value.join(', ')}</Td>;
+                    if (
+                      cell.process === "multiSelect" &&
+                      Array.isArray(cell.value)
+                    ) {
+                      return (
+                        <Td key={header} className="RowsField">
+                          {cell.value.join(", ")}
+                        </Td>
+                      );
                     }
 
-                    return <Td key={header} className="RowsField">{cell.value}</Td>;
+                    return (
+                      <Td key={header} className="RowsField">
+                        {cell.value}
+                      </Td>
+                    );
                   })}
 
-                  <Td className="RowsField">{selectedProcess.updatedBy?.userName || 'N/A'}</Td>
-                  <Td className="RowsField">{new Date(row.createdAt).toLocaleString()}</Td>
+                  <Td className="RowsField">
+                    {selectedProcess.updatedBy?.userName || "N/A"}
+                  </Td>
+                  <Td className="RowsField">
+                    {new Date(row.createdAt).toLocaleString()}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
@@ -224,7 +257,12 @@ function Qms() {
       )}
 
       {/* SubProcess modal */}
-      <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} isView={true} />
+      <SubProcess
+        isOpen={isOpen}
+        onClose={onClose}
+        data={popupData}
+        isView={true}
+      />
 
       {/* Image Popup */}
       {renderImagePopUp()}

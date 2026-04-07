@@ -1,23 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  Button,
+  Select,
+  Box,
+  IconButton,
+  Tooltip,
+  Center,
+  Spinner,
+  Text as ChakraText,
+  VStack,
+} from "@chakra-ui/react";
+import { Icon } from "@iconify/react";
+import { DownloadIcon } from "@chakra-ui/icons";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 // importing components
 import FormPage from "../components/FormPage";
 import Loading from "../hooks/Loading";
-import AddData from "../hooks/AddData";
+import HeaderSection from "../components/HeaderSection";
+import SearchCompo from "../components/SearchCompo";
+import FilterCompo from "../components/FilterCompo";
 import DepartmentDashboard from "./DepartmentDashboard";
 
 // importing styles
 import "../styles/departmentpage.css";
 
-// importing the datas
-import ItemsData from "../utils/ItemsData.json";
-
 // importing API's
-import Department from "../services/Department";
-import Process from "../services/Process";
+import { useDepartments } from "../services/Department";
+import {
+  useProcessesByDepartmentId,
+  useProcessById,
+  useSearchSelectOptions,
+} from "../services/Process";
 import { setMainTableData, setProcess } from "../redux/slices/department";
+import { usePermissions } from "../services/permissions";
 
 // utility: transform process object → FormPage format
 const transformProcess = (process) => {
@@ -32,7 +51,7 @@ const transformProcess = (process) => {
           key: cell.key,
           value: cell.value,
           process: cell.process || null,
-        }))
+        })),
       ) || [],
     rowIds: process.data?.map((row) => row._id) || [],
     rowDataIds: process.data?.map((row) => row.rowDataId) || [],
@@ -74,7 +93,7 @@ const combineSimilarRows = (mainTableData) => {
       key: k,
       value: rowObj[k].value,
       process: rowObj[k].process,
-    }))
+    })),
   );
 
   return {
@@ -83,54 +102,102 @@ const combineSimilarRows = (mainTableData) => {
   };
 };
 
-function DepartmentPage({ department, processId }) {
-  const dispatch = useDispatch();
-  const process = useSelector((state) => state.department.process);
-  const departments = useSelector((state) => state.department.departments);
-  const mainTableData = useSelector((state) => state.department.mainTableData);
+const PageLoader = () => (
+  <Center h="100%" w="100%" bg="white" borderRadius="xl">
+    <VStack spacing={4}>
+      <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+      <ChakraText color="gray.500" fontWeight="medium">
+        Loading process data...
+      </ChakraText>
+    </VStack>
+  </Center>
+);
 
-  const { loading, handleGetAllDepartments } = Department();
-  const {
-    handleGetProcessbyDepartmentId,
-    handleSearchSelectOptions,
-    handleAddData,
-    handleGetProcessByProcessId,
-    loading: processLoading,
-  } = Process();
-
+function DepartmentPage({ department: propDept, processId: propProcId }) {
+  const params = useParams();
+  const department = propDept || params.department;
+  const processId = propProcId || params.processId;
+  const { hasAccessToDepartment, isViewer } = usePermissions();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (department && !hasAccessToDepartment(department)) {
+      navigate("/"); // Redirect unauthorized users
+    }
+  }, [department, hasAccessToDepartment, navigate]);
+
+  return (
+    <div
+      className="AppRightContainer DepartmentPageContainer"
+      style={{
+        padding: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        width: "100%",
+        overflow: "hidden",
+      }}
+    >
+      <Suspense fallback={<Loading />}>
+        <DepartmentPageContent
+          department={department}
+          processId={processId}
+          isViewOnly={isViewer}
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+const DEPT_URL = process.env.REACT_APP_DEPARTMENT_URL;
+const PROC_URL = process.env.REACT_APP_PROCESS_URL;
+
+const getAuthHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+});
+
+function DepartmentPageContent({ department, processId, isViewOnly }) {
+  const dispatch = useDispatch();
+  const mainTableData = useSelector((state) => state.department.mainTableData);
+  const navigate = useNavigate();
+
+  // Suspense-enabled queries
+  const { data: departments } = useSuspenseQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const response = await axios.get(`${DEPT_URL}/all`);
+      return response.data.data;
+    },
+  });
+
+  useSearchSelectOptions();
+
   const [selectedProcess, setSelectedProcess] = useState("");
-  const [processes, setProcesses] = useState([]);
-  const [showAddData, setShowAddData] = useState(false);
   const [isMerged, setIsMerged] = useState(false);
   const [originalMainTable, setOriginalMainTable] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   const currentDepartment = departments.find(
-    (d) => d.name.toLowerCase() === department?.toLowerCase()
+    (d) => d.name.toLowerCase() === department?.toLowerCase(),
   );
 
-  useEffect(() => {
-    handleGetAllDepartments();
-    handleSearchSelectOptions();
-  }, []);
+  const { data: processes } = useSuspenseQuery({
+    queryKey: ["processesByDepartment", currentDepartment?._id],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${PROC_URL}/department/${currentDepartment?._id}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+  });
 
   useEffect(() => {
-    const fetchProcesses = async () => {
-      if (currentDepartment?._id) {
-        const data = await handleGetProcessbyDepartmentId(
-          currentDepartment._id
-        );
-        setProcesses(data);
-        dispatch(setProcess(data));
-      }
-    };
-    fetchProcesses();
-    setSelectedProcess("");
-    dispatch(setMainTableData(null));
-  }, [currentDepartment, department]);
-  
-  // Sync selectedProcess with URL processId
+    if (processes.length > 0) {
+      dispatch(setProcess(processes));
+    }
+  }, [processes, dispatch]);
+
   useEffect(() => {
     if (processId && processes.length > 0) {
       const found = processes.find((p) => (p._id || p.id) === processId);
@@ -142,46 +209,47 @@ function DepartmentPage({ department, processId }) {
     }
   }, [processId, processes]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      dispatch(setMainTableData(null));
-      setIsMerged(false);
-      setOriginalMainTable(null);
+  const foundProcess = processes.find((p) => p.process === selectedProcess);
+  const selectedProcessId = foundProcess
+    ? foundProcess._id || foundProcess.id
+    : null;
 
-      if (selectedProcess && processes.length > 0) {
-        const found = processes.find((p) => p.process === selectedProcess);
-        if (found) {
-          const data = await handleGetProcessByProcessId(found._id || found.id);
-          dispatch(setMainTableData(transformProcess(data)));
-        }
-      } else {
-        dispatch(setMainTableData(null));
-      }
-    };
-    fetchData();
-  }, [selectedProcess, processes]);
+  const { data: processDataRaw, refetch: refetchProcess } = useSuspenseQuery({
+    queryKey: ["process", selectedProcessId],
+    queryFn: async () => {
+      if (!selectedProcessId) return null;
+      const response = await axios.get(
+        `${PROC_URL}/${selectedProcessId}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+  });
 
-  const handleAddDataSave = async (data) => {
-    const processId = mainTableData.id;
-    const response = await handleAddData({ items: data, id: processId });
-    dispatch(setMainTableData(transformProcess(response)));
+  const handleRefresh = () => {
+    refetchProcess();
   };
 
-  // ✅ Toggle (Merge / Restore) handler
+  useEffect(() => {
+    dispatch(setMainTableData(null));
+    setIsMerged(false);
+    setOriginalMainTable(null);
+
+    if (processDataRaw) {
+      const transformed = transformProcess(processDataRaw);
+      dispatch(setMainTableData(transformed));
+    }
+  }, [processDataRaw, dispatch, selectedProcessId]);
+
   const handleSortMerge = () => {
     if (!mainTableData) return;
 
     if (!isMerged) {
-      // 🔹 Store original before merging
       setOriginalMainTable(mainTableData);
-
-      // 🔹 Merge and update Redux
       const merged = combineSimilarRows(mainTableData);
       dispatch(setMainTableData(merged));
       setIsMerged(true);
-
     } else {
-      // 🔹 Restore the original main table
       if (originalMainTable) {
         dispatch(setMainTableData(originalMainTable));
       }
@@ -189,87 +257,125 @@ function DepartmentPage({ department, processId }) {
     }
   };
 
-  if (loading || processLoading) {
-    return <Loading />;
-  }
-
   return (
-    <div className="AppRightContainer DepartmentPageContainer">
-      {currentDepartment && (
-        <div className="ProcessListContainer">
-          <select
+    <>
+      <HeaderSection
+        title={
+          selectedProcess || `${currentDepartment?.name || department} Analysis`
+        }
+        description={
+          selectedProcess
+            ? `Manage and track ${selectedProcess.toLowerCase()} specifications and statuses.`
+            : `Overview and department-level analysis for ${department}.`
+        }
+      >
+        {selectedProcess && (
+          <>
+            <SearchCompo
+              placeholder="Search records..."
+              onSearch={(term) => console.log("Searching for:", term)}
+            />
+
+            <FilterCompo
+              filters={["Completed", "Pending", "In Progress"]}
+              onFilterChange={(val) => console.log("Filter:", val)}
+            />
+
+            <Tooltip label="Export Data">
+              <IconButton
+                icon={<DownloadIcon />}
+                size="sm"
+                variant="solid"
+                bg="white"
+                color="gray.600"
+                border="1px solid"
+                borderColor="gray.200"
+                _hover={{
+                  bg: "gray.50",
+                  boxShadow: "sm",
+                  borderColor: "gray.300",
+                  color: "blue.500",
+                }}
+                transition="all 0.2s"
+                aria-label="Export Data"
+              />
+            </Tooltip>
+          </>
+        )}
+
+        <Box width="180px">
+          <Select
+            placeholder="Select Process"
             value={selectedProcess}
-            className="ProcessSelectContainer"
             onChange={(e) => {
               const val = e.target.value;
+              setIsAdding(false); // Reset adding state when process changes
               if (val === "") {
                 navigate(`/department/${department}`);
               } else {
-                const found = processes.find((p) => p.process === val);
-                if (found) {
-                  navigate(`/department/${department}/${found._id || found.id}`);
+                const processObj = processes.find((p) => p.process === val);
+                if (processObj) {
+                  navigate(
+                    `/department/${department}/${processObj._id || processObj.id}`,
+                  );
+                } else {
+                  navigate(`/department/${department}`);
                 }
               }
             }}
+            bg="white"
+            borderColor="gray.300"
+            size="sm"
+            fontSize="xs"
+            borderRadius="md"
           >
-            <option value="">-- Select Process --</option>
-            {currentDepartment.process.map((subProc, index) => (
-              <option
-                key={index}
-                value={subProc}
-                className="ProcessOptionContainer"
-              >
+            {currentDepartment?.process.map((subProc, index) => (
+              <option key={index} value={subProc}>
                 {subProc}
               </option>
             ))}
-          </select>
-        </div>
-      )}
+          </Select>
+        </Box>
 
-      {selectedProcess && (
-        <div className="SelectedProcessContainer">
-          <h1>{selectedProcess}</h1>
-          <div className="AddDataContainer">
-            <button
-              className="AddDataButton IconButtonStyle"
-              onClick={() => setShowAddData(true)}
-            >
-              Add Data
-            </button>
-            {selectedProcess === "Procurement Register" && (
-              <button
-                className="AddDataButton IconButtonStyle"
-                onClick={handleSortMerge}
-              >
-                {isMerged ? "Undo Sort" : "Sort"}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+        {selectedProcess && !isViewOnly && (
+          <Button
+            leftIcon={<Icon icon="material-symbols:add-rounded" />}
+            onClick={() => setIsAdding(!isAdding)}
+            colorScheme={isAdding ? "red" : "blue"}
+            variant="solid"
+            size="sm"
+          >
+            {isAdding ? "Cancel Add" : "Add Data"}
+          </Button>
+        )}
 
-      {showAddData && (
-        <AddData
-          headers={mainTableData?.header || []}
-          IndicationText="Add New Data"
-          isOpen={showAddData}
-          onClose={() => setShowAddData(false)}
-          onSave={handleAddDataSave}
-        />
-      )}
+        {selectedProcess === "Procurement Register" && (
+          <Button
+            onClick={handleSortMerge}
+            colorScheme={isMerged ? "red" : "purple"}
+            variant="solid"
+            size="sm"
+          >
+            {isMerged ? "Undo Sort" : "Sort Data"}
+          </Button>
+        )}
+      </HeaderSection>
 
-      {selectedProcess && (
-        <FormPage
-          key={selectedProcess}
-          process={mainTableData}
-          isView={selectedProcess === "Products"}
-        />
-      )}
-
-      {!selectedProcess && (
-        <DepartmentDashboard Content={currentDepartment?.name || ""} />
-      )}
-    </div>
+      <Box flex="1" overflowY="auto" display="flex" flexDirection="column">
+        {selectedProcess ? (
+          <FormPage
+            key={selectedProcess}
+            process={mainTableData}
+            isView={isViewOnly || selectedProcess === "Products"}
+            refresh={handleRefresh}
+            isAddingNewRow={isAdding}
+            setIsAddingNewRow={setIsAdding}
+          />
+        ) : (
+          <DepartmentDashboard Content={department} />
+        )}
+      </Box>
+    </>
   );
 }
 

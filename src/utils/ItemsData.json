@@ -22,7 +22,7 @@
   ],
   "DefaultHeaderAndProcessId": [
     {
-      "tableHeader": "MASTER",
+      "tableHeader": "MASTER PIECE",
       "processId": "DD/R/008"
     },
     {
@@ -86,7 +86,7 @@
       "processId": "MR/R/005A"
     },
     {
-      "tableHeader": "NEXT SCHEDULE",
+      "tableHeader": "AUDIT",
       "processId": "QA/F/005A"
     },
     {
@@ -100,6 +100,10 @@
     {
       "tableHeader": "CRS-STATUS",
       "processId": "QA/R/011A"
+    },
+    {
+      "tableHeader": "DOCKET",
+      "processId": "MS/R/006A"
     }
   ],
   "DefaultTemplateForProtoProcess": [
@@ -122,6 +126,11 @@
       "key": "ANALYSIS",
       "value": "Pending",
       "process": "value"
+    },
+    {
+        "key": "ITEM LIST",
+        "value": "Pending",
+        "process": "value"
     },
     {
       "key": "BOM",
@@ -147,11 +156,6 @@
         "key": "ADD TO PRODUCT LIST",
         "value": "Pending",
         "process": "value"
-    },
-    {
-        "key": "ITEM LIST",
-        "value": "Pending",
-        "process": "value"
     }
   ],
   "DefaultSelectProcess": [
@@ -160,12 +164,13 @@
   "ColorProcess": [
     "PROTO",
     "VALIDATION",
-    "MASTER",
+    "MASTER PIECE",
     "SETTING"
   ],
   "ArrayValuesProcess": [
     "REVISION",
-    "PART REV NO"
+    "PART REV NO",
+    "REV NO"
   ],
   "SelectOptionsArray": [
     {
@@ -372,7 +377,11 @@
     "NPD FORM",
     "EVALUATE",
     "IMAGE",
-    "CERTIFICATE"
+    "CERTIFICATE",
+    "SERVICE REPORT",
+    "FILE UPLOAD",
+    "T-REPORT",
+    "MASTER PIECE UPLOAD"
   ],
   "DateFieldsArray":[
     "CALIBRATION DONE DATE",
@@ -385,7 +394,15 @@
     "ISSUE DATE",
     "EXPIRY DATE",
     "NEXT RENEVAL",
-    "UPDATED DATE"
+    "UPDATED DATE",
+    "REVIEW DATE",
+    "COMMISIONING DATE",
+    "DATE OF RELELIVING",
+    "T-PLAN",
+    "T-ACTUAL",
+    "DONE",
+    "DUE",
+    "DATE OF JOINING"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
@@ -398,6 +415,12 @@
   "TimeArrays": [
     "START TIME",
     "END TIME"
+  ],
+  "ToggleFieldsArray": [
+    "CONTROL COPY",
+    "VERIFIED COPY",
+    "PHOTO COPY",
+    "REJECT COPY"
   ],
   "NumberFields":[
     "QTY",
@@ -417,11 +440,5 @@
     "UNITS",
     "GRADE",
     "ITEM-NAME"
-  ],
-  "noEditableFields":[
-    "ITEM-NAME",
-    "GRADE",
-    "QTY",
-    "UNITS"
   ]
 }
