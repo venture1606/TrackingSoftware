@@ -1,5 +1,5 @@
 import { useDashboard } from "../services/Process";
-import { getMainNPDRegister, getMainProductList } from "../services/dashboard";
+import { getMainNPDRegister, getMainProductList, getMainRevisionControl } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -96,6 +96,14 @@ function Dashboard() {
     getMainProductList()
       .then((res) => setProductListData({ totalProducts: res.totalProducts || 0, totalBOMs: res.totalBOMs || 0 }))
       .catch(() => setProductListData({ totalProducts: 0, totalBOMs: 0 }));
+  }, []);
+
+  // Revision Control — separate API call
+  const [revisionControlData, setRevisionControlData] = useState([]);
+  useEffect(() => {
+    getMainRevisionControl()
+      .then((res) => setRevisionControlData(res.data || []))
+      .catch(() => setRevisionControlData([]));
   }, []);
 
   const handleApplyFilter = (section) => (filterValues) => {
@@ -501,7 +509,7 @@ function Dashboard() {
           <StatCard
             title="NPD Register"
             count={npdMainData.length}
-            minWidth="680px"
+            minWidth="380px"
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("npd")}
@@ -564,6 +572,35 @@ function Dashboard() {
                   </Text>
                 </VStack>
               </HStack>
+            </Suspense>
+          </StatCard>
+
+          {/* Revision Control */}
+          <StatCard
+            title="Revision Control"
+            count={revisionControlData.length}
+            minWidth="450px"
+            headerRight={
+              <DashboardCardFilter
+                onApply={handleApplyFilter("revisionControl")}
+                hasActiveFilter={hasFilter("revisionControl")}
+              />
+            }
+          >
+            <Suspense fallback={<ChartSkeleton type="table" />}>
+              <Box maxH="220px" overflowY="auto">
+                <TableChart
+                  headers={["DATE", "PART", "STATUS", "DUE"]}
+                  data={revisionControlData.map((row) => ({
+                    date: row.date && !isNaN(row.date) ? new Date(Number(row.date)).toLocaleDateString() : row.date || "-",
+                    part: row.part,
+                    status: row.status,
+                    due: row.due,
+                  }))}
+                  keys={["date", "part", "status", "due"]}
+                  colorKeys={["status"]}
+                />
+              </Box>
             </Suspense>
           </StatCard>
         </Flex>        

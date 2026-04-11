@@ -5,6 +5,13 @@ const STATUS_COLOR_MAP = {
   red: { bg: '#FED7D7', color: '#C53030', label: 'Red' },
   green: { bg: '#C6F6D5', color: '#276749', label: 'Green' },
   orange: { bg: '#FEEBC8', color: '#C05621', label: 'Orange' },
+  pending: { bg: '#E2E8F0', color: '#4A5568', label: 'Pending' },
+  'in progress': { bg: '#EBF8FF', color: '#2B6CB0', label: 'In Progress' },
+  inrevision: { bg: '#EBF8FF', color: '#2B6CB0', label: 'In Revision' },
+  completed: { bg: '#C6F6D5', color: '#276749', label: 'Completed' },
+  closed: { bg: '#C6F6D5', color: '#276749', label: 'Closed' },
+  approved: { bg: '#C6F6D5', color: '#276749', label: 'Approved' },
+  rejected: { bg: '#FED7D7', color: '#C53030', label: 'Rejected' },
 };
 
 const StatusDot = ({ value }) => {

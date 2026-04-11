@@ -159,3 +159,8 @@ export const getMainProductList = async () => {
   const response = await axios.get(`${API_URL}/main/design/productList`, getAuthHeaders());
   return response.data;
 };
+
+export const getMainRevisionControl = async () => {
+  const response = await axios.get(`${API_URL}/main/design/revisionControl`, getAuthHeaders());
+  return response.data;
+};
