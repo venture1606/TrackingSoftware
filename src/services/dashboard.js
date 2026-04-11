@@ -172,3 +172,11 @@ export const getMainOrderList = async (startDate, endDate) => {
   });
   return response.data;
 };
+
+export const getMainDockets = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/main/sales/dockets`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};

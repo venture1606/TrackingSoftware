@@ -32,6 +32,7 @@ import {
   getSalesOrderDetails,
   getSalesPaymentAndDelivery,
   getSalesTrailStatus,
+  getMainDockets,
 } from '../services/dashboard';
 
 // Import Dashboard Components
@@ -112,15 +113,16 @@ const DepartmentDashboard = ({ Content }) => {
           break;
 
         case 'sales':
-          const [salesCust, salesTrend, quotation, salesOrder, salesPay, salesTrail] = await Promise.all([
+          const [salesCust, salesTrend, quotation, salesOrder, salesPay, salesTrail, dockets] = await Promise.all([
             getSalesCustomerCount(),
             getSalesTrend(startTimestamp, endTimestamp),
             getQuotationStatus(),
             getSalesOrderDetails(),
             getSalesPaymentAndDelivery(),
             getSalesTrailStatus(),
+            getMainDockets(startTimestamp, endTimestamp),
           ]);
-          dashboardData = { salesCust, salesTrend, quotation, salesOrder, salesPay, salesTrail };
+          dashboardData = { salesCust, salesTrend, quotation, salesOrder, salesPay, salesTrail, dockets };
           break;
 
         default:
@@ -362,7 +364,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard 
         title="Pending Procurements" 
         count={data.procurement?.data?.totalPending || 0} 
-        minWidth="700px"
+        minWidth="500px"
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
          <TableChart 
@@ -442,6 +444,31 @@ const DepartmentDashboard = ({ Content }) => {
             color="#E53E3E"
           />
        </StatCard>
+
+       <StatCard 
+        title="Dockets (Active)" 
+        count={data.dockets?.data?.totalOpen || 0} 
+        minWidth="500px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <TableChart 
+           headers={['VENDOR/CUSTOMER', 'INVOICE', 'QTY', 'DATE', 'STATUS']}
+           data={(data.dockets?.data?.openRecords || []).map(row => {
+             const items = row.items;
+             const dateVal = items.find(i => i.key === 'DELIVERY DATE')?.value;
+             
+             return {
+               vendor: items.find(i => i.key === 'VENDOR NAME')?.value || '-',
+               invoice: items.find(i => i.key === 'INVOICE NO')?.value || '-',
+               qty: items.find(i => i.key === 'QTY')?.value || '0',
+               date: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
+               status: items.find(i => i.key === 'PAYMENT')?.value || 'OPEN'
+             };
+           })}
+           keys={['vendor', 'invoice', 'qty', 'date', 'status']}
+           colorKeys={['status']}
+         />
+      </StatCard>
 
        <StatCard title="Quotation Status" count={data.quotation?.count || 0} minWidth="300px">
           <DonutChart 
