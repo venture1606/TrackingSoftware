@@ -154,3 +154,8 @@ export const getMainNPDRegister = async () => {
   const response = await axios.get(`${API_URL}/main/design/npdRegister`, getAuthHeaders());
   return response.data;
 };
+
+export const getMainProductList = async () => {
+  const response = await axios.get(`${API_URL}/main/design/productList`, getAuthHeaders());
+  return response.data;
+};

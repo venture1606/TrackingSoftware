@@ -1,5 +1,5 @@
 import { useDashboard } from "../services/Process";
-import { getMainNPDRegister } from "../services/dashboard";
+import { getMainNPDRegister, getMainProductList } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -88,6 +88,14 @@ function Dashboard() {
     getMainNPDRegister()
       .then((res) => setNpdMainData(res.data || []))
       .catch(() => setNpdMainData([]));
+  }, []);
+
+  // Product List — separate API call
+  const [productListData, setProductListData] = useState({ totalProducts: 0, totalBOMs: 0 });
+  useEffect(() => {
+    getMainProductList()
+      .then((res) => setProductListData({ totalProducts: res.totalProducts || 0, totalBOMs: res.totalBOMs || 0 }))
+      .catch(() => setProductListData({ totalProducts: 0, totalBOMs: 0 }));
   }, []);
 
   const handleApplyFilter = (section) => (filterValues) => {
@@ -525,7 +533,7 @@ function Dashboard() {
           <StatCard
             title="Overall Products Summary"
             minH="150px"
-            minWidth="100px"
+            minWidth="280px"
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("products")}
@@ -534,19 +542,28 @@ function Dashboard() {
             }
           >
             <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack justify="center" h="100%">
-                <Text fontSize="4xl" fontWeight="black" color="blue.600">
-                  {Object.keys(products.partNoCount || {}).length || 0}
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  fontWeight="bold"
-                  textTransform="uppercase"
-                >
-                  Unique Part No's
-                </Text>
-              </VStack>
+              <HStack w="100%" h="100%" justify="space-evenly" align="center" py={2}>
+                <VStack bg="blue.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+                  <Text fontSize="3xl" fontWeight="black" color="blue.600" lineHeight={1}>
+                    {productListData.totalProducts}
+                  </Text>
+                  <Text fontSize="10px" fontWeight="bold" color="blue.400" textTransform="uppercase" textAlign="center">
+                    Total
+                    <br />
+                    Products
+                  </Text>
+                </VStack>
+                <VStack bg="purple.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+                  <Text fontSize="3xl" fontWeight="black" color="purple.600" lineHeight={1}>
+                    {productListData.totalBOMs}
+                  </Text>
+                  <Text fontSize="10px" fontWeight="bold" color="purple.400" textTransform="uppercase" textAlign="center">
+                    Total
+                    <br />
+                    BOMs
+                  </Text>
+                </VStack>
+              </HStack>
             </Suspense>
           </StatCard>
         </Flex>        
