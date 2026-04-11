@@ -287,19 +287,23 @@ function Dashboard() {
             <Suspense fallback={<ChartSkeleton type="table" />}>
               <Box maxH="220px" overflowY="auto">
                 <TableChart
-                  headers={["PO NO", "PART NO", "PART NAME", "DATE", "QTY"]}
+                  headers={["CUSTOMER NAME", "PO NO", "PART NO", "PART NAME", "DATE", "QTY", "DUE"]}
                   data={(orderListData || []).map(row => {
                     const items = row.items;
                     const dateVal = items.find(i => i.key === 'DATE')?.value;
                     return {
+                      customerName: items.find(i => i.key === 'CUSTOMER NAME')?.value || '-',
                       po: items.find(i => i.key === 'PO NO')?.value || '-',
                       partNo: items.find(i => i.key === 'PART NO')?.value || '-',
                       partName: items.find(i => i.key === 'PART NAME')?.value || '-',
                       date: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
-                      qty: items.find(i => i.key === 'QTY')?.value || '0'
+                      qty: items.find(i => i.key === 'QTY')?.value || '0',
+                      due: dateVal && !isNaN(dateVal)
+                        ? `${Math.floor((new Date() - new Date(Number(dateVal))) / (1000 * 60 * 60 * 24))} Days` 
+                        : "-",
                     };
                   })}
-                  keys={["po", "partNo", "partName", "date", "qty"]}
+                  keys={["customerName", "po", "partNo", "partName", "date", "qty", "due"]}
                 />
               </Box>
             </Suspense>
