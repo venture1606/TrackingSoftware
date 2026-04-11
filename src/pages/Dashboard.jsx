@@ -1,5 +1,5 @@
 import { useDashboard } from "../services/Process";
-import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard } from "../services/dashboard";
+import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard, getInhouseDashboard } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -114,6 +114,16 @@ function Dashboard() {
     getOEEDashboard(startTimestamp, endTimestamp)
       .then((res) => setOeeData(res.data || null))
       .catch(() => setOeeData(null));
+  }, [filters.startDate, filters.endDate]);
+
+  // In House Quality Data
+  const [inHouseData, setInHouseData] = useState(null);
+  useEffect(() => {
+    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
+    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
+    getInhouseDashboard(startTimestamp, endTimestamp)
+      .then((res) => setInHouseData(res.data || null))
+      .catch(() => setInHouseData(null));
   }, [filters.startDate, filters.endDate]);
 
   const handleApplyFilter = (section) => (filterValues) => {
@@ -667,22 +677,44 @@ function Dashboard() {
           </StatCard>
 
           {/* 6. Reject / Actual (Gauge) */}
+          {/* 6. In House Quality */}
           <StatCard
-            title="Reject / Actual Production Ratio"
+            title="In House Quality"
             minWidth="350px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("rejectActualGauge")}
-                hasActiveFilter={hasFilter("rejectActualGauge")}
+                onApply={handleApplyFilter("inHouseQuality")}
+                hasActiveFilter={hasFilter("inHouseQuality")}
               />
             }
           >
             <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <GaugeChart
-                value={(rejectReport.chartResult || 0) * 100} // Convert ratio to percentage
-                max={100}
-                label="Reject Rate %"
-              />
+              <VStack spacing={6} align="stretch" mt={2}>
+                <HStack justify="space-around" align="center" py={2}>
+                  <VStack bg="red.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+                    <Text fontSize="2xl" fontWeight="black" color="red.600" lineHeight={1}>
+                      {inHouseData?.rejectionRatio || 0}%
+                    </Text>
+                    <Text fontSize="10px" fontWeight="bold" color="red.400" textTransform="uppercase" textAlign="center">
+                      Rejection<br />Ratio
+                    </Text>
+                  </VStack>
+                  <VStack bg="orange.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+                    <Text fontSize="2xl" fontWeight="black" color="orange.600" lineHeight={1}>
+                      {inHouseData?.actionPending || 0}
+                    </Text>
+                    <Text fontSize="10px" fontWeight="bold" color="orange.400" textTransform="uppercase" textAlign="center">
+                      Action<br />Pending
+                    </Text>
+                  </VStack>
+                </HStack>
+                <CircleChart
+                  data={[
+                    { name: 'Rejection', value: inHouseData?.rejectionRatio || 0, color: '#E53E3E', suffix: '%' },
+                    { name: 'Rework', value: inHouseData?.reworkPending || 0, color: '#3182ce' }
+                  ]}
+                />
+              </VStack>
             </Suspense>
           </StatCard>
 

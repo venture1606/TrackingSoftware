@@ -223,24 +223,45 @@ const DepartmentDashboard = ({ Content }) => {
         />
       </StatCard>
 
-      <StatCard title="In House Quality" minWidth="350px">
-        <VStack spacing={6} align="stretch" mt={2}>
-           <HStack justify="space-around">
-              <VStack>
-                <Text fontSize="2xl" fontWeight="bold" color="red.500">{data.inhouse?.data?.rejectionRatio || 0}%</Text>
-                <Text fontSize="xs" color="gray.500">Rejection Ratio</Text>
-              </VStack>
-              <VStack>
-                <Text fontSize="2xl" fontWeight="bold" color="orange.500">{data.inhouse?.data?.actionPending || 0}</Text>
-                <Text fontSize="xs" color="gray.500">Action Pending</Text>
-              </VStack>
-           </HStack>
-           <CircleChart 
-             data={[
-               { name: 'Rejection', value: data.inhouse?.data?.rejectionRatio || 0, color: '#E53E3E' },
-               { name: 'Rework', value: (data.inhouse?.data?.reworkPending / 100) || 0, color: '#3182ce' }
-             ]}
-           />
+      <StatCard 
+        title="In House Rejection & Action" 
+        minWidth="340px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <HStack justify="space-around" align="center" py={4}>
+          <VStack bg="red.50" p={4} borderRadius="xl" minW="130px" spacing={1}>
+            <Text fontSize="3xl" fontWeight="black" color="red.600" lineHeight={1}>
+              {data.inhouse?.data?.rejectionRatio || 0}%
+            </Text>
+            <Text fontSize="11px" fontWeight="bold" color="red.400" textTransform="uppercase" textAlign="center">
+              Rejection<br />Ratio
+            </Text>
+          </VStack>
+          <VStack bg="orange.50" p={4} borderRadius="xl" minW="130px" spacing={1}>
+            <Text fontSize="3xl" fontWeight="black" color="orange.600" lineHeight={1}>
+              {data.inhouse?.data?.actionPending || 0}
+            </Text>
+            <Text fontSize="11px" fontWeight="bold" color="orange.400" textTransform="uppercase" textAlign="center">
+              Action<br />Pending
+            </Text>
+          </VStack>
+        </HStack>
+      </StatCard>
+
+      <StatCard 
+        title="In House Rework Status" 
+        minWidth="200px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <VStack justify="center" h="100%" py={2}>
+          <Box bg="blue.50" p={5} borderRadius="2xl" textAlign="center" minW="140px">
+            <Text fontSize="4xl" fontWeight="black" color="blue.600" lineHeight={1}>
+              {data.inhouse?.data?.reworkPending || 0}
+            </Text>
+            <Text fontSize="xs" fontWeight="bold" color="blue.400" mt={2} textTransform="uppercase">
+              Rework Pending
+            </Text>
+          </Box>
         </VStack>
       </StatCard>
     </SimpleGrid>
@@ -248,13 +269,29 @@ const DepartmentDashboard = ({ Content }) => {
 
   const renderQualityDashboard = () => (
     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-      <StatCard title="Customer Complaints" count={data.custQual?.data?.actionPending || 0}>
-         <GaugeChart 
-           value={data.custQual?.data?.rejectionRate || 0} 
-           max={10} 
-           label="Cust Rejection Rate" 
-           color="#e53e3e"
-         />
+      <StatCard 
+        title="Customer Complaints" 
+        minWidth="300px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <HStack w="100%" h="100%" justify="space-around" align="center" py={4}>
+          <VStack bg="red.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+            <Text fontSize="3xl" fontWeight="black" color="red.600" lineHeight={1}>
+              {data.custQual?.data?.rejectionRate || 0}%
+            </Text>
+            <Text fontSize="10px" fontWeight="bold" color="red.400" textTransform="uppercase" textAlign="center">
+              Rejection<br />Rate
+            </Text>
+          </VStack>
+          <VStack bg="orange.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
+            <Text fontSize="3xl" fontWeight="black" color="orange.600" lineHeight={1}>
+              {data.custQual?.data?.actionPending || 0}
+            </Text>
+            <Text fontSize="10px" fontWeight="bold" color="orange.400" textTransform="uppercase" textAlign="center">
+              Action<br />Pending
+            </Text>
+          </VStack>
+        </HStack>
       </StatCard>
 
       <StatCard title="Incoming Inspection" count={data.incoming?.data?.pendingCount || 0}>
