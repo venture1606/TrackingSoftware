@@ -49,13 +49,21 @@ const DepartmentDashboard = ({ Content }) => {
   const [data, setData] = useState({});
   const toast = useToast();
 
-  const fetchData = useCallback(async (deptName) => {
+  // DASHBOARD FILTERS STATE
+  const [globalFilters, setGlobalFilters] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 30 days
+    endDate: new Date().toISOString().split('T')[0]
+  });
+
+  const fetchData = useCallback(async (deptName, filters = globalFilters) => {
     setLoading(true);
     const department = deptName?.toLowerCase();
     try {
       let dashboardData = {};
-      const now = Date.now();
-      const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
+      
+      // Convert string dates to timestamps for backend
+      const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
+      const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
 
       switch (department) {
         case 'design':
@@ -69,19 +77,19 @@ const DepartmentDashboard = ({ Content }) => {
 
         case 'manufacturing':
           const [oee, prodReport, inhouse] = await Promise.all([
-            getOEEDashboard(oneMonthAgo, now),
-            getProductionReport(oneMonthAgo, now),
-            getInhouseDashboard(oneMonthAgo, now),
+            getOEEDashboard(startTimestamp, endTimestamp),
+            getProductionReport(startTimestamp, endTimestamp),
+            getInhouseDashboard(startTimestamp, endTimestamp),
           ]);
           dashboardData = { oee, prodReport, inhouse };
           break;
 
         case 'quality':
           const [custQual, incoming, audits, improvement] = await Promise.all([
-            getCustomerQuality(oneMonthAgo, now),
+            getCustomerQuality(startTimestamp, endTimestamp),
             getIncomingInspection(),
             getQualityAudits(),
-            getContinuousImprovement(oneMonthAgo, now),
+            getContinuousImprovement(startTimestamp, endTimestamp),
           ]);
           dashboardData = { custQual, incoming, audits, improvement };
           break;
@@ -90,15 +98,15 @@ const DepartmentDashboard = ({ Content }) => {
         case 'human resources':
           const [overhead, attendance] = await Promise.all([
             getEmployeeOverhead(),
-            getEmployeeAttendance(oneMonthAgo, now),
+            getEmployeeAttendance(startTimestamp, endTimestamp),
           ]);
           dashboardData = { overhead, attendance };
           break;
 
         case 'purchase':
           const [procurement, inward] = await Promise.all([
-            getProcurementDashboard(oneMonthAgo, now),
-            getInwardDashboard(oneMonthAgo, now),
+            getProcurementDashboard(startTimestamp, endTimestamp),
+            getInwardDashboard(startTimestamp, endTimestamp),
           ]);
           dashboardData = { procurement, inward };
           break;
@@ -106,7 +114,7 @@ const DepartmentDashboard = ({ Content }) => {
         case 'sales':
           const [salesCust, salesTrend, quotation, salesOrder, salesPay, salesTrail] = await Promise.all([
             getSalesCustomerCount(),
-            getSalesTrend(oneMonthAgo, now),
+            getSalesTrend(startTimestamp, endTimestamp),
             getQuotationStatus(),
             getSalesOrderDetails(),
             getSalesPaymentAndDelivery(),
@@ -138,6 +146,15 @@ const DepartmentDashboard = ({ Content }) => {
       fetchData(Content);
     }
   }, [Content, fetchData]);
+
+  const handleFilterApply = (filterValues) => {
+    const newFilters = {
+      startDate: filterValues.startDate,
+      endDate: filterValues.endDate
+    };
+    setGlobalFilters(newFilters);
+    fetchData(Content, newFilters);
+  };
 
   if (loading) {
     return (
@@ -187,7 +204,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard 
         title="Average OEE" 
         count={`${data.oee?.data?.averageOEE || 0}%`}
-        headerRight={<DashboardCardFilter onApply={(val) => console.log('Filter:', val)} />}
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <GaugeChart 
           value={data.oee?.data?.averageOEE || 0} 

@@ -1,5 +1,5 @@
 import { useDashboard } from "../services/Process";
-import { getMainNPDRegister, getMainProductList, getMainRevisionControl } from "../services/dashboard";
+import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -105,6 +105,16 @@ function Dashboard() {
       .then((res) => setRevisionControlData(res.data || []))
       .catch(() => setRevisionControlData([]));
   }, []);
+
+  // OEE Data — separate API call
+  const [oeeData, setOeeData] = useState(null);
+  useEffect(() => {
+    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
+    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
+    getOEEDashboard(startTimestamp, endTimestamp)
+      .then((res) => setOeeData(res.data || null))
+      .catch(() => setOeeData(null));
+  }, [filters.startDate, filters.endDate]);
 
   const handleApplyFilter = (section) => (filterValues) => {
     // Current Dashboard structure uses per-card filters, but we map them to global filters
@@ -608,26 +618,26 @@ function Dashboard() {
         {/* Row 6: Others */}
         <Flex wrap="wrap" gap={6}>
           {/* 3. Production Report - Total */}
+          {/* 3. Average OEE */}
           <StatCard
-            title="Production Report - Total"
+            title="Average OEE"
+            count={`${oeeData?.averageOEE || 0}%`}
             minH="150px"
             minWidth="200px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("productionReport")}
-                hasActiveFilter={hasFilter("productionReport")}
+                onApply={handleApplyFilter("oee")}
+                hasActiveFilter={hasFilter("oee")}
               />
             }
           >
             <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack justify="center" h="100%">
-                <Text fontSize="4xl" fontWeight="black" color="green.500">
-                  {productionReport.totalFiltered || 0}
-                </Text>
-                <Text fontSize="xs" color="gray.500" fontWeight="bold">
-                  TOTAL REPORTS
-                </Text>
-              </VStack>
+              <GaugeChart
+                value={oeeData?.averageOEE || 0}
+                max={100}
+                label="Overall Efficiency"
+                color={oeeData?.averageOEE > 65 ? "#48BB78" : oeeData?.averageOEE > 45 ? "#ECC94B" : "#F56565"}
+              />
             </Suspense>
           </StatCard>
 
