@@ -164,3 +164,11 @@ export const getMainRevisionControl = async () => {
   const response = await axios.get(`${API_URL}/main/design/revisionControl`, getAuthHeaders());
   return response.data;
 };
+
+export const getMainOrderList = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/main/sales/orderList`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};

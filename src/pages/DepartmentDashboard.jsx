@@ -303,14 +303,20 @@ const DepartmentDashboard = ({ Content }) => {
         </VStack>
       </StatCard>
 
-      <StatCard title="Continuous Improvement" count={data.improvement?.data?.improvementCount || 0}>
-        <VStack align="stretch" spacing={4} mt={4}>
-           <Box p={4} bg="green.50" borderRadius="lg" border="1px dashed" borderColor="green.200">
-              <Text fontSize="sm" color="green.700">Records documented for quality improvement initiatives.</Text>
-           </Box>
-           <HStack justify="center">
-              <Badge colorScheme="green" variant="subtle" fontSize="md" py={1} px={3} borderRadius="full">Active Initiatives</Badge>
-           </HStack>
+       <StatCard 
+        title="Continuous Improvement" 
+        minWidth="300px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <VStack justify="center" h="100%" py={4}>
+          <Box bg="green.50" p={6} borderRadius="2xl" textAlign="center" minW="200px">
+            <Text fontSize="4xl" fontWeight="black" color="green.600" lineHeight={1}>
+              {data.improvement?.data?.improvementCount || 0}
+            </Text>
+            <Text fontSize="xs" fontWeight="bold" color="green.400" mt={2} textTransform="uppercase">
+              Improvement Initiatives
+            </Text>
+          </Box>
         </VStack>
       </StatCard>
 
@@ -353,27 +359,65 @@ const DepartmentDashboard = ({ Content }) => {
 
   const renderPurchaseDashboard = () => (
     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-      <StatCard title="Pending Procurements" count={data.procurement?.data?.totalPending || 0} minWidth="500px">
+      <StatCard 
+        title="Pending Procurements" 
+        count={data.procurement?.data?.totalPending || 0} 
+        minWidth="700px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
          <TableChart 
-           headers={['ITEM', 'PO NO', 'QTY']}
-           data={(data.procurement?.data?.pendingRecords || []).slice(0, 5).map(row => ({
-             item: row.items.find(i => i.key === 'ITEM NAME')?.value || 'N/A',
-             po: row.items.find(i => i.key === 'PO NO')?.value || 'N/A',
-             qty: row.items.find(i => i.key === 'QTY')?.value || '0'
-           }))}
-           keys={['item', 'po', 'qty']}
+           headers={['PO NUMBER', 'ITEM NAME', 'VENDOR', 'QTY', 'SUPPLY DATE', 'DUE']}
+           data={(data.procurement?.data?.pendingRecords || []).map(row => {
+             const items = row.items;
+             const dateVal = items.find(i => i.key === 'DATE')?.value;
+             
+             // Calculate Due
+             let due = '-';
+             if (dateVal && !isNaN(dateVal)) {
+               const diffDays = Math.ceil((Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24));
+               due = diffDays > 0 ? `${diffDays} days` : diffDays < 0 ? `${Math.abs(diffDays)} days ago` : 'Today';
+             }
+
+             return {
+               po: items.find(i => i.key === 'PO NO')?.value || '-',
+               item: items.find(i => i.key === 'ITEM NAME')?.value || '-',
+               vendor: items.find(i => i.key === 'VENDOR-NAME')?.value || '-',
+               qty: items.find(i => i.key === 'QTY')?.value || '0',
+               supplyDate: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
+               due
+             };
+           })}
+           keys={['po', 'item', 'vendor', 'qty', 'supplyDate', 'due']}
          />
       </StatCard>
 
-      <StatCard title="Open Inward Payments" count={data.inward?.data?.totalOpen || 0} minWidth="500px">
+      <StatCard 
+        title="Open Inward Payments" 
+        count={data.inward?.data?.totalOpen || 0} 
+        minWidth="500px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
         <TableChart 
-           headers={['VENDOR', 'ITEM', 'PO NO']}
-           data={(data.inward?.data?.openRecords || []).slice(0, 5).map(row => ({
-             vendor: row.items.find(i => i.key === 'VENDOR NAME')?.value || 'N/A',
-             item: row.items.find(i => i.key === 'ITEM NAME')?.value || 'N/A',
-             po: row.items.find(i => i.key === 'PO NO')?.value || 'N/A'
-           }))}
-           keys={['vendor', 'item', 'po']}
+           headers={['VENDOR', 'INVOICE', 'VALUE', 'PAYMENT DATE', 'DUE']}
+           data={(data.inward?.data?.openRecords || []).map(row => {
+             const items = row.items;
+             const dateVal = items.find(i => i.key === 'DELIVERY DATE')?.value;
+             
+             let due = '-';
+             if (dateVal && !isNaN(dateVal)) {
+               const diffDays = Math.ceil((Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24));
+               due = diffDays > 0 ? `${diffDays} days` : diffDays < 0 ? `${Math.abs(diffDays)} days ago` : 'Today';
+             }
+
+             return {
+               vendor: items.find(i => i.key === 'VENDOR NAME')?.value || '-',
+               invoice: items.find(i => i.key === 'INVOICE NO')?.value || '-',
+               value: items.find(i => i.key === 'VALUE')?.value || '-',
+               paymentDate: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
+               due
+             };
+           })}
+           keys={['vendor', 'invoice', 'value', 'paymentDate', 'due']}
          />
       </StatCard>
     </SimpleGrid>
@@ -381,7 +425,7 @@ const DepartmentDashboard = ({ Content }) => {
 
   const renderSalesDashboard = () => (
     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-       <StatCard title="Customer Count" count={data.salesCust?.data?.totalCustomers || 0}>
+       <StatCard title="Customer Count" count={data.salesCust?.data?.totalCustomers || 0} minWidth="300px">
           <VStack h="100%" justify="center">
              <Box p={6} bg="orange.50" borderRadius="full">
                 <Text fontSize="4xl" fontWeight="bold" color="orange.600">{data.salesCust?.data?.totalCustomers || 0}</Text>
@@ -390,7 +434,7 @@ const DepartmentDashboard = ({ Content }) => {
           </VStack>
        </StatCard>
 
-       <StatCard title="Sales Trend" minWidth="500px">
+       <StatCard title="Sales Trend" minWidth="300px">
           <AreaChart 
             data={data.salesTrend?.data || []}
             xAxisKey="month"
@@ -399,7 +443,7 @@ const DepartmentDashboard = ({ Content }) => {
           />
        </StatCard>
 
-       <StatCard title="Quotation Status" count={data.quotation?.count || 0}>
+       <StatCard title="Quotation Status" count={data.quotation?.count || 0} minWidth="300px">
           <DonutChart 
             data={Object.entries(data.quotation?.data || {}).map(([name, value]) => ({ name, value }))}
           />

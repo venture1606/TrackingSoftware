@@ -1,5 +1,5 @@
 import { useDashboard } from "../services/Process";
-import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard, getInhouseDashboard } from "../services/dashboard";
+import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard, getInhouseDashboard, getMainOrderList } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -124,6 +124,16 @@ function Dashboard() {
     getInhouseDashboard(startTimestamp, endTimestamp)
       .then((res) => setInHouseData(res.data || null))
       .catch(() => setInHouseData(null));
+  }, [filters.startDate, filters.endDate]);
+
+  // Main Order List Data
+  const [orderListData, setOrderListData] = useState(null);
+  useEffect(() => {
+    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
+    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
+    getMainOrderList(startTimestamp, endTimestamp)
+      .then((res) => setOrderListData(res.data || null))
+      .catch(() => setOrderListData(null));
   }, [filters.startDate, filters.endDate]);
 
   const handleApplyFilter = (section) => (filterValues) => {
@@ -262,11 +272,11 @@ function Dashboard() {
             </Suspense>
           </StatCard>
 
-          {/* 16. Order List */}
+          {/* 16. Order List (Active) */}
           <StatCard
             title="Order List (Active)"
-            minWidth="500px"
-            count={orderList?.totalOrderQty}
+            minWidth="650px"
+            count={orderListData?.length || 0}
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("orders")}
@@ -277,14 +287,19 @@ function Dashboard() {
             <Suspense fallback={<ChartSkeleton type="table" />}>
               <Box maxH="220px" overflowY="auto">
                 <TableChart
-                  headers={["CUSTOMER", "PART NO", "PART NAME", "QTY"]}
-                  data={formatProcessTableData(orderList.data, {
-                    customerName: "CUSTOMER",
-                    partNo: "PART NO",
-                    partName: "PART NAME",
-                    qty: "QTY",
+                  headers={["PO NO", "PART NO", "PART NAME", "DATE", "QTY"]}
+                  data={(orderListData || []).map(row => {
+                    const items = row.items;
+                    const dateVal = items.find(i => i.key === 'DATE')?.value;
+                    return {
+                      po: items.find(i => i.key === 'PO NO')?.value || '-',
+                      partNo: items.find(i => i.key === 'PART NO')?.value || '-',
+                      partName: items.find(i => i.key === 'PART NAME')?.value || '-',
+                      date: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
+                      qty: items.find(i => i.key === 'QTY')?.value || '0'
+                    };
                   })}
-                  keys={["customerName", "partNo", "partName", "qty"]}
+                  keys={["po", "partNo", "partName", "date", "qty"]}
                 />
               </Box>
             </Suspense>
