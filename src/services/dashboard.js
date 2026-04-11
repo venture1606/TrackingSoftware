@@ -149,3 +149,8 @@ export const getSalesTrailStatus = async () => {
   const response = await axios.get(`${API_URL}/sales/trailStatus`, getAuthHeaders());
   return response.data;
 };
+
+export const getMainNPDRegister = async () => {
+  const response = await axios.get(`${API_URL}/main/design/npdRegister`, getAuthHeaders());
+  return response.data;
+};

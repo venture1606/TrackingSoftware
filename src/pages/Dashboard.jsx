@@ -1,5 +1,6 @@
 import { useDashboard } from "../services/Process";
-import React, { useState, Suspense, lazy } from "react";
+import { getMainNPDRegister } from "../services/dashboard";
+import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
   SimpleGrid,
@@ -80,6 +81,14 @@ function Dashboard() {
   const orderList = getProcessData("orderListProcess");
   const procurement = getProcessData("procurementProcess");
   const stockData = getProcessData("stockDataProcess");
+
+  // NPD Main Register — separate API call
+  const [npdMainData, setNpdMainData] = useState([]);
+  useEffect(() => {
+    getMainNPDRegister()
+      .then((res) => setNpdMainData(res.data || []))
+      .catch(() => setNpdMainData([]));
+  }, []);
 
   const handleApplyFilter = (section) => (filterValues) => {
     // Current Dashboard structure uses per-card filters, but we map them to global filters
@@ -483,8 +492,8 @@ function Dashboard() {
           {/* 9. NPD Register */}
           <StatCard
             title="NPD Register"
-            count={npdRegister.totalFiltered}
-            minWidth="400px"
+            count={npdMainData.length}
+            minWidth="680px"
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("npd")}
@@ -492,17 +501,21 @@ function Dashboard() {
               />
             }
           >
-            <Suspense fallback={<ChartSkeleton type="chart" />}>
-              <Box>
-                <Text fontSize="md" fontWeight="bold" mb={2} color="gray.700">
-                  Total: {npdRegister.totalFiltered || 0}
-                </Text>
-                {/* Could use BarChart for monthWise/yearWise */}
-                <BarChart
-                  data={npdRegister.monthWise || []}
-                  xAxisKey="label"
-                  height={180}
-                  dataKeys={[{ key: "count", name: "Count", color: "#f6ad55" }]}
+            <Suspense fallback={<ChartSkeleton type="table" />}>
+              <Box maxH="220px" overflowY="auto">
+                <TableChart
+                  headers={["FROM", "DATE", "PART", "PROTO", "VALIDATION", "MASTER", "DUE"]}
+                  data={npdMainData.map((row) => ({
+                    from: row.from,
+                    date: row.date,
+                    part: row.part,
+                    proto: row.proto,
+                    validation: row.validation,
+                    master: row.master,
+                    due: row.due,
+                  }))}
+                  keys={["from", "date", "part", "proto", "validation", "master", "due"]}
+                  colorKeys={["proto", "validation", "master"]}
                 />
               </Box>
             </Suspense>
