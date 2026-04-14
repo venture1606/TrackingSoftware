@@ -10,6 +10,7 @@ import {
   Center,
   useToast,
   Badge,
+  Flex,
 } from "@chakra-ui/react";
 import {
   getNPDRegister,
@@ -213,10 +214,11 @@ const DepartmentDashboard = ({ Content }) => {
   }
 
   const renderDesignDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Product Success Rate"
         count={`${((data.productSuccess?.data?.avgSuccessRate || 0) * 100).toFixed(2)}%`}
+        minWidth="300px"
       >
         <VStack align="center" justify="center" h="100%" py={2}>
           <Box
@@ -239,7 +241,7 @@ const DepartmentDashboard = ({ Content }) => {
         </VStack>
       </StatCard>
 
-      <StatCard title="Total Products" count={data.products?.data?.totalProducts || 0}>
+      <StatCard title="Total Products" count={data.products?.data?.totalProducts || 0} minWidth="300px">
         <VStack align="stretch" spacing={4} mt={4}>
           <HStack justify="space-between">
             <Text color="gray.600" fontSize="sm">
@@ -310,14 +312,15 @@ const DepartmentDashboard = ({ Content }) => {
           keys={["partNo", "partName", "dueDate"]}
         />
       </StatCard>
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderManufacturingDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Average OEE"
         count={`${data.oee?.data?.averageOEE || 0}%`}
+        minWidth="300px"
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <GaugeChart
@@ -459,11 +462,11 @@ const DepartmentDashboard = ({ Content }) => {
         </HStack>
       </StatCard>
       
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderQualityDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Customer Complaints"
         minWidth="300px"
@@ -524,6 +527,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Incoming Inspection"
         count={data.incoming?.data?.pendingCount || 0}
+        minWidth="300px"
       >
         <VStack align="center" justify="center" h="100%" spacing={3}>
           <Box
@@ -594,31 +598,25 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Calibration Due Status"
         count={data.calibration?.data?.totalFiltered || 0}
-        minWidth="600px"
+        minWidth="400px"
       >
-        <HStack spacing={4} align="flex-start" h="100%">
-          <VStack spacing={4} minW="180px" justify="center" h="100%" py={2}>
-            <HStack w="100%" justify="space-between" bg="green.50" p={3} borderRadius="md">
-              <VStack align="flex-start" spacing={0}>
-                <Text fontSize="10px" fontWeight="bold" color="green.600">DONE</Text>
-                <Text fontSize="lg" fontWeight="black" color="green.700" lineHeight={1.2}>
-                  {data.calibration?.data?.doneCount || 0}
-                </Text>
-              </VStack>
-              <Box boxSize="30px" border="2px solid" borderColor="green.200" borderRadius="full" />
-            </HStack>
-            <HStack w="100%" justify="space-between" bg="red.50" p={3} borderRadius="md">
-              <VStack align="flex-start" spacing={0}>
-                <Text fontSize="10px" fontWeight="bold" color="red.600">DUE</Text>
-                <Text fontSize="lg" fontWeight="black" color="red.700" lineHeight={1.2}>
-                  {data.calibration?.data?.dueCount || 0}
-                </Text>
-              </VStack>
-              <Box boxSize="30px" border="2px solid" borderColor="red.200" borderRadius="full" />
-            </HStack>
-          </VStack>
-          
-          <Box flex="1" borderLeft="1px solid" borderColor="gray.100" pl={4}>
+        <VStack spacing={4} align="stretch" w="100%">
+          <HStack spacing={4} justify="start" pb={2}>
+            <Box bg="green.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="green.100" minW="100px">
+              <Text fontSize="xs" fontWeight="bold" color="green.600">DONE</Text>
+              <Text fontSize="2xl" fontWeight="black" color="green.700" lineHeight={1}>
+                {data.calibration?.data?.doneCount || 0}
+              </Text>
+            </Box>
+            <Box bg="red.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="red.100" minW="100px">
+              <Text fontSize="xs" fontWeight="bold" color="red.600">DUE</Text>
+              <Text fontSize="2xl" fontWeight="black" color="red.700" lineHeight={1}>
+                {data.calibration?.data?.dueCount || 0}
+              </Text>
+            </Box>
+          </HStack>
+
+          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
              <TableChart
                headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
                data={(data.calibration?.data?.openRecords || []).slice(0, 5).map(row => {
@@ -636,29 +634,30 @@ const DepartmentDashboard = ({ Content }) => {
                keys={["instrument", "done", "due"]}
              />
           </Box>
-        </HStack>
+        </VStack>
       </StatCard>
       <StatCard
         title="Process Control Plan"
         count={data.pcp?.data?.totalRecords || 0}
-        minWidth="600px"
+        minWidth="400px"
       >
-        <HStack spacing={4} align="flex-start" h="100%">
-          <VStack spacing={4} minW="180px" justify="center" h="100%" py={2}>
-             <Box bg="orange.50" p={4} borderRadius="xl" w="100%" textAlign="center">
-                <Text fontSize="4xl" fontWeight="black" color="orange.600" lineHeight={1}>
+        <VStack spacing={4} align="stretch" w="100%">
+          <HStack spacing={4} justify="start" pb={2}>
+             <Box bg="orange.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="orange.100" minW="150px">
+                <Text fontSize="xs" fontWeight="bold" color="orange.600">PENDING UPLOADS</Text>
+                <Text fontSize="2xl" fontWeight="black" color="orange.700" lineHeight={1}>
                   {data.pcp?.data?.pendingCount || 0}
                 </Text>
-                <Text fontSize="10px" fontWeight="bold" color="orange.400" mt={1} textTransform="uppercase">
-                  Pending Uploads
-                </Text>
              </Box>
-             <Text fontSize="xs" fontWeight="bold" color="gray.400">
-               Total PCP Records: {data.pcp?.data?.totalRecords || 0}
-             </Text>
-          </VStack>
+             <VStack align="flex-start" spacing={0}>
+                <Text fontSize="xs" fontWeight="bold" color="gray.400">TOTAL RECORDS</Text>
+                <Text fontSize="md" fontWeight="bold" color="gray.600">
+                  {data.pcp?.data?.totalRecords || 0}
+                </Text>
+             </VStack>
+          </HStack>
 
-          <Box flex="1" borderLeft="1px solid" borderColor="gray.100" pl={4}>
+          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
              <TableChart
                headers={["NAME", "DATE", "REV NO"]}
                data={(data.pcp?.data?.pendingRecords || []).slice(0, 5).map(row => {
@@ -676,16 +675,17 @@ const DepartmentDashboard = ({ Content }) => {
                keys={["name", "date", "rev"]}
              />
           </Box>
-        </HStack>
+        </VStack>
       </StatCard>
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderHRDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Employee Strength"
         count={data.overhead?.data?.actualOverHead || 0}
+        minWidth="350px"
       >
         <VStack align="center" justify="center" h="100%">
           <SimpleGrid columns={2} spacing={10} w="100%">
@@ -716,11 +716,11 @@ const DepartmentDashboard = ({ Content }) => {
           dataKey="value"
         />
       </StatCard>
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderPurchaseDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Pending Procurements"
         count={data.procurement?.data?.totalPending || 0}
@@ -809,11 +809,11 @@ const DepartmentDashboard = ({ Content }) => {
           keys={["vendor", "invoice", "value", "paymentDate", "due"]}
         />
       </StatCard>
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderSalesDashboard = () => (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+    <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Customer Count"
         count={data.salesCust?.data?.totalCustomers || 0}
@@ -893,7 +893,7 @@ const DepartmentDashboard = ({ Content }) => {
           )}
         />
       </StatCard>
-    </SimpleGrid>
+    </Flex>
   );
 
   const renderContent = () => {
