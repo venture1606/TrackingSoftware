@@ -136,7 +136,7 @@ export const useSearchSelectOptions = () => {
         { key: "CCR STATUS", value: ["OPEN", "CLOSED"] },
         {
           key: "STATUS OF SETTINGS",
-          value: ["No", "Under Process", "Completed"],
+          value: ["Under Process", "Completed"],
         },
         {
           key: "QL STATUS",

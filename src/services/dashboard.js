@@ -180,3 +180,8 @@ export const getMainDockets = async (startDate, endDate) => {
   });
   return response.data;
 };
+
+export const getProductSuccess = async () => {
+  const response = await axios.get(`${API_URL}/design/productSuccess`, getAuthHeaders());
+  return response.data;
+};
