@@ -35,6 +35,7 @@ import {
   getSalesTrailStatus,
   getMainDockets,
   getSettingsDashboard,
+  getCalibrationDueDashboard,
 } from "../services/dashboard";
 
 // Import Dashboard Components
@@ -97,15 +98,21 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "quality":
-            const [custQual, incoming, audits, improvement] = await Promise.all(
-              [
+            const [custQual, incoming, audits, improvement, calibration] =
+              await Promise.all([
                 getCustomerQuality(startTimestamp, endTimestamp),
                 getIncomingInspection(),
                 getQualityAudits(),
                 getContinuousImprovement(startTimestamp, endTimestamp),
-              ],
-            );
-            dashboardData = { custQual, incoming, audits, improvement };
+                getCalibrationDueDashboard(),
+              ]);
+            dashboardData = {
+              custQual,
+              incoming,
+              audits,
+              improvement,
+              calibration,
+            };
             break;
 
           case "hr":
@@ -579,6 +586,54 @@ const DepartmentDashboard = ({ Content }) => {
           data={(data.audits?.data?.table || []).slice(0, 5)}
           keys={["department", "noOfNC", "responsible", "due"]}
         />
+      </StatCard>
+
+      <StatCard
+        title="Calibration Due Status"
+        count={data.calibration?.data?.totalFiltered || 0}
+        minWidth="600px"
+      >
+        <HStack spacing={4} align="flex-start" h="100%">
+          <VStack spacing={4} minW="180px" justify="center" h="100%" py={2}>
+            <HStack w="100%" justify="space-between" bg="green.50" p={3} borderRadius="md">
+              <VStack align="flex-start" spacing={0}>
+                <Text fontSize="10px" fontWeight="bold" color="green.600">DONE</Text>
+                <Text fontSize="lg" fontWeight="black" color="green.700" lineHeight={1.2}>
+                  {data.calibration?.data?.doneCount || 0}
+                </Text>
+              </VStack>
+              <Box boxSize="30px" border="2px solid" borderColor="green.200" borderRadius="full" />
+            </HStack>
+            <HStack w="100%" justify="space-between" bg="red.50" p={3} borderRadius="md">
+              <VStack align="flex-start" spacing={0}>
+                <Text fontSize="10px" fontWeight="bold" color="red.600">DUE</Text>
+                <Text fontSize="lg" fontWeight="black" color="red.700" lineHeight={1.2}>
+                  {data.calibration?.data?.dueCount || 0}
+                </Text>
+              </VStack>
+              <Box boxSize="30px" border="2px solid" borderColor="red.200" borderRadius="full" />
+            </HStack>
+          </VStack>
+          
+          <Box flex="1" borderLeft="1px solid" borderColor="gray.100" pl={4}>
+             <TableChart
+               headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
+               data={(data.calibration?.data?.openRecords || []).slice(0, 5).map(row => {
+                 const items = row.items || [];
+                 const formatDate = (val) => {
+                   if(!val || isNaN(Number(val))) return val || "-";
+                   return new Date(Number(val)).toLocaleDateString('en-GB');
+                 };
+                 return {
+                   instrument: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME"))?.value || items[0]?.value || "-",
+                   done: formatDate(items.find(i => i.key === "DONE")?.value || items.find(i => i.key === "DATE")?.value),
+                   due: formatDate(items.find(i => i.key === "DUE")?.value),
+                 }
+               })}
+               keys={["instrument", "done", "due"]}
+             />
+          </Box>
+        </HStack>
       </StatCard>
     </SimpleGrid>
   );

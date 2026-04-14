@@ -193,3 +193,8 @@ export const getSettingsDashboard = async (startDate, endDate) => {
   });
   return response.data;
 };
+
+export const getCalibrationDueDashboard = async () => {
+  const response = await axios.get(`${API_URL}/main/quality/calibrationdue`, getAuthHeaders());
+  return response.data;
+};
