@@ -36,6 +36,7 @@ import {
   getMainDockets,
   getSettingsDashboard,
   getCalibrationDueDashboard,
+  getProcessControlPlanDashboard,
 } from "../services/dashboard";
 
 // Import Dashboard Components
@@ -98,13 +99,14 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "quality":
-            const [custQual, incoming, audits, improvement, calibration] =
+            const [custQual, incoming, audits, improvement, calibration, pcp] =
               await Promise.all([
                 getCustomerQuality(startTimestamp, endTimestamp),
                 getIncomingInspection(),
                 getQualityAudits(),
                 getContinuousImprovement(startTimestamp, endTimestamp),
                 getCalibrationDueDashboard(),
+                getProcessControlPlanDashboard(),
               ]);
             dashboardData = {
               custQual,
@@ -112,6 +114,7 @@ const DepartmentDashboard = ({ Content }) => {
               audits,
               improvement,
               calibration,
+              pcp,
             };
             break;
 
@@ -631,6 +634,46 @@ const DepartmentDashboard = ({ Content }) => {
                  }
                })}
                keys={["instrument", "done", "due"]}
+             />
+          </Box>
+        </HStack>
+      </StatCard>
+      <StatCard
+        title="Process Control Plan"
+        count={data.pcp?.data?.totalRecords || 0}
+        minWidth="600px"
+      >
+        <HStack spacing={4} align="flex-start" h="100%">
+          <VStack spacing={4} minW="180px" justify="center" h="100%" py={2}>
+             <Box bg="orange.50" p={4} borderRadius="xl" w="100%" textAlign="center">
+                <Text fontSize="4xl" fontWeight="black" color="orange.600" lineHeight={1}>
+                  {data.pcp?.data?.pendingCount || 0}
+                </Text>
+                <Text fontSize="10px" fontWeight="bold" color="orange.400" mt={1} textTransform="uppercase">
+                  Pending Uploads
+                </Text>
+             </Box>
+             <Text fontSize="xs" fontWeight="bold" color="gray.400">
+               Total PCP Records: {data.pcp?.data?.totalRecords || 0}
+             </Text>
+          </VStack>
+
+          <Box flex="1" borderLeft="1px solid" borderColor="gray.100" pl={4}>
+             <TableChart
+               headers={["NAME", "DATE", "REV NO"]}
+               data={(data.pcp?.data?.pendingRecords || []).slice(0, 5).map(row => {
+                 const items = row.items || [];
+                 const formatDate = (val) => {
+                   if(!val || isNaN(Number(val))) return val || "-";
+                   return new Date(Number(val)).toLocaleDateString('en-GB');
+                 };
+                 return {
+                   name: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME") || i.key.includes("PART"))?.value || items[0]?.value || "-",
+                   date: formatDate(items.find(i => i.key === "DATE")?.value),
+                   rev: items.find(i => i.key === "REVISION NO")?.value || "-",
+                 }
+               })}
+               keys={["name", "date", "rev"]}
              />
           </Box>
         </HStack>

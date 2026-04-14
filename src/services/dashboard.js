@@ -198,3 +198,8 @@ export const getCalibrationDueDashboard = async () => {
   const response = await axios.get(`${API_URL}/main/quality/calibrationdue`, getAuthHeaders());
   return response.data;
 };
+
+export const getProcessControlPlanDashboard = async () => {
+  const response = await axios.get(`${API_URL}/main/quality/processControlPlan`, getAuthHeaders());
+  return response.data;
+};
