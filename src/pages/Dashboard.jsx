@@ -159,9 +159,14 @@ function Dashboard() {
 
   if (isLoading && !apiResponse) {
     return (
-      <Flex justify="center" align="center" h="100vh">
-        <Spinner size="xl" color="blue.500" />
-      </Flex>
+      <Box className="AppRightContainer DashboardContainer" p={6}>
+        <Flex justify="center" align="center" h="60vh">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
+            <Text color="gray.500" fontWeight="medium">Loading Dashboard Data...</Text>
+          </VStack>
+        </Flex>
+      </Box>
     );
   }
 

@@ -34,6 +34,7 @@ import {
   getSalesPaymentAndDelivery,
   getSalesTrailStatus,
   getMainDockets,
+  getSettingsDashboard,
 } from "../services/dashboard";
 
 // Import Dashboard Components
@@ -86,12 +87,13 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "manufacturing":
-            const [oee, prodReport, inhouse] = await Promise.all([
+            const [oee, prodReport, inhouse, settings] = await Promise.all([
               getOEEDashboard(startTimestamp, endTimestamp),
               getProductionReport(startTimestamp, endTimestamp),
               getInhouseDashboard(startTimestamp, endTimestamp),
+              getSettingsDashboard(startTimestamp, endTimestamp),
             ]);
-            dashboardData = { oee, prodReport, inhouse };
+            dashboardData = { oee, prodReport, inhouse, settings };
             break;
 
           case "quality":
@@ -189,9 +191,9 @@ const DepartmentDashboard = ({ Content }) => {
 
   if (loading) {
     return (
-      <Center h="400px">
+      <Center h="100%" w="100%" bg="white" borderRadius="xl">
         <VStack spacing={4}>
-          <Spinner size="xl" color="blue.500" thickness="4px" />
+          <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
           <Text color="gray.500" fontWeight="medium">
             Loading {Content} Dashboard...
           </Text>
@@ -421,6 +423,32 @@ const DepartmentDashboard = ({ Content }) => {
           </Box>
         </VStack>
       </StatCard>
+      <StatCard
+        title="Settings Performance"
+        count={data.settings?.data?.noOfSettings || 0}
+        minWidth="350px"
+        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+      >
+        <HStack justify="space-around" align="center" py={4} w="100%">
+          <VStack bg="purple.50" p={4} borderRadius="xl" minW="135px" spacing={1}>
+            <Text fontSize="2xl" fontWeight="black" color="purple.600">
+              {data.settings?.data?.averageSettingTime || 0}
+            </Text>
+            <Text fontSize="10px" fontWeight="bold" color="purple.400" textTransform="uppercase" textAlign="center">
+              Avg Setting<br />Time (min)
+            </Text>
+          </VStack>
+          <VStack bg="teal.50" p={4} borderRadius="xl" minW="135px" spacing={1}>
+            <Text fontSize="2xl" fontWeight="black" color="teal.600">
+              {data.settings?.data?.avgSetupLoss || 0}
+            </Text>
+            <Text fontSize="10px" fontWeight="bold" color="teal.400" textTransform="uppercase" textAlign="center">
+              Avg Setup<br />Loss (qty)
+            </Text>
+          </VStack>
+        </HStack>
+      </StatCard>
+      
     </SimpleGrid>
   );
 

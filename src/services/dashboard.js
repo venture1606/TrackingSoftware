@@ -185,3 +185,11 @@ export const getProductSuccess = async () => {
   const response = await axios.get(`${API_URL}/design/productSuccess`, getAuthHeaders());
   return response.data;
 };
+
+export const getSettingsDashboard = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/manufacturing/settingsDashboard`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};
