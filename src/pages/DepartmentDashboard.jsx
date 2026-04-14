@@ -38,6 +38,7 @@ import {
   getSettingsDashboard,
   getCalibrationDueDashboard,
   getProcessControlPlanDashboard,
+  getCertificateRenewalDashboard,
 } from "../services/dashboard";
 
 // Import Dashboard Components
@@ -100,15 +101,23 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "quality":
-            const [custQual, incoming, audits, improvement, calibration, pcp] =
-              await Promise.all([
-                getCustomerQuality(startTimestamp, endTimestamp),
-                getIncomingInspection(),
-                getQualityAudits(),
-                getContinuousImprovement(startTimestamp, endTimestamp),
-                getCalibrationDueDashboard(),
-                getProcessControlPlanDashboard(),
-              ]);
+            const [
+              custQual,
+              incoming,
+              audits,
+              improvement,
+              calibration,
+              pcp,
+              certs,
+            ] = await Promise.all([
+              getCustomerQuality(startTimestamp, endTimestamp),
+              getIncomingInspection(),
+              getQualityAudits(),
+              getContinuousImprovement(startTimestamp, endTimestamp),
+              getCalibrationDueDashboard(),
+              getProcessControlPlanDashboard(),
+              getCertificateRenewalDashboard(),
+            ]);
             dashboardData = {
               custQual,
               incoming,
@@ -116,6 +125,7 @@ const DepartmentDashboard = ({ Content }) => {
               improvement,
               calibration,
               pcp,
+              certs,
             };
             break;
 
@@ -673,6 +683,39 @@ const DepartmentDashboard = ({ Content }) => {
                  }
                })}
                keys={["name", "date", "rev"]}
+             />
+          </Box>
+        </VStack>
+      </StatCard>
+      <StatCard
+        title="Certificate Renewal Status"
+        count={(data.certs?.data || []).filter(c => c.isDue).length}
+        minWidth="600px"
+      >
+        <VStack spacing={4} align="stretch" w="100%">
+          <HStack spacing={4} justify="start" pb={2}>
+             <Box bg="purple.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="purple.100" minW="150px">
+                <Text fontSize="xs" fontWeight="bold" color="purple.600">ACTION REQUIRED</Text>
+                <Text fontSize="2xl" fontWeight="black" color="purple.700" lineHeight={1}>
+                  {(data.certs?.data || []).filter(c => c.isDue).length}
+                </Text>
+             </Box>
+          </HStack>
+
+          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
+             <TableChart
+               headers={["CERTIFICATE NAME", "DEPT", "DUE DATE", "REMINDER"]}
+               data={(data.certs?.data || []).slice(0, 5).map(c => {
+                 const formatDate = (val) => {
+                   if(!val || isNaN(Number(val))) return val || "-";
+                   return new Date(Number(val)).toLocaleDateString('en-GB');
+                 };
+                 return {
+                   ...c,
+                   dueDate: formatDate(c.dueDate),
+                 }
+               })}
+               keys={["certName", "department", "dueDate", "reminder"]}
              />
           </Box>
         </VStack>

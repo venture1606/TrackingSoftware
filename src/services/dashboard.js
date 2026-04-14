@@ -203,3 +203,8 @@ export const getProcessControlPlanDashboard = async () => {
   const response = await axios.get(`${API_URL}/main/quality/processControlPlan`, getAuthHeaders());
   return response.data;
 };
+
+export const getCertificateRenewalDashboard = async () => {
+  const response = await axios.get(`${API_URL}/main/quality/certificateRenewal`, getAuthHeaders());
+  return response.data;
+};
