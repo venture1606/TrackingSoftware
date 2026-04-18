@@ -1,11 +1,8 @@
-import React from 'react'
+import React from 'react';
+import DepartmentDashboard from './DepartmentDashboard';
 
 function Stock() {
-  return (
-    <div className='AppRightContainer'>
-      Stock
-    </div>
-  )
+  return <DepartmentDashboard Content="Stock" />;
 }
 
-export default Stock
+export default Stock;

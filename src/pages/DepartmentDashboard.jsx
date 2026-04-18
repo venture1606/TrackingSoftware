@@ -39,13 +39,12 @@ import {
   getCalibrationDueDashboard,
   getProcessControlPlanDashboard,
   getCertificateRenewalDashboard,
+  getDashboardStock,
 } from "../services/dashboard";
 
 // Import Dashboard Components
 import StatCard from "../components/dashboard/StatCard";
-import BarChart from "../components/dashboard/BarChart";
 import AreaChart from "../components/dashboard/AreaChart";
-import CircleChart from "../components/dashboard/CircleChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import GaugeChart from "../components/dashboard/GaugeChart";
 import TableChart from "../components/dashboard/TableChart";
@@ -175,6 +174,13 @@ const DepartmentDashboard = ({ Content }) => {
             };
             break;
 
+          case "stock":
+          case "store":
+          case "stores":
+            const stock = await getDashboardStock();
+            dashboardData = { stock: stock?.data || stock || {} };
+            break;
+
           default:
             dashboardData = {};
         }
@@ -192,7 +198,7 @@ const DepartmentDashboard = ({ Content }) => {
         setLoading(false);
       }
     },
-    [toast],
+    [toast, globalFilters],
   );
 
   useEffect(() => {
@@ -939,6 +945,26 @@ const DepartmentDashboard = ({ Content }) => {
     </Flex>
   );
 
+  const renderStockDashboard = () => (
+    <Flex wrap="wrap" gap={6}>
+      <StatCard
+        title="Stock Data (Finished Goods)"
+        count={data.stock?.totalStockQty || 0}
+        minWidth="600px"
+      >
+        <TableChart
+          headers={["ITEM CODE", "ITEM NAME", "STOCK"]}
+          data={(data.stock?.data || []).map((row) => ({
+            itemCode: row.items?.find((i) => i.key === "ITEM CODE")?.value || "-",
+            itemName: row.items?.find((i) => i.key === "ITEM NAME")?.value || "-",
+            stockCount: row.items?.find((i) => i.key === "STOCK")?.value || "0",
+          }))}
+          keys={["itemCode", "itemName", "stockCount"]}
+        />
+      </StatCard>
+    </Flex>
+  );
+
   const renderContent = () => {
     const department = Content?.toLowerCase();
     switch (department) {
@@ -955,6 +981,10 @@ const DepartmentDashboard = ({ Content }) => {
         return renderPurchaseDashboard();
       case "sales":
         return renderSalesDashboard();
+      case "stock":
+      case "store":
+      case "stores":
+        return renderStockDashboard();
       default:
         return (
           <Box py={10} textAlign="center">
