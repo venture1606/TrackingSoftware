@@ -50,6 +50,7 @@ import {
 import StatCard from "../components/dashboard/StatCard";
 import ChartSkeleton from "../components/dashboard/ChartSkeleton";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
+import { formatEpochDate } from "../utils/dateUtils";
 
 // importing lazy-loaded chart components
 const BarChart = lazy(() => import("../components/dashboard/BarChart"));
@@ -358,7 +359,7 @@ function Dashboard() {
                   headers={["FROM", "DATE", "PART", "PROTO", "VALIDATION", "MASTER", "DUE"]}
                   data={npdMainData.map((row) => ({
                     from: row.from,
-                    date: row.date,
+                    date: formatEpochDate(row.date),
                     part: row.part,
                     proto: row.proto,
                     validation: row.validation,
@@ -375,8 +376,9 @@ function Dashboard() {
           {/* ── 2. Product Success Rate ── */}
           <StatCard
             title="Product Success Rate"
-            count={`${((productSuccessData?.data?.avgSuccessRate || 0) * 100).toFixed(2)}%`}
+            count={`${(productSuccessData?.data?.totalOpen || 0)}`}
             minWidth="300px"
+            headerRight
           >
             <Suspense fallback={<ChartSkeleton type="circles" />}>
               <VStack align="center" justify="center" h="100%" py={2}>
@@ -452,7 +454,7 @@ function Dashboard() {
                 <TableChart
                   headers={["DATE", "PART", "STATUS", "DUE"]}
                   data={revisionControlData.map((row) => ({
-                    date: row.date && !isNaN(row.date) ? new Date(Number(row.date)).toLocaleDateString() : row.date || "-",
+                    date: formatEpochDate(row.date),
                     part: row.part,
                     status: row.status,
                     due: row.due,

@@ -402,7 +402,8 @@
     "T-ACTUAL",
     "DONE",
     "DUE",
-    "DATE OF JOINING"
+    "DATE OF JOINING",
+    "TARGET DATE"
   ],
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"

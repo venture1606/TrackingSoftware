@@ -49,6 +49,7 @@ import DonutChart from "../components/dashboard/DonutChart";
 import GaugeChart from "../components/dashboard/GaugeChart";
 import TableChart from "../components/dashboard/TableChart";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
+import { formatEpochDate } from "../utils/dateUtils";
 
 const DepartmentDashboard = ({ Content }) => {
   const [loading, setLoading] = useState(true);
@@ -678,13 +679,9 @@ const DepartmentDashboard = ({ Content }) => {
                headers={["NAME", "DATE", "REV NO"]}
                data={(data.pcp?.data?.pendingRecords || []).slice(0, 5).map(row => {
                  const items = row.items || [];
-                 const formatDate = (val) => {
-                   if(!val || isNaN(Number(val))) return val || "-";
-                   return new Date(Number(val)).toLocaleDateString('en-GB');
-                 };
                  return {
                    name: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME") || i.key.includes("PART"))?.value || items[0]?.value || "-",
-                   date: formatDate(items.find(i => i.key === "DATE")?.value),
+                   date: formatEpochDate(items.find(i => i.key === "DATE")?.value),
                    rev: items.find(i => i.key === "REVISION NO")?.value || "-",
                  }
                })}
@@ -712,13 +709,9 @@ const DepartmentDashboard = ({ Content }) => {
              <TableChart
                headers={["CERTIFICATE NAME", "DEPT", "DUE DATE", "REMINDER"]}
                data={(data.certs?.data || []).slice(0, 5).map(c => {
-                 const formatDate = (val) => {
-                   if(!val || isNaN(Number(val))) return val || "-";
-                   return new Date(Number(val)).toLocaleDateString('en-GB');
-                 };
                  return {
                    ...c,
-                   dueDate: formatDate(c.dueDate),
+                   dueDate: formatEpochDate(c.dueDate),
                  }
                })}
                keys={["certName", "department", "dueDate", "reminder"]}
