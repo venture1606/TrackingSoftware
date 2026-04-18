@@ -8,9 +8,81 @@ const getAuthHeaders = () => ({
   },
 });
 
-// Main Dashboard
-export const getMainDashboard = async () => {
-  const response = await axios.get(`${API_URL}/dashboard`, getAuthHeaders());
+// Individual Main Dashboard APIs
+export const getDashboardProductionPlan = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/dashboard/production-plan`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};
+
+export const getDashboardProductionReport = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/dashboard/production-report`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};
+
+export const getDashboardRejectReport = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/reject-report`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardReworkReport = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/rework-report`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardDispatch = async (startDate, endDate) => {
+  const response = await axios.get(`${API_URL}/dashboard/dispatch`, {
+    ...getAuthHeaders(),
+    params: { startDate, endDate },
+  });
+  return response.data;
+};
+
+export const getDashboardCalibration = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/calibration`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardIncomingInspection = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/incoming-inspection`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardCustomerComplaints = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/customer-complaints`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardCustomerList = async (salesPerson, location) => {
+  const response = await axios.get(`${API_URL}/dashboard/customer-list`, {
+    ...getAuthHeaders(),
+    params: { salesPerson, location },
+  });
+  return response.data;
+};
+
+export const getDashboardQuotationList = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/quotation-list`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardOrderList = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/order-list`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardProcurement = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/procurement`, getAuthHeaders());
+  return response.data;
+};
+
+export const getDashboardStock = async () => {
+  const response = await axios.get(`${API_URL}/dashboard/stock`, getAuthHeaders());
   return response.data;
 };
 

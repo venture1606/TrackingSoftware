@@ -368,20 +368,8 @@ export const useDeleteProcessData = () => {
   });
 };
 
-export const useDashboard = (filters = {}) => {
-  return useQuery({
-    queryKey: ["dashboard", filters],
-    queryFn: async () => {
-      const response = await axios.post(
-        `${URL}/dashboard`,
-        filters,
-        getAuthHeaders(),
-      );
-      return response.data;
-    },
-    placeholderData: (previousData) => previousData,
-  });
-};
+// useDashboard removed — the monolithic /dashboard endpoint has been split
+// into individual endpoints. Use the functions in services/dashboard.js instead.
 
 // Default export acting as a hook for backward compatibility if needed,
 // though we encourage using individual hooks.

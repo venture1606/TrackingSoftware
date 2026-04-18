@@ -1,5 +1,3 @@
-import { useDashboard } from "../services/Process";
-import { getMainNPDRegister, getMainProductList, getMainRevisionControl, getOEEDashboard, getInhouseDashboard, getMainOrderList } from "../services/dashboard";
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import {
   Box,
@@ -14,6 +12,32 @@ import {
   AlertIcon,
 } from "@chakra-ui/react";
 
+// Individual dashboard service functions
+import {
+  getDashboardProductionPlan,
+  getDashboardRejectReport,
+  getDashboardReworkReport,
+  getDashboardDispatch,
+  getDashboardCalibration,
+  getDashboardIncomingInspection,
+  getDashboardCustomerComplaints,
+  getDashboardCustomerList,
+  getDashboardQuotationList,
+  getDashboardOrderList,
+  getDashboardProcurement,
+  getDashboardStock,
+} from "../services/dashboard";
+
+// Other separate dashboard APIs already split before
+import {
+  getMainNPDRegister,
+  getMainProductList,
+  getMainRevisionControl,
+  getOEEDashboard,
+  getInhouseDashboard,
+  getMainOrderList,
+} from "../services/dashboard";
+
 // importing common components
 import StatCard from "../components/dashboard/StatCard";
 import ChartSkeleton from "../components/dashboard/ChartSkeleton";
@@ -27,9 +51,6 @@ const CircleChart = lazy(() => import("../components/dashboard/CircleChart"));
 const DonutChart = lazy(() => import("../components/dashboard/DonutChart"));
 const GaugeChart = lazy(() => import("../components/dashboard/GaugeChart"));
 
-const URL =
-  process.env.REACT_APP_PROCESS_URL || "http://localhost:3008/api/v1/process";
-
 function Dashboard() {
   // State to hold global filters
   const [filters, setFilters] = useState({
@@ -39,106 +60,160 @@ function Dashboard() {
     location: "",
   });
 
-  // Convert filters to what the backend expects (epoch for dates)
-  const apiFilters = {
-    ...filters,
-    startDate: filters.startDate
-      ? new Date(filters.startDate).getTime()
-      : undefined,
-    endDate: filters.endDate ? new Date(filters.endDate).getTime() : undefined,
-    // Ensure "All" is treated as empty string or undefined
-    salesPerson: filters.salesPerson === "All" ? "" : filters.salesPerson,
-    location: filters.location === "All" ? "" : filters.location,
-  };
+  // ── Individual section states ─────────────────────────────────────────────
+  const [productionPlan, setProductionPlan] = useState({});
+  const [rejectReport, setRejectReport] = useState({ totalFiltered: 0, data: [], chartResult: 0 });
+  const [reworkReport, setReworkReport] = useState({ totalFiltered: 0, data: [] });
+  const [dispatch, setDispatch] = useState({ totalFiltered: 0, data: [], totalQuantity: 0, graphChart: { monthWise: [], yearWise: [] } });
+  const [calibration, setCalibration] = useState({ totalFiltered: 0, data: [], doneCount: 0, dueCount: 0 });
+  const [incoming, setIncoming] = useState({ totalFiltered: 0, data: [] });
+  const [customerComplaint, setCustomerComplaint] = useState({ totalFiltered: 0, data: [] });
+  const [customerList, setCustomerList] = useState({ totalFiltered: 0, data: [] });
+  const [quotationList, setQuotationList] = useState({ totalFiltered: 0, data: [] });
+  const [orderListData, setOrderListData] = useState(null);
+  const [procurement, setProcurement] = useState({ totalFiltered: 0, data: [], totalPendingQty: 0 });
+  const [stockData, setStockData] = useState({ totalFiltered: 0, data: [], totalStockQty: 0 });
 
-  const {
-    data: apiResponse,
-    isLoading,
-    isError,
-    refetch,
-  } = useDashboard(apiFilters);
-
-  // Extract data sections gracefully
-  const rawData = apiResponse?.data || [];
-
-  const getProcessData = (key) => {
-    const section = rawData.find((item) => item[key] !== undefined);
-    return section ? section[key] : {};
-  };
-
-  const productionPlan = getProcessData("productionPlanProcess");
-  const productionReport = getProcessData("productionReportProcess");
-  const rejectReport = getProcessData("rejectReportProcess");
-  const reworkReport = getProcessData("reworkReportProcess");
-  const dispatch = getProcessData("dispatchProcess");
-  const npdRegister = getProcessData("npdRegisterProcess");
-  const products = getProcessData("productsProcess");
-  const calibration = getProcessData("calibrationReportProcess");
-  const incoming = getProcessData("incomingInspectionProcess");
-  const customerComplaint = getProcessData("customerComplientRegisterProcess");
-  const customerList = getProcessData("customerListProcess");
-  const quotationList = getProcessData("quotationListProcess");
-  const orderList = getProcessData("orderListProcess");
-  const procurement = getProcessData("procurementProcess");
-  const stockData = getProcessData("stockDataProcess");
-
-  // NPD Main Register — separate API call
+  // Pre-existing separate API states
   const [npdMainData, setNpdMainData] = useState([]);
+  const [productListData, setProductListData] = useState({ totalProducts: 0, totalBOMs: 0 });
+  const [revisionControlData, setRevisionControlData] = useState([]);
+  const [oeeData, setOeeData] = useState(null);
+  const [inHouseData, setInHouseData] = useState(null);
+
+  // ── Helper: build timestamp params ───────────────────────────────────────
+  const getTimestamps = () => ({
+    startTimestamp: filters.startDate ? new Date(filters.startDate).getTime() : undefined,
+    endTimestamp: filters.endDate ? new Date(filters.endDate).getTime() : undefined,
+  });
+
+  // ── Fetch: Production Plan ────────────────────────────────────────────────
+  useEffect(() => {
+    const { startTimestamp, endTimestamp } = getTimestamps();
+    getDashboardProductionPlan(startTimestamp, endTimestamp)
+      .then((res) => setProductionPlan(res.data || {}))
+      .catch(() => setProductionPlan({}));
+  }, [filters.startDate, filters.endDate]);
+
+  // ── Fetch: Reject Report ──────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardRejectReport()
+      .then((res) => setRejectReport(res.data || { totalFiltered: 0, data: [], chartResult: 0 }))
+      .catch(() => setRejectReport({ totalFiltered: 0, data: [], chartResult: 0 }));
+  }, []);
+
+  // ── Fetch: Rework Report ──────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardReworkReport()
+      .then((res) => setReworkReport(res.data || { totalFiltered: 0, data: [] }))
+      .catch(() => setReworkReport({ totalFiltered: 0, data: [] }));
+  }, []);
+
+  // ── Fetch: Dispatch ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const { startTimestamp, endTimestamp } = getTimestamps();
+    getDashboardDispatch(startTimestamp, endTimestamp)
+      .then((res) => setDispatch(res.data || { totalFiltered: 0, data: [], totalQuantity: 0, graphChart: { monthWise: [], yearWise: [] } }))
+      .catch(() => setDispatch({ totalFiltered: 0, data: [], totalQuantity: 0, graphChart: { monthWise: [], yearWise: [] } }));
+  }, [filters.startDate, filters.endDate]);
+
+  // ── Fetch: Calibration ────────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardCalibration()
+      .then((res) => setCalibration(res.data || { totalFiltered: 0, data: [], doneCount: 0, dueCount: 0 }))
+      .catch(() => setCalibration({ totalFiltered: 0, data: [], doneCount: 0, dueCount: 0 }));
+  }, []);
+
+  // ── Fetch: Incoming Inspection ────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardIncomingInspection()
+      .then((res) => setIncoming(res.data || { totalFiltered: 0, data: [] }))
+      .catch(() => setIncoming({ totalFiltered: 0, data: [] }));
+  }, []);
+
+  // ── Fetch: Customer Complaints ────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardCustomerComplaints()
+      .then((res) => setCustomerComplaint(res.data || { totalFiltered: 0, data: [] }))
+      .catch(() => setCustomerComplaint({ totalFiltered: 0, data: [] }));
+  }, []);
+
+  // ── Fetch: Customer List ──────────────────────────────────────────────────
+  useEffect(() => {
+    const sp = filters.salesPerson === "All" ? "" : filters.salesPerson;
+    const loc = filters.location === "All" ? "" : filters.location;
+    getDashboardCustomerList(sp, loc)
+      .then((res) => setCustomerList(res.data || { totalFiltered: 0, data: [] }))
+      .catch(() => setCustomerList({ totalFiltered: 0, data: [] }));
+  }, [filters.salesPerson, filters.location]);
+
+  // ── Fetch: Quotation List ─────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardQuotationList()
+      .then((res) => setQuotationList(res.data || { totalFiltered: 0, data: [] }))
+      .catch(() => setQuotationList({ totalFiltered: 0, data: [] }));
+  }, []);
+
+  // ── Fetch: Order List ─────────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardOrderList()
+      .then((res) => setOrderListData(res.data?.data || null))
+      .catch(() => setOrderListData(null));
+  }, []);
+
+  // ── Fetch: Procurement ────────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardProcurement()
+      .then((res) => setProcurement(res.data || { totalFiltered: 0, data: [], totalPendingQty: 0 }))
+      .catch(() => setProcurement({ totalFiltered: 0, data: [], totalPendingQty: 0 }));
+  }, []);
+
+  // ── Fetch: Stock ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    getDashboardStock()
+      .then((res) => setStockData(res.data || { totalFiltered: 0, data: [], totalStockQty: 0 }))
+      .catch(() => setStockData({ totalFiltered: 0, data: [], totalStockQty: 0 }));
+  }, []);
+
+  // ── Fetch: NPD Main Register ──────────────────────────────────────────────
   useEffect(() => {
     getMainNPDRegister()
       .then((res) => setNpdMainData(res.data || []))
       .catch(() => setNpdMainData([]));
   }, []);
 
-  // Product List — separate API call
-  const [productListData, setProductListData] = useState({ totalProducts: 0, totalBOMs: 0 });
+  // ── Fetch: Product List ───────────────────────────────────────────────────
   useEffect(() => {
     getMainProductList()
       .then((res) => setProductListData({ totalProducts: res.totalProducts || 0, totalBOMs: res.totalBOMs || 0 }))
       .catch(() => setProductListData({ totalProducts: 0, totalBOMs: 0 }));
   }, []);
 
-  // Revision Control — separate API call
-  const [revisionControlData, setRevisionControlData] = useState([]);
+  // ── Fetch: Revision Control ───────────────────────────────────────────────
   useEffect(() => {
     getMainRevisionControl()
       .then((res) => setRevisionControlData(res.data || []))
       .catch(() => setRevisionControlData([]));
   }, []);
 
-  // OEE Data — separate API call
-  const [oeeData, setOeeData] = useState(null);
+  // ── Fetch: OEE ───────────────────────────────────────────────────────────
   useEffect(() => {
-    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
-    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
+    const { startTimestamp, endTimestamp } = getTimestamps();
     getOEEDashboard(startTimestamp, endTimestamp)
       .then((res) => setOeeData(res.data || null))
       .catch(() => setOeeData(null));
   }, [filters.startDate, filters.endDate]);
 
-  // In House Quality Data
-  const [inHouseData, setInHouseData] = useState(null);
+  // ── Fetch: In House Quality ───────────────────────────────────────────────
   useEffect(() => {
-    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
-    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
+    const { startTimestamp, endTimestamp } = getTimestamps();
     getInhouseDashboard(startTimestamp, endTimestamp)
       .then((res) => setInHouseData(res.data || null))
       .catch(() => setInHouseData(null));
   }, [filters.startDate, filters.endDate]);
 
-  // Main Order List Data
-  const [orderListData, setOrderListData] = useState(null);
-  useEffect(() => {
-    const startTimestamp = filters.startDate ? new Date(filters.startDate).getTime() : undefined;
-    const endTimestamp = filters.endDate ? new Date(filters.endDate).getTime() : undefined;
-    getMainOrderList(startTimestamp, endTimestamp)
-      .then((res) => setOrderListData(res.data || null))
-      .catch(() => setOrderListData(null));
-  }, [filters.startDate, filters.endDate]);
-
+  // ── Filter handlers ───────────────────────────────────────────────────────
   const handleApplyFilter = (section) => (filterValues) => {
-    // Current Dashboard structure uses per-card filters, but we map them to global filters
-    // to match current backend capabilities.
     setFilters((prev) => ({
       ...prev,
       startDate: filterValues.startDate || prev.startDate,
@@ -147,30 +222,9 @@ function Dashboard() {
     }));
   };
 
-  const hasFilter = (section) => {
-    // Basic check for active filters
-    return !!(
-      filters.startDate ||
-      filters.endDate ||
-      filters.salesPerson ||
-      filters.location
-    );
-  };
+  const hasFilter = () => !!(filters.startDate || filters.endDate || filters.salesPerson || filters.location);
 
-  if (isLoading && !apiResponse) {
-    return (
-      <Box className="AppRightContainer DashboardContainer" p={6}>
-        <Flex justify="center" align="center" h="60vh">
-          <VStack spacing={4}>
-            <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
-            <Text color="gray.500" fontWeight="medium">Loading Dashboard Data...</Text>
-          </VStack>
-        </Flex>
-      </Box>
-    );
-  }
-
-  // Helper to format rows from process.items array into a flat object
+  // ── Helper: format table data ─────────────────────────────────────────────
   const formatProcessTableData = (data, mapping) => {
     if (!Array.isArray(data)) return [];
     return data.map((row) => {
@@ -206,13 +260,6 @@ function Dashboard() {
         </VStack>
       </Flex>
 
-      {isError && (
-        <Alert status="warning" mb={6} borderRadius="md">
-          <AlertIcon />
-          Failed to fetch live dashboard data. Showing available details.
-        </Alert>
-      )}
-
       <VStack spacing={8} align="stretch" mb={8}>
 
         {/* Row 4: Quotation, Order, Stock */}
@@ -224,12 +271,11 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("quotation")}
-                hasActiveFilter={hasFilter("quotation")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
             <Suspense fallback={<ChartSkeleton type="chart" />}>
-              {/* Simple count representation */}
               <HStack w="100%" h="100%" justify="space-evenly" align="center">
                 <VStack bg="gray.50" p={4} borderRadius="lg" minW="100px">
                   <Text fontSize="2xl" fontWeight="black" color="purple.600">
@@ -285,7 +331,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("orders")}
-                hasActiveFilter={hasFilter("orders")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -304,7 +350,7 @@ function Dashboard() {
                       date: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
                       qty: items.find(i => i.key === 'QTY')?.value || '0',
                       due: dateVal && !isNaN(dateVal)
-                        ? `${Math.floor((new Date() - new Date(Number(dateVal))) / (1000 * 60 * 60 * 24))} Days` 
+                        ? `${Math.floor((new Date() - new Date(Number(dateVal))) / (1000 * 60 * 60 * 24))} Days`
                         : "-",
                     };
                   })}
@@ -322,7 +368,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("stock")}
-                hasActiveFilter={hasFilter("stock")}
+                hasActiveFilter={hasFilter()}
                 fields={[
                   {
                     name: "itemCode",
@@ -359,7 +405,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("productionPlan")}
-                hasActiveFilter={hasFilter("productionPlan")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -408,7 +454,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("productionPlanGraph")}
-                hasActiveFilter={hasFilter("productionPlanGraph")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -435,7 +481,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("procurement")}
-                hasActiveFilter={hasFilter("procurement")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -486,7 +532,7 @@ function Dashboard() {
             </Suspense>
           </StatCard>
         </Flex>
-        
+
         {/* Row 2: Dispatch Data */}
         <Flex wrap="wrap" gap={6}>
           {/* 8. Dispatch - Table chart */}
@@ -497,7 +543,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("dispatch")}
-                hasActiveFilter={hasFilter("dispatch")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -524,7 +570,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("dispatch")}
-                hasActiveFilter={hasFilter("dispatch")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -557,7 +603,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("npd")}
-                hasActiveFilter={hasFilter("npd")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -589,7 +635,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("products")}
-                hasActiveFilter={hasFilter("products")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -627,7 +673,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("revisionControl")}
-                hasActiveFilter={hasFilter("revisionControl")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -647,12 +693,11 @@ function Dashboard() {
               </Box>
             </Suspense>
           </StatCard>
-        </Flex>        
+        </Flex>
 
         {/* Row 6: Others */}
         <Flex wrap="wrap" gap={6}>
-          {/* 3. Production Report - Total */}
-          {/* 3. Average OEE */}
+          {/* Average OEE */}
           <StatCard
             title="Average OEE"
             count={`${oeeData?.averageOEE || 0}%`}
@@ -661,7 +706,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("oee")}
-                hasActiveFilter={hasFilter("oee")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -682,7 +727,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("rejectReport")}
-                hasActiveFilter={hasFilter("rejectReport")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -700,7 +745,6 @@ function Dashboard() {
             </Suspense>
           </StatCard>
 
-          {/* 6. Reject / Actual (Gauge) */}
           {/* 6. In House Quality */}
           <StatCard
             title="In House Quality"
@@ -708,7 +752,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("inHouseQuality")}
-                hasActiveFilter={hasFilter("inHouseQuality")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -749,7 +793,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("reworkReport")}
-                hasActiveFilter={hasFilter("reworkReport")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -775,7 +819,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("calibration")}
-                hasActiveFilter={hasFilter("calibration")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -799,7 +843,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("incoming")}
-                hasActiveFilter={hasFilter("incoming")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -833,7 +877,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("customerComplaint")}
-                hasActiveFilter={hasFilter("customerComplaint")}
+                hasActiveFilter={hasFilter()}
               />
             }
           >
@@ -860,7 +904,7 @@ function Dashboard() {
             headerRight={
               <DashboardCardFilter
                 onApply={handleApplyFilter("customerList")}
-                hasActiveFilter={hasFilter("customerList")}
+                hasActiveFilter={hasFilter()}
                 fields={[
                   {
                     name: "salesPerson",
