@@ -117,7 +117,8 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   const params = useParams();
   const department = propDept || params.department;
   const processId = propProcId || params.processId;
-  const { hasAccessToDepartment, isViewer } = usePermissions();
+  const { hasAccessToDepartment, hasAccessToProcess, isViewer, isAdmin } =
+    usePermissions();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -160,6 +161,7 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
   const dispatch = useDispatch();
   const mainTableData = useSelector((state) => state.department.mainTableData);
   const navigate = useNavigate();
+  const { hasAccessToProcess, isAdmin } = usePermissions();
 
   // Suspense-enabled queries
   const { data: departments } = useSuspenseQuery({
@@ -202,6 +204,11 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
     if (processId && processes.length > 0) {
       const found = processes.find((p) => (p._id || p.id) === processId);
       if (found) {
+        // Enforce restriction handle
+        if (!isAdmin && !hasAccessToProcess(found.processId)) {
+          navigate(`/department/${department}`);
+          return;
+        }
         setSelectedProcess(found.process);
       }
     } else if (!processId) {
@@ -329,11 +336,13 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
             fontSize="xs"
             borderRadius="md"
           >
-            {currentDepartment?.process.map((subProc, index) => (
-              <option key={index} value={subProc}>
-                {subProc}
-              </option>
-            ))}
+            {processes
+              .filter((p) => isAdmin || hasAccessToProcess(p.processId))
+              .map((p, index) => (
+                <option key={index} value={p.process}>
+                  {p.process}
+                </option>
+              ))}
           </Select>
         </Box>
 

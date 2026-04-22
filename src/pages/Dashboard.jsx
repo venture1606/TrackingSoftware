@@ -51,6 +51,7 @@ import StatCard from "../components/dashboard/StatCard";
 import ChartSkeleton from "../components/dashboard/ChartSkeleton";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
 import { formatEpochDate } from "../utils/dateUtils";
+import { usePermissions } from "../services/permissions";
 
 // importing lazy-loaded chart components
 const BarChart = lazy(() => import("../components/dashboard/BarChart"));
@@ -58,7 +59,10 @@ const AreaChart = lazy(() => import("../components/dashboard/AreaChart"));
 const TableChart = lazy(() => import("../components/dashboard/TableChart"));
 const GaugeChart = lazy(() => import("../components/dashboard/GaugeChart"));
 
+
+
 function Dashboard() {
+  const { hasAccessToProcess, isAdmin } = usePermissions();
   // State to hold global filters
   const [filters, setFilters] = useState({
     startDate: "",
@@ -342,466 +346,800 @@ function Dashboard() {
 
         {/* ── 1. NPD Register ── */}
         <Flex wrap="wrap" gap={6}>
-          <StatCard
-            title="NPD Register"
-            count={npdMainData.length}
-            minWidth="380px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("npd")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="table" />}>
-              <Box maxH="220px" overflowY="auto">
-                <TableChart
-                  headers={["FROM", "DATE", "PART", "PROTO", "VALIDATION", "MASTER", "DUE"]}
-                  data={npdMainData.map((row) => ({
-                    from: row.from,
-                    date: formatEpochDate(row.date),
-                    part: row.part,
-                    proto: row.proto,
-                    validation: row.validation,
-                    master: row.master,
-                    due: row.due,
-                  }))}
-                  keys={["from", "date", "part", "proto", "validation", "master", "due"]}
-                  colorKeys={["proto", "validation", "master"]}
+          {(isAdmin || hasAccessToProcess("DD/R/010")) && (
+            <StatCard
+              title="NPD Register"
+              count={npdMainData.length}
+              minWidth="380px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("npd")}
+                  hasActiveFilter={hasFilter()}
                 />
-              </Box>
-            </Suspense>
-          </StatCard>
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="table" />}>
+                <Box maxH="220px" overflowY="auto">
+                  <TableChart
+                    headers={[
+                      "FROM",
+                      "DATE",
+                      "PART",
+                      "PROTO",
+                      "VALIDATION",
+                      "MASTER",
+                      "DUE",
+                    ]}
+                    data={npdMainData.map((row) => ({
+                      from: row.from,
+                      date: formatEpochDate(row.date),
+                      part: row.part,
+                      proto: row.proto,
+                      validation: row.validation,
+                      master: row.master,
+                      due: row.due,
+                    }))}
+                    keys={[
+                      "from",
+                      "date",
+                      "part",
+                      "proto",
+                      "validation",
+                      "master",
+                      "due",
+                    ]}
+                    colorKeys={["proto", "validation", "master"]}
+                  />
+                </Box>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 2. Product Success Rate ── */}
-          <StatCard
-            title="Product Success Rate"
-            count={`${(productSuccessData?.data?.totalOpen || 0)}`}
-            minWidth="300px"
-            headerRight
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack align="center" justify="center" h="100%" py={2}>
-                <Box
-                  boxSize="100px"
-                  borderRadius="full"
-                  border="8px solid"
-                  borderColor="green.400"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  bg="green.50"
-                >
-                  <Text fontSize="xl" fontWeight="black" color="green.600">
-                    {((productSuccessData?.data?.avgSuccessRate || 0) * 100).toFixed(1)}%
+          {(isAdmin || hasAccessToProcess("DD/R/007")) && (
+            <StatCard
+              title="Product Success Rate"
+              count={`${productSuccessData?.data?.totalOpen || 0}`}
+              minWidth="300px"
+              headerRight
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <VStack align="center" justify="center" h="100%" py={2}>
+                  <Box
+                    boxSize="100px"
+                    borderRadius="full"
+                    border="8px solid"
+                    borderColor="green.400"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    bg="green.50"
+                  >
+                    <Text fontSize="xl" fontWeight="black" color="green.600">
+                      {(
+                        (productSuccessData?.data?.avgSuccessRate || 0) * 100
+                      ).toFixed(1)}
+                      %
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" fontWeight="bold" mt={2} fontSize="xs">
+                    Average Performance
                   </Text>
-                </Box>
-                <Text color="gray.500" fontWeight="bold" mt={2} fontSize="xs">
-                  Average Performance
-                </Text>
-              </VStack>
-            </Suspense>
-          </StatCard>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 3. Overall Products Summary ── */}
-          <StatCard
-            title="Overall Products Summary"
-            minH="150px"
-            minWidth="280px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("products")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <HStack w="100%" h="100%" justify="space-evenly" align="center" py={2}>
-                <VStack bg="blue.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="blue.600" lineHeight={1}>
-                    {productListData.totalProducts}
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="blue.400" textTransform="uppercase" textAlign="center">
-                    Total<br />Products
-                  </Text>
-                </VStack>
-                <VStack bg="purple.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="purple.600" lineHeight={1}>
-                    {productListData.totalBOMs}
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="purple.400" textTransform="uppercase" textAlign="center">
-                    Total<br />BOMs
-                  </Text>
-                </VStack>
-              </HStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("DD/R/001")) && (
+            <StatCard
+              title="Overall Products Summary"
+              minH="150px"
+              minWidth="280px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("products")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <HStack
+                  w="100%"
+                  h="100%"
+                  justify="space-evenly"
+                  align="center"
+                  py={2}
+                >
+                  <VStack
+                    bg="blue.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="110px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="blue.600"
+                      lineHeight={1}
+                    >
+                      {productListData.totalProducts}
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="blue.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Total
+                      <br />
+                      Products
+                    </Text>
+                  </VStack>
+                  <VStack
+                    bg="purple.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="110px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="purple.600"
+                      lineHeight={1}
+                    >
+                      {productListData.totalBOMs}
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="purple.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Total
+                      <br />
+                      BOMs
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 4. Revision Control ── */}
-          <StatCard
-            title="Revision Control"
-            count={revisionControlData.length}
-            minWidth="450px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("revisionControl")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="table" />}>
-              <Box maxH="220px" overflowY="auto">
-                <TableChart
-                  headers={["DATE", "PART", "STATUS", "DUE"]}
-                  data={revisionControlData.map((row) => ({
-                    date: formatEpochDate(row.date),
-                    part: row.part,
-                    status: row.status,
-                    due: row.due,
-                  }))}
-                  keys={["date", "part", "status", "due"]}
-                  colorKeys={["status"]}
+          {(isAdmin || hasAccessToProcess("DD/R/005")) && (
+            <StatCard
+              title="Revision Control"
+              count={revisionControlData.length}
+              minWidth="450px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("revisionControl")}
+                  hasActiveFilter={hasFilter()}
                 />
-              </Box>
-            </Suspense>
-          </StatCard>
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="table" />}>
+                <Box maxH="220px" overflowY="auto">
+                  <TableChart
+                    headers={["DATE", "PART", "STATUS", "DUE"]}
+                    data={revisionControlData.map((row) => ({
+                      date: formatEpochDate(row.date),
+                      part: row.part,
+                      status: row.status,
+                      due: row.due,
+                    }))}
+                    keys={["date", "part", "status", "due"]}
+                    colorKeys={["status"]}
+                  />
+                </Box>
+              </Suspense>
+            </StatCard>
+          )}
         </Flex>
 
         {/* ── 5. Average OEE  ──  6. OEE Trend ── */}
         <Flex wrap="wrap" gap={6}>
-          <StatCard
-            title="Average OEE"
-            count={`${oeeData?.averageOEE || 0}%`}
-            minH="150px"
-            minWidth="200px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("oee")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <GaugeChart
-                value={oeeData?.averageOEE || 0}
-                max={100}
-                label="Overall Efficiency"
-                color={oeeData?.averageOEE > 65 ? "#48BB78" : oeeData?.averageOEE > 45 ? "#ECC94B" : "#F56565"}
-              />
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("MR/R/002")) && (
+            <StatCard
+              title="Average OEE"
+              count={`${oeeData?.averageOEE || 0}%`}
+              minH="150px"
+              minWidth="200px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("oee")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <GaugeChart
+                  value={oeeData?.averageOEE || 0}
+                  max={100}
+                  label="Overall Efficiency"
+                  color={
+                    oeeData?.averageOEE > 65
+                      ? "#48BB78"
+                      : oeeData?.averageOEE > 45
+                        ? "#ECC94B"
+                        : "#F56565"
+                  }
+                />
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 6. OEE Trend ── */}
-          <StatCard
-            title="OEE Trend"
-            minWidth="450px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("oeeTrend")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="chart" />}>
-              <Box h="220px">
-                <AreaChart
-                  data={prodReportData || []}
-                  xAxisKey="date"
-                  dataKey="oee"
-                  height={200}
+          {(isAdmin || hasAccessToProcess("MR/R/002")) && (
+            <StatCard
+              title="OEE Trend"
+              minWidth="450px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("oeeTrend")}
+                  hasActiveFilter={hasFilter()}
                 />
-              </Box>
-            </Suspense>
-          </StatCard>
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="chart" />}>
+                <Box h="220px">
+                  <AreaChart
+                    data={prodReportData || []}
+                    xAxisKey="date"
+                    dataKey="oee"
+                    height={200}
+                  />
+                </Box>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 7. In House Rejection & Action ── */}
-          <StatCard
-            title="In House Rejection & Action"
-            minWidth="340px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("inHouseRejection")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <HStack justify="space-around" align="center" py={4}>
-                <VStack bg="red.50" p={4} borderRadius="xl" minW="130px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="red.600" lineHeight={1}>
-                    {inHouseData?.rejectionRatio || 0}%
-                  </Text>
-                  <Text fontSize="11px" fontWeight="bold" color="red.400" textTransform="uppercase" textAlign="center">
-                    Rejection<br />Ratio
-                  </Text>
-                </VStack>
-                <VStack bg="orange.50" p={4} borderRadius="xl" minW="130px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="orange.600" lineHeight={1}>
-                    {inHouseData?.actionPending || 0}
-                  </Text>
-                  <Text fontSize="11px" fontWeight="bold" color="orange.400" textTransform="uppercase" textAlign="center">
-                    Action<br />Pending
-                  </Text>
-                </VStack>
-              </HStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("MR/R/003")) && (
+            <StatCard
+              title="In House Rejection & Action"
+              minWidth="340px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("inHouseRejection")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <HStack justify="space-around" align="center" py={4}>
+                  <VStack
+                    bg="red.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="130px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="red.600"
+                      lineHeight={1}
+                    >
+                      {inHouseData?.rejectionRatio || 0}%
+                    </Text>
+                    <Text
+                      fontSize="11px"
+                      fontWeight="bold"
+                      color="red.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Rejection
+                      <br />
+                      Ratio
+                    </Text>
+                  </VStack>
+                  <VStack
+                    bg="orange.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="130px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="orange.600"
+                      lineHeight={1}
+                    >
+                      {inHouseData?.actionPending || 0}
+                    </Text>
+                    <Text
+                      fontSize="11px"
+                      fontWeight="bold"
+                      color="orange.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Action
+                      <br />
+                      Pending
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 8. In House Rework Status ── */}
-          <StatCard
-            title="In House Rework Status"
-            minWidth="200px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("inHouseRework")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack justify="center" h="100%" py={2}>
-                <Box bg="blue.50" p={5} borderRadius="2xl" textAlign="center" minW="140px">
-                  <Text fontSize="4xl" fontWeight="black" color="blue.600" lineHeight={1}>
-                    {inHouseData?.reworkPending || 0}
-                  </Text>
-                  <Text fontSize="xs" fontWeight="bold" color="blue.400" mt={2} textTransform="uppercase">
-                    Rework Pending
-                  </Text>
-                </Box>
-              </VStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("MR/R/003A")) && (
+            <StatCard
+              title="In House Rework Status"
+              minWidth="200px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("inHouseRework")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <VStack justify="center" h="100%" py={2}>
+                  <Box
+                    bg="blue.50"
+                    p={5}
+                    borderRadius="2xl"
+                    textAlign="center"
+                    minW="140px"
+                  >
+                    <Text
+                      fontSize="4xl"
+                      fontWeight="black"
+                      color="blue.600"
+                      lineHeight={1}
+                    >
+                      {inHouseData?.reworkPending || 0}
+                    </Text>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="bold"
+                      color="blue.400"
+                      mt={2}
+                      textTransform="uppercase"
+                    >
+                      Rework Pending
+                    </Text>
+                  </Box>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 9. Settings Performance ── */}
-          <StatCard
-            title="Settings Performance"
-            count={settingsDeptData?.noOfSettings || 0}
-            minWidth="350px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("settings")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <HStack justify="space-around" align="center" py={4} w="100%">
-                <VStack bg="purple.50" p={4} borderRadius="xl" minW="135px" spacing={1}>
-                  <Text fontSize="2xl" fontWeight="black" color="purple.600">
-                    {settingsDeptData?.averageSettingTime || 0}
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="purple.400" textTransform="uppercase" textAlign="center">
-                    Avg Setting<br />Time (min)
-                  </Text>
-                </VStack>
-                <VStack bg="teal.50" p={4} borderRadius="xl" minW="135px" spacing={1}>
-                  <Text fontSize="2xl" fontWeight="black" color="teal.600">
-                    {settingsDeptData?.avgSetupLoss || 0}
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="teal.400" textTransform="uppercase" textAlign="center">
-                    Avg Setup<br />Loss (qty)
-                  </Text>
-                </VStack>
-              </HStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("MR/R/002A")) && (
+            <StatCard
+              title="Settings Performance"
+              count={settingsDeptData?.noOfSettings || 0}
+              minWidth="350px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("settings")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <HStack justify="space-around" align="center" py={4} w="100%">
+                  <VStack
+                    bg="purple.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="135px"
+                    spacing={1}
+                  >
+                    <Text fontSize="2xl" fontWeight="black" color="purple.600">
+                      {settingsDeptData?.averageSettingTime || 0}
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="purple.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Avg Setting
+                      <br />
+                      Time (min)
+                    </Text>
+                  </VStack>
+                  <VStack
+                    bg="teal.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="135px"
+                    spacing={1}
+                  >
+                    <Text fontSize="2xl" fontWeight="black" color="teal.600">
+                      {settingsDeptData?.avgSetupLoss || 0}
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="teal.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Avg Setup
+                      <br />
+                      Loss (qty)
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Suspense>
+            </StatCard>
+          )}
         </Flex>
 
         {/* ── 10. Customer Quality ── 11. Incoming Inspection ── */}
         <Flex wrap="wrap" gap={6}>
           {/* ── 10. Customer Quality ── */}
-          <StatCard
-            title="Customer Quality"
-            minWidth="300px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("customerQuality")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <HStack w="100%" h="100%" justify="space-around" align="center" py={4}>
-                <VStack bg="red.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="red.600" lineHeight={1}>
-                    {custQualData?.rejectionRate || 0}%
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="red.400" textTransform="uppercase" textAlign="center">
-                    Rejection<br />Rate
-                  </Text>
-                </VStack>
-                <VStack bg="orange.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
-                  <Text fontSize="3xl" fontWeight="black" color="orange.600" lineHeight={1}>
-                    {custQualData?.actionPending || 0}
-                  </Text>
-                  <Text fontSize="10px" fontWeight="bold" color="orange.400" textTransform="uppercase" textAlign="center">
-                    Action<br />Pending
-                  </Text>
-                </VStack>
-              </HStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("QA/R/007")) && (
+            <StatCard
+              title="Customer Quality"
+              minWidth="300px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("customerQuality")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <HStack
+                  w="100%"
+                  h="100%"
+                  justify="space-around"
+                  align="center"
+                  py={4}
+                >
+                  <VStack
+                    bg="red.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="110px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="red.600"
+                      lineHeight={1}
+                    >
+                      {custQualData?.rejectionRate || 0}%
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="red.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Rejection
+                      <br />
+                      Rate
+                    </Text>
+                  </VStack>
+                  <VStack
+                    bg="orange.50"
+                    p={4}
+                    borderRadius="xl"
+                    minW="110px"
+                    spacing={1}
+                  >
+                    <Text
+                      fontSize="3xl"
+                      fontWeight="black"
+                      color="orange.600"
+                      lineHeight={1}
+                    >
+                      {custQualData?.actionPending || 0}
+                    </Text>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="bold"
+                      color="orange.400"
+                      textTransform="uppercase"
+                      textAlign="center"
+                    >
+                      Action
+                      <br />
+                      Pending
+                    </Text>
+                  </VStack>
+                </HStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 11. Incoming Inspection ── */}
-          <StatCard
-            title="Incoming Inspection"
-            count={incomingInspData?.pendingCount || 0}
-            minWidth="300px"
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack align="center" justify="center" h="100%" spacing={3}>
-                <Box
-                  boxSize="120px"
-                  borderRadius="full"
-                  border="10px solid"
-                  borderColor="blue.500"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Text fontSize="3xl" fontWeight="bold" color="blue.600">
-                    {incomingInspData?.pendingCount || 0}
+          {(isAdmin || hasAccessToProcess("QA/R/003")) && (
+            <StatCard
+              title="Incoming Inspection"
+              count={incomingInspData?.pendingCount || 0}
+              minWidth="300px"
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <VStack align="center" justify="center" h="100%" spacing={3}>
+                  <Box
+                    boxSize="120px"
+                    borderRadius="full"
+                    border="10px solid"
+                    borderColor="blue.500"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Text fontSize="3xl" fontWeight="bold" color="blue.600">
+                      {incomingInspData?.pendingCount || 0}
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" fontWeight="bold">
+                    Pending Inspections
                   </Text>
-                </Box>
-                <Text color="gray.500" fontWeight="bold">Pending Inspections</Text>
-              </VStack>
-            </Suspense>
-          </StatCard>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 12. Quality Audits (Pending) ── */}
-          <StatCard
-            title="Quality Audits (Pending)"
-            count={qualityAuditsData?.totalPending || 0}
-            minWidth="600px"
-          >
-            <Suspense fallback={<ChartSkeleton type="table" />}>
-              <Box maxH="220px" overflowY="auto">
-                <TableChart
-                  headers={["DEPARTMENT", "NCs", "RESPONSIBLE", "DUE"]}
-                  data={(qualityAuditsData?.table || []).slice(0, 5)}
-                  keys={["department", "noOfNC", "responsible", "due"]}
-                />
-              </Box>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("QA/F/005")) && (
+            <StatCard
+              title="Quality Audits (Pending)"
+              count={qualityAuditsData?.totalPending || 0}
+              minWidth="600px"
+            >
+              <Suspense fallback={<ChartSkeleton type="table" />}>
+                <Box maxH="220px" overflowY="auto">
+                  <TableChart
+                    headers={["DEPARTMENT", "NCs", "RESPONSIBLE", "DUE"]}
+                    data={(qualityAuditsData?.table || []).slice(0, 5)}
+                    keys={["department", "noOfNC", "responsible", "due"]}
+                  />
+                </Box>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 13. Continuous Improvement ── */}
-          <StatCard
-            title="Continuous Improvement"
-            minWidth="300px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("continuousImprovement")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
-          >
-            <Suspense fallback={<ChartSkeleton type="circles" />}>
-              <VStack justify="center" h="100%" py={4}>
-                <Box bg="green.50" p={6} borderRadius="2xl" textAlign="center" minW="200px">
-                  <Text fontSize="4xl" fontWeight="black" color="green.600" lineHeight={1}>
-                    {continuousImpData?.improvementCount || 0}
-                  </Text>
-                  <Text fontSize="xs" fontWeight="bold" color="green.400" mt={2} textTransform="uppercase">
-                    Improvement Initiatives
-                  </Text>
-                </Box>
-              </VStack>
-            </Suspense>
-          </StatCard>
+          {(isAdmin || hasAccessToProcess("MR/R/005")) && (
+            <StatCard
+              title="Continuous Improvement"
+              minWidth="300px"
+              headerRight={
+                <DashboardCardFilter
+                  onApply={handleApplyFilter("continuousImprovement")}
+                  hasActiveFilter={hasFilter()}
+                />
+              }
+            >
+              <Suspense fallback={<ChartSkeleton type="circles" />}>
+                <VStack justify="center" h="100%" py={4}>
+                  <Box
+                    bg="green.50"
+                    p={6}
+                    borderRadius="2xl"
+                    textAlign="center"
+                    minW="200px"
+                  >
+                    <Text
+                      fontSize="4xl"
+                      fontWeight="black"
+                      color="green.600"
+                      lineHeight={1}
+                    >
+                      {continuousImpData?.improvementCount || 0}
+                    </Text>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="bold"
+                      color="green.400"
+                      mt={2}
+                      textTransform="uppercase"
+                    >
+                      Improvement Initiatives
+                    </Text>
+                  </Box>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
         </Flex>
 
         {/* ── 14. Calibration Due  ──  15. Process Control Plan  ──  16. Certificate Renewal ── */}
         <Flex wrap="wrap" gap={6}>
           {/* ── 14. Calibration Due Status ── */}
-          <StatCard
-            title="Calibration Due Status"
-            count={calibrationDeptData?.totalFiltered || 0}
-            minWidth="400px"
-          >
-            <Suspense fallback={<ChartSkeleton type="table" />}>
-              <VStack spacing={4} align="stretch" w="100%">
-                <HStack spacing={4} justify="start" pb={2}>
-                  <Box bg="green.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="green.100" minW="100px">
-                    <Text fontSize="xs" fontWeight="bold" color="green.600">DONE</Text>
-                    <Text fontSize="2xl" fontWeight="black" color="green.700" lineHeight={1}>
-                      {calibrationDeptData?.doneCount || 0}
-                    </Text>
+          {(isAdmin || hasAccessToProcess("QA/R/002")) && (
+            <StatCard
+              title="Calibration Due Status"
+              count={calibrationDeptData?.totalFiltered || 0}
+              minWidth="400px"
+            >
+              <Suspense fallback={<ChartSkeleton type="table" />}>
+                <VStack spacing={4} align="stretch" w="100%">
+                  <HStack spacing={4} justify="start" pb={2}>
+                    <Box
+                      bg="green.50"
+                      px={4}
+                      py={2}
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="green.100"
+                      minW="100px"
+                    >
+                      <Text fontSize="xs" fontWeight="bold" color="green.600">
+                        DONE
+                      </Text>
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="black"
+                        color="green.700"
+                        lineHeight={1}
+                      >
+                        {calibrationDeptData?.doneCount || 0}
+                      </Text>
+                    </Box>
+                    <Box
+                      bg="red.50"
+                      px={4}
+                      py={2}
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="red.100"
+                      minW="100px"
+                    >
+                      <Text fontSize="xs" fontWeight="bold" color="red.600">
+                        DUE
+                      </Text>
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="black"
+                        color="red.700"
+                        lineHeight={1}
+                      >
+                        {calibrationDeptData?.dueCount || 0}
+                      </Text>
+                    </Box>
+                  </HStack>
+ 
+                  <Box
+                    overflowX="auto"
+                    borderTop="1px solid"
+                    borderColor="gray.100"
+                    pt={4}
+                  >
+                    <TableChart
+                      headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
+                      data={(calibrationDeptData?.openRecords || [])
+                        .slice(0, 5)
+                        .map((row) => {
+                          const items = row.items || [];
+                          const formatDate = (val) => {
+                            if (!val || isNaN(Number(val))) return val || "-";
+                            return new Date(Number(val)).toLocaleDateString(
+                              "en-GB",
+                            );
+                          };
+                          return {
+                            instrument:
+                              items.find(
+                                (i) =>
+                                  i.key.includes("INSTRUMENT") ||
+                                  i.key.includes("NAME"),
+                              )?.value ||
+                              items[0]?.value ||
+                              "-",
+                            done: formatDate(
+                              items.find((i) => i.key === "DONE")?.value ||
+                                items.find((i) => i.key === "DATE")?.value,
+                            ),
+                            due: formatDate(
+                              items.find((i) => i.key === "DUE")?.value,
+                            ),
+                          };
+                        })}
+                      keys={["instrument", "done", "due"]}
+                    />
                   </Box>
-                  <Box bg="red.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="red.100" minW="100px">
-                    <Text fontSize="xs" fontWeight="bold" color="red.600">DUE</Text>
-                    <Text fontSize="2xl" fontWeight="black" color="red.700" lineHeight={1}>
-                      {calibrationDeptData?.dueCount || 0}
-                    </Text>
-                  </Box>
-                </HStack>
-
-                <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
-                  <TableChart
-                    headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
-                    data={(calibrationDeptData?.openRecords || []).slice(0, 5).map(row => {
-                      const items = row.items || [];
-                      const formatDate = (val) => {
-                        if(!val || isNaN(Number(val))) return val || "-";
-                        return new Date(Number(val)).toLocaleDateString('en-GB');
-                      };
-                      return {
-                        instrument: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME"))?.value || items[0]?.value || "-",
-                        done: formatDate(items.find(i => i.key === "DONE")?.value || items.find(i => i.key === "DATE")?.value),
-                        due: formatDate(items.find(i => i.key === "DUE")?.value),
-                      }
-                    })}
-                    keys={["instrument", "done", "due"]}
-                  />
-                </Box>
-              </VStack>
-            </Suspense>
-          </StatCard>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 15. Process Control Plan ── */}
-          <StatCard
-            title="Process Control Plan"
-            count={pcpDeptData?.totalRecords || 0}
-            minWidth="400px"
-          >
-            <Suspense fallback={<ChartSkeleton type="table" />}>
-              <VStack spacing={4} align="stretch" w="100%">
-                <HStack spacing={4} justify="start" pb={2}>
-                  <Box bg="orange.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="orange.100" minW="150px">
-                    <Text fontSize="xs" fontWeight="bold" color="orange.600">PENDING UPLOADS</Text>
-                    <Text fontSize="2xl" fontWeight="black" color="orange.700" lineHeight={1}>
-                      {pcpDeptData?.pendingCount || 0}
-                    </Text>
+          {(isAdmin || hasAccessToProcess("QA/R/009")) && (
+            <StatCard
+              title="Process Control Plan"
+              count={pcpDeptData?.totalRecords || 0}
+              minWidth="400px"
+            >
+              <Suspense fallback={<ChartSkeleton type="table" />}>
+                <VStack spacing={4} align="stretch" w="100%">
+                  <HStack spacing={4} justify="start" pb={2}>
+                    <Box
+                      bg="orange.50"
+                      px={4}
+                      py={2}
+                      borderRadius="lg"
+                      border="1px solid"
+                      borderColor="orange.100"
+                      minW="150px"
+                    >
+                      <Text fontSize="xs" fontWeight="bold" color="orange.600">
+                        PENDING UPLOADS
+                      </Text>
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="black"
+                        color="orange.700"
+                        lineHeight={1}
+                      >
+                        {pcpDeptData?.pendingCount || 0}
+                      </Text>
+                    </Box>
+                    <VStack align="flex-start" spacing={0}>
+                      <Text fontSize="xs" fontWeight="bold" color="gray.400">
+                        TOTAL RECORDS
+                      </Text>
+                      <Text fontSize="md" fontWeight="bold" color="gray.600">
+                        {pcpDeptData?.totalRecords || 0}
+                      </Text>
+                    </VStack>
+                  </HStack>
+ 
+                  <Box
+                    overflowX="auto"
+                    borderTop="1px solid"
+                    borderColor="gray.100"
+                    pt={4}
+                  >
+                    <TableChart
+                      headers={["NAME", "DATE", "REV NO"]}
+                      data={(pcpDeptData?.pendingRecords || [])
+                        .slice(0, 5)
+                        .map((row) => {
+                          const items = row.items || [];
+                          const formatDate = (val) => {
+                            if (!val || isNaN(Number(val))) return val || "-";
+                            return new Date(Number(val)).toLocaleDateString(
+                              "en-GB",
+                            );
+                          };
+                          return {
+                            name:
+                              items.find(
+                                (i) =>
+                                  i.key.includes("INSTRUMENT") ||
+                                  i.key.includes("NAME") ||
+                                  i.key.includes("PART"),
+                              )?.value ||
+                              items[0]?.value ||
+                              "-",
+                            date: formatDate(
+                              items.find((i) => i.key === "DATE")?.value,
+                            ),
+                            rev:
+                              items.find((i) => i.key === "REVISION NO")
+                                ?.value || "-",
+                          };
+                        })}
+                      keys={["name", "date", "rev"]}
+                    />
                   </Box>
-                  <VStack align="flex-start" spacing={0}>
-                    <Text fontSize="xs" fontWeight="bold" color="gray.400">TOTAL RECORDS</Text>
-                    <Text fontSize="md" fontWeight="bold" color="gray.600">
-                      {pcpDeptData?.totalRecords || 0}
-                    </Text>
-                  </VStack>
-                </HStack>
-
-                <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
-                  <TableChart
-                    headers={["NAME", "DATE", "REV NO"]}
-                    data={(pcpDeptData?.pendingRecords || []).slice(0, 5).map(row => {
-                      const items = row.items || [];
-                      const formatDate = (val) => {
-                        if(!val || isNaN(Number(val))) return val || "-";
-                        return new Date(Number(val)).toLocaleDateString('en-GB');
-                      };
-                      return {
-                        name: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME") || i.key.includes("PART"))?.value || items[0]?.value || "-",
-                        date: formatDate(items.find(i => i.key === "DATE")?.value),
-                        rev: items.find(i => i.key === "REVISION NO")?.value || "-",
-                      }
-                    })}
-                    keys={["name", "date", "rev"]}
-                  />
-                </Box>
-              </VStack>
-            </Suspense>
-          </StatCard>
+                </VStack>
+              </Suspense>
+            </StatCard>
+          )}
 
           {/* ── 16. Certificate Renewal Status ── */}
           <StatCard

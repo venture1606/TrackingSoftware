@@ -24,6 +24,7 @@ import { Icon } from "@iconify/react";
 // Importing Api
 import Auth from "../services/Auth";
 import { usePermissions } from "../services/permissions";
+import { PROCESS_MAPPINGS } from "../utils/processMappings";
 
 // Importing common components
 import Loading from "../hooks/Loading";
@@ -54,6 +55,7 @@ function CreateAccount() {
     role: "",
     department: [],
     accessLevel: "",
+    processAccess: [],
   });
 
   const handleChange = (e) => {
@@ -63,10 +65,40 @@ function CreateAccount() {
   const handleDepartmentChange = (deptValue) => {
     setForm((prev) => {
       const currentDepts = prev.department || [];
-      const newDepts = currentDepts.includes(deptValue)
+      const isRemoving = currentDepts.includes(deptValue);
+      const newDepts = isRemoving
         ? currentDepts.filter((d) => d !== deptValue)
         : [...currentDepts, deptValue];
-      return { ...prev, department: newDepts };
+
+      // Automatically sync process access
+      let newProcessAccess = [...(prev.processAccess || [])];
+      const deptProcesses = PROCESS_MAPPINGS.filter(
+        (p) => p.dept === deptValue,
+      ).map((p) => p.id);
+
+      if (isRemoving) {
+        // Remove all processes belonging to this department
+        newProcessAccess = newProcessAccess.filter(
+          (pid) => !deptProcesses.includes(pid),
+        );
+      } else {
+        // Add all processes belonging to this department
+        newProcessAccess = Array.from(
+          new Set([...newProcessAccess, ...deptProcesses]),
+        );
+      }
+
+      return { ...prev, department: newDepts, processAccess: newProcessAccess };
+    });
+  };
+
+  const handleProcessChange = (processId) => {
+    setForm((prev) => {
+      const currentAccess = prev.processAccess || [];
+      const newAccess = currentAccess.includes(processId)
+        ? currentAccess.filter((id) => id !== processId)
+        : [...currentAccess, processId];
+      return { ...prev, processAccess: newAccess };
     });
   };
 
@@ -128,6 +160,7 @@ function CreateAccount() {
           role: "",
           department: [],
           accessLevel: "",
+          processAccess: [],
         });
       }
     });
@@ -294,14 +327,18 @@ function CreateAccount() {
                       form.department.length < allPossibleDepts.length
                     }
                     onChange={(e) => {
+                      const isChecked = e.target.checked;
                       setForm((prev) => ({
                         ...prev,
-                        department: e.target.checked ? allPossibleDepts : [],
+                        department: isChecked ? allPossibleDepts : [],
+                        processAccess: isChecked
+                          ? PROCESS_MAPPINGS.map((p) => p.id)
+                          : [],
                       }));
                     }}
                     colorScheme="blue"
                   >
-                    Select All
+                    Select All Departments
                   </Checkbox>
                 </Flex>
 
@@ -320,11 +357,134 @@ function CreateAccount() {
                         onChange={() => handleDepartmentChange(dept.value)}
                         colorScheme="blue"
                       >
-                        <Text fontSize="sm">{dept.label}</Text>
+                        <Text fontSize="sm" fontWeight="600">
+                          {dept.label}
+                        </Text>
                       </Checkbox>
                     ))}
                   </SimpleGrid>
                 </Box>
+              </VStack>
+
+              <Divider />
+
+              {/* Process Access */}
+              <VStack align="stretch" spacing={6}>
+                <Heading
+                  size="xs"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="gray.500"
+                >
+                  Process Specific Authorization
+                </Heading>
+
+                {deptCheckboxes
+                  .filter((dept) => form.department.includes(dept.value))
+                  .map((dept) => {
+                    const deptProcesses = PROCESS_MAPPINGS.filter(
+                      (p) => p.dept === dept.value,
+                    );
+                    if (deptProcesses.length === 0) return null;
+
+                    return (
+                      <Box
+                        key={dept.value}
+                        p={5}
+                        bg="white"
+                        borderRadius="xl"
+                        border="1px solid"
+                        borderColor="gray.100"
+                      >
+                        <VStack align="stretch" spacing={4}>
+                          <HStack justify="space-between">
+                            <Heading size="xs" color="blue.600">
+                              {dept.label} Processes
+                            </Heading>
+                            <Checkbox
+                              size="sm"
+                              isChecked={deptProcesses.every((p) =>
+                                form.processAccess.includes(p.id),
+                              )}
+                              isIndeterminate={
+                                deptProcesses.some((p) =>
+                                  form.processAccess.includes(p.id),
+                                ) &&
+                                !deptProcesses.every((p) =>
+                                  form.processAccess.includes(p.id),
+                                )
+                              }
+                              onChange={(e) => {
+                                const ids = deptProcesses.map((p) => p.id);
+                                setForm((prev) => {
+                                  let newAccess = [...prev.processAccess];
+                                  if (e.target.checked) {
+                                    newAccess = Array.from(
+                                      new Set([...newAccess, ...ids]),
+                                    );
+                                  } else {
+                                    newAccess = newAccess.filter(
+                                      (id) => !ids.includes(id),
+                                    );
+                                  }
+                                  return { ...prev, processAccess: newAccess };
+                                });
+                              }}
+                            >
+                              Select All {dept.label}
+                            </Checkbox>
+                          </HStack>
+                          <Divider />
+                          <SimpleGrid
+                            columns={{ base: 1, md: 2, lg: 3 }}
+                            spacing={3}
+                          >
+                            {deptProcesses.map((process) => (
+                              <Checkbox
+                                key={process.id}
+                                isChecked={form.processAccess.includes(
+                                  process.id,
+                                )}
+                                onChange={() => handleProcessChange(process.id)}
+                                colorScheme="green"
+                                size="sm"
+                              >
+                                <VStack align="start" spacing={0}>
+                                  <Text fontSize="xs" fontWeight="700">
+                                    {process.p}
+                                  </Text>
+                                  <Text fontSize="10px" color="gray.500">
+                                    {process.id}
+                                  </Text>
+                                </VStack>
+                              </Checkbox>
+                            ))}
+                          </SimpleGrid>
+                        </VStack>
+                      </Box>
+                    );
+                  })}
+
+                {form.department.length === 0 && (
+                  <Box
+                    p={8}
+                    textAlign="center"
+                    bg="gray.50"
+                    borderRadius="xl"
+                    border="1px dashed"
+                    borderColor="gray.200"
+                  >
+                    <Icon
+                      icon="mdi:lock-outline"
+                      fontSize="32px"
+                      style={{ margin: "0 auto", color: "#CBD5E0" }}
+                    />
+                    <Text mt={2} color="gray.500" fontSize="sm">
+                      Select departments above to configure specific process
+                      access
+                    </Text>
+                  </Box>
+                )}
               </VStack>
 
               <Flex justify="flex-end" pt={4}>

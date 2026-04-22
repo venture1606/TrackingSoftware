@@ -22,6 +22,11 @@ export const usePermissions = () => {
         ? [user.department]
         : [];
 
+    // Accessible processes
+    const accessibleProcesses = Array.isArray(user?.processAccess)
+      ? user.processAccess
+      : [];
+
     /**
      * Helper to check if a specific department is accessible to the user
      * @param {string} departmentName - The key of the department (e.g., 'design')
@@ -46,6 +51,17 @@ export const usePermissions = () => {
     };
 
     /**
+     * Helper to check if a specific process is accessible to the user
+     * @param {string} processId - The ID of the process (e.g., 'DD/R/010')
+     * @returns {boolean}
+     */
+    const hasAccessToProcess = (processId) => {
+      if (isAdmin) return true;
+      if (!processId) return false;
+      return accessibleProcesses.includes(processId);
+    };
+
+    /**
      * Helper to check if the user has a specific action permission
      * @param {string} action - 'edit', 'create', or 'read'
      * @returns {boolean}
@@ -63,7 +79,9 @@ export const usePermissions = () => {
       isViewer,
       isAdmin,
       accessibleDepartments,
+      accessibleProcesses,
       hasAccessToDepartment,
+      hasAccessToProcess,
       hasPermission,
       user,
     };
