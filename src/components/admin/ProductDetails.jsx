@@ -28,38 +28,60 @@ const ProductDetails = () => {
   }
 
   return (
-    <Box w="100%" p={4}>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+    <Box w="100%" py={4}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
         {products.map((prod) => (
           <Box 
             key={prod._id} 
-            p={5} 
-            shadow="md" 
-            borderWidth="1px" 
-            borderRadius="md" 
+            p={6} 
             bg="white"
-            transition="0.2s"
-            _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor="gray.100"
+            transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
+            _hover={{ 
+              transform: 'translateY(-4px)', 
+              boxShadow: '0 12px 20px -10px rgba(0, 0, 0, 0.1)',
+              borderColor: 'blue.100'
+            }}
           >
-            <VStack align="start" spacing={3}>
-              <HStack justify="space-between" w="100%">
-                <Heading size="md" color="blue.700" isTruncated>
+            <VStack align="start" spacing={4}>
+              <Flex justify="space-between" w="100%" align="center">
+                <Badge 
+                  px={2} 
+                  py={1} 
+                  borderRadius="md" 
+                  colorScheme="blue" 
+                  variant="subtle" 
+                  fontSize="10px"
+                >
+                  {prod.category || 'Product'}
+                </Badge>
+                <Badge 
+                  colorScheme={prod.status === 'active' ? 'green' : 'gray'} 
+                  variant="solid" 
+                  fontSize="10px" 
+                  borderRadius="full" 
+                  px={3}
+                >
+                  {prod.status || 'Active'}
+                </Badge>
+              </Flex>
+
+              <VStack align="start" spacing={1} w="100%">
+                <Heading size="sm" color="gray.800" noOfLines={1}>
                   {prod.name || prod.partName || '-'}
                 </Heading>
-                <Badge colorScheme="green">{prod.status || '-'}</Badge>
-              </HStack>
-
-              <Text fontSize="sm" color="gray.600">
-                <strong>Part No:</strong> {prod.partNo || '-'}
-              </Text>
+                <Text fontSize="12px" color="gray.500" fontWeight="600">
+                  ID: {prod.partNo || '-'}
+                </Text>
+              </VStack>
               
-              <Text fontSize="sm" color="gray.600">
-                <strong>Category:</strong> {prod.category || '-'}
-              </Text>
-              
-              <Text fontSize="xs" color="gray.400" mt={2}>
-                Created: {prod.createdAt ? new Date(prod.createdAt).toLocaleDateString() : '-'}
-              </Text>
+              <Box pt={2} borderTop="1px solid" borderColor="gray.50" w="100%">
+                <Text fontSize="11px" color="gray.400" fontWeight="500">
+                  System Entry: {prod.createdAt ? new Date(prod.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                </Text>
+              </Box>
             </VStack>
           </Box>
         ))}

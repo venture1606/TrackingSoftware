@@ -57,18 +57,31 @@ function AdminTableView({ DetailsArray, TableContent }) {
 
     const UserRow = useCallback(({ index, style }) => {
         const row = DetailsArray[index];
+        // Define a consistent grid template for user table
+        const gridTemplate = "60px 1.5fr 1fr 1.2fr 1.5fr 1.5fr 120px 120px 100px";
+
         return (
             <div style={{ ...style }}>
                 <div style={{
-                    display: 'flex', 
-                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9",
-                    padding: "8px 10px",
-                    borderBottom: '1px solid #E2E8F0', 
+                    display: 'grid',
+                    gridTemplateColumns: gridTemplate,
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
+                    padding: "0 10px",
+                    borderBottom: '1px solid #edf2f7', 
                     alignItems: 'center',
-                    height: "100%"
+                    height: "100%",
+                    transition: "background-color 0.2s"
                 }}>
                     {row.map((cell, cellIndex) => (
-                        <Box key={cellIndex} flex="1" px={4} fontSize="sm" isTruncated textAlign="center" color="#2d3748" fontWeight="500">
+                        <Box 
+                            key={cellIndex} 
+                            px={3} 
+                            fontSize="13px" 
+                            isTruncated 
+                            textAlign={cellIndex === 1 ? "left" : "center"} 
+                            color="#4a5568" 
+                            fontWeight="500"
+                        >
                             {cell?.value && cell?.value !== "" ? cell?.value : "-"}
                         </Box>
                     ))}
@@ -87,20 +100,22 @@ function AdminTableView({ DetailsArray, TableContent }) {
                     display: 'grid', 
                     gridTemplateColumns: gridTemplate, 
                     gap: '20px', 
-                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9",
-                    padding: "8px 10px",
-                    borderBottom: '1px solid #E2E8F0', 
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
+                    padding: "0 10px",
+                    borderBottom: '1px solid #edf2f7', 
                     alignItems: 'center',
-                    height: '100%'
+                    height: '100%',
+                    transition: "background-color 0.2s"
                 }}>
                     {selectedProcess.headers.map((header) => {
                         const item = row.items.find((i) => i.key === header);
                         return (
-                            <Box key={header} fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" textAlign="center" fontWeight="500" color="#2d3748">
+                            <Box key={header} fontSize="13px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" textAlign="center" fontWeight="500" color="#4a5568">
                                 {item && item.value?.startsWith("processId -") ? (
                                     <Button
                                         size="xs"
                                         colorScheme="blue"
+                                        variant="soft"
                                         onClick={() => handleViewSubProcess(row._id, item.value)}
                                     >
                                         View
@@ -111,10 +126,10 @@ function AdminTableView({ DetailsArray, TableContent }) {
                             </Box>
                         );
                     })}
-                    <Box fontSize="sm" textAlign="center">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
-                    <Box fontSize="sm" textAlign="center">{new Date(row.createdAt).toLocaleString()}</Box>
-                    <Box fontSize="sm" textAlign="center">
-                       <Button size="xs" colorScheme="orange" onClick={() => handleViewHistory(row._id)}>History</Button>
+                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
+                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500">{new Date(row.createdAt).toLocaleString()}</Box>
+                    <Box fontSize="13px" textAlign="center">
+                       <Button size="xs" colorScheme="orange" variant="outline" onClick={() => handleViewHistory(row._id)}>History</Button>
                     </Box>
                 </div>
             </div>
@@ -125,28 +140,84 @@ function AdminTableView({ DetailsArray, TableContent }) {
         switch (TableContent) {
             case 'users':
                 if (!DetailsArray || DetailsArray.length === 0) return null;
+                const userGridTemplate = "60px 1.5fr 1fr 1.2fr 1.5fr 1.5fr 120px 120px 100px";
                 return (
-                  <div className='FormPageContainer' style={{ overflowX: "auto", overflowY: "auto", maxWidth: "100%", maxHeight: "calc(100vh - 250px)", position: "relative", borderRadius: "8px", padding: "10px", backgroundColor: "#f7f9fc" }}>
-                      <Box minW="max-content" bg="transparent" borderRadius="md">
-                          {/* Custom Header */}
-                          <Flex bg="#f7f9fc" borderBottom="2px solid #e2e8f0" fontWeight="bold" padding="10px" position="sticky" top={0} zIndex={15}>
-                              {DetailsArray[0].map((item, idx) => (
-                                  <Box key={idx} flex="1" px={4} py={3} fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">
-                                      {item.key}
-                                  </Box>
-                              ))}
-                          </Flex>
-                          <List
-                            height={500}
-                            itemCount={DetailsArray.length}
-                            itemSize={55}
-                            width="100%"
-                            style={{ overflowX: "hidden" }}
-                          >
-                            {UserRow}
-                          </List>
-                      </Box>
-                  </div>
+                    <Box 
+                        className='FormPageContainer' 
+                        sx={{
+                            overflow: "hidden", // Hide outer scroll since list handles it
+                            maxWidth: "100%", 
+                            borderRadius: "xl", 
+                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                            border: "1px solid",
+                            borderColor: "gray.200",
+                            backgroundColor: "white",
+                            mt: 4
+                        }}
+                    >
+                        <Box minW="1200px"> {/* Ensure horizontal scroll for many columns */}
+                            {/* Custom Header */}
+                            <Box 
+                                display="grid"
+                                gridTemplateColumns={userGridTemplate}
+                                bg="#f8fafc" 
+                                borderBottom="2px solid #e2e8f0" 
+                                fontWeight="700" 
+                                padding="0 10px" 
+                                position="sticky" 
+                                top={0} 
+                                zIndex={15}
+                                height="50px"
+                            >
+                                {DetailsArray[0].map((item, idx) => (
+                                    <Box 
+                                        key={idx} 
+                                        px={3} 
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent={idx === 1 ? "flex-start" : "center"}
+                                        fontSize="11px" 
+                                        textTransform="uppercase" 
+                                        letterSpacing="wider"
+                                        color="#64748b"
+                                    >
+                                        {item.key}
+                                    </Box>
+                                ))}
+                            </Box>
+                            
+                            <Box sx={{
+                                "& .custom-scrollbar": {
+                                    overflowY: "auto !important",
+                                    overflowX: "auto !important",
+                                },
+                                "& .custom-scrollbar::-webkit-scrollbar": {
+                                    width: "6px",
+                                    height: "6px",
+                                },
+                                "& .custom-scrollbar::-webkit-scrollbar-track": {
+                                    background: "#f1f5f9",
+                                },
+                                "& .custom-scrollbar::-webkit-scrollbar-thumb": {
+                                    background: "#cbd5e1",
+                                    borderRadius: "10px",
+                                },
+                                "& .custom-scrollbar::-webkit-scrollbar-thumb:hover": {
+                                    background: "#94a3b8",
+                                }
+                            }}>
+                                <List
+                                    height={500}
+                                    itemCount={DetailsArray.length}
+                                    itemSize={55}
+                                    width="100%"
+                                    className="custom-scrollbar"
+                                >
+                                    {UserRow}
+                                </List>
+                            </Box>
+                        </Box>
+                    </Box>
                 )
 
             case 'process':
@@ -176,37 +247,71 @@ function AdminTableView({ DetailsArray, TableContent }) {
                         {selectedProcess && (() => {
                             const gridTemplateColumns = selectedProcess.headers.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + " 150px 160px 100px";
                             return (
-                                <Box mt={4} className='FormPageContainer' overflowX="auto" overflowY="auto" maxH="calc(100vh - 250px)" position="relative" borderRadius="8px" bg="#f7f9fc" p="10px">
-                                    <Box minW="max-content" bg="transparent" borderRadius="md">
+                                <Box 
+                                    mt={4} 
+                                    className='FormPageContainer' 
+                                    sx={{
+                                        overflow: "hidden",
+                                        borderRadius: "xl",
+                                        border: "1px solid",
+                                        borderColor: "gray.200",
+                                        boxShadow: "sm",
+                                        bg: "white",
+                                    }}
+                                >
+                                    <Box minW="max-content">
                                         <Box 
                                             display="grid" 
                                             gridTemplateColumns={gridTemplateColumns} 
                                             gap="20px" 
-                                            bg="#f7f9fc" 
+                                            bg="#f8fafc" 
                                             borderBottom="2px solid #e2e8f0" 
-                                            fontWeight="bold"
-                                            padding="10px"
+                                            fontWeight="700"
+                                            padding="0 10px"
                                             position="sticky"
                                             top={0}
                                             zIndex={15}
+                                            height="50px"
+                                            alignItems="center"
                                         >
                                             {selectedProcess.headers.map((header) => (
-                                                <Box key={header} fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">{header}</Box>
+                                                <Box key={header} fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">{header}</Box>
                                             ))}
-                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">Updated By</Box>
-                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">Created At</Box>
-                                            <Box fontSize="xs" textTransform="uppercase" color="#718096" textAlign="center">History</Box>
+                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">Updated By</Box>
+                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">Created At</Box>
+                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">History</Box>
                                         </Box>
                                         
-                                        <List
-                                            height={500}
-                                            itemCount={selectedProcess.data.length}
-                                            itemSize={55}
-                                            width="100%"
-                                            style={{ overflowX: "hidden" }}
-                                        >
-                                            {ProcessRow}
-                                        </List>
+                                        <Box sx={{
+                                            "& .custom-scrollbar": {
+                                                overflowY: "auto !important",
+                                                overflowX: "auto !important",
+                                            },
+                                            "& .custom-scrollbar::-webkit-scrollbar": {
+                                                width: "6px",
+                                                height: "6px",
+                                            },
+                                            "& .custom-scrollbar::-webkit-scrollbar-track": {
+                                                background: "#f1f5f9",
+                                            },
+                                            "& .custom-scrollbar::-webkit-scrollbar-thumb": {
+                                                background: "#cbd5e1",
+                                                borderRadius: "10px",
+                                            },
+                                            "& .custom-scrollbar::-webkit-scrollbar-thumb:hover": {
+                                                background: "#94a3b8",
+                                            }
+                                        }}>
+                                            <List
+                                                height={500}
+                                                itemCount={selectedProcess.data.length}
+                                                itemSize={55}
+                                                width="100%"
+                                                className="custom-scrollbar"
+                                            >
+                                                {ProcessRow}
+                                            </List>
+                                        </Box>
                                     </Box>
                                 </Box>
                             )

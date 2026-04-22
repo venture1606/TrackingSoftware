@@ -7,28 +7,39 @@
 }
 
 .APIDetailsButtonContainer{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 2rem;
+    display: flex;
+    gap: 12px;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 12px;
+    width: fit-content;
+    margin-bottom: 2rem;
 }
 
 .APIDetailsButton{
     text-overflow: ellipsis;
     white-space: nowrap;
     border-radius: 8px;
-    background-color: var(--primary-color);
-    color: var(--text-primary-color);
-    padding: 0.5rem;
-    transition: all 0.3s ease-in-out;
+    background-color: transparent;
+    color: #64748b;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.APIDetailsButton:hover{
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #1e293b;
 }
 
 .APIDetailsButtonActive{
-    background-color: var(--third-color);
-    transform: scale(1.1);
-}
-
-.APIDetailsContainer{
-
+    background-color: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: none !important;
 }
 
 .AdminTableDepartmentContainer {
@@ -61,30 +72,50 @@
 
 .AdminTableDeptHeader h3 {
   margin: 0;
-  font-size: 1.2rem;
-  color: var(--third-color); /* Chakra blue tone */
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .AdminTableUpdatedBy {
-  font-size: 0.9rem;
-  color: var(--primary-color);
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
 }
 
 .AdminTableDeptBody {
-  margin-bottom: 12px;
+  margin: 16px 0;
+}
+
+.AdminTableProcessSection strong {
+  font-size: 13px;
+  color: #475569;
 }
 
 .AdminTableProcessSection ul {
-  margin: 8px 0 0;
-  padding: 0 0 0 20px;
-  list-style: disc;
-  color: var(--text-secondary-color);
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.AdminTableProcessSection li {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .AdminTableDeptFooter {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  color: #4a5568;
+  gap: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
 }

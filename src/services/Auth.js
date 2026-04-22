@@ -34,6 +34,21 @@ export const useAllUsers = (enabled = true) => {
   });
 };
 
+export const useUserDetails = (id, enabled = true) => {
+  return useQuery({
+    queryKey: ["userDetails", id],
+    queryFn: async () => {
+      const response = await axios.get(`${URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data.user;
+    },
+    enabled: !!id && enabled,
+  });
+};
+
 function Auth() {
   const userDetails = useSelector((state) => state.auth.userDetails);
   const dispatch = useDispatch();
@@ -266,6 +281,37 @@ function Auth() {
     handleAdminCreateAccount,
     handleForgotPassword,
     handleGetAllUser,
+    handleUpdateUser: async (id, credentials) => {
+      setLoading(true);
+      try {
+        const response = await axios.put(`${URL}/update/${id}`, credentials, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        dispatch(
+          setMessage({
+            status: "success",
+            description: response.data.message || "User Updated Successfully",
+            message: "Update Success",
+          }),
+        );
+        return true;
+      } catch (error) {
+        console.log(error);
+        dispatch(
+          setMessage({
+            status: "error",
+            description: error.response?.data?.message || "User Update Failed",
+            message: "Update Error",
+          }),
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
     loading,
     isOtpCorrect,
   };

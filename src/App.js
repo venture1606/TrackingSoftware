@@ -30,6 +30,7 @@ const Stock = lazy(() => import("./pages/Stock"));
 const Development = lazy(() => import("./pages/Development"));
 const Master = lazy(() => import("./pages/Master"));
 const CreateAccount = lazy(() => import("./pages/CreateAccount"));
+const EditAccount = lazy(() => import("./pages/EditAccount"));
 
 function App() {
   const dispatch = useDispatch();
@@ -101,6 +102,7 @@ function App() {
                 <Route path="/master" element={<Master />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/create-account" element={<CreateAccount />} />
+                <Route path="/admin/edit-account/:id" element={<EditAccount />} />
                 <Route path="/products/:id" element={<ShowProduct />} />
               </Routes>
             </div>

@@ -7,8 +7,9 @@ import {
   IconButton,
   useDisclosure,
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 import { useAllUsers } from "../../services/Auth";
 import AdminTableView from "../../hooks/AdminTableView";
@@ -21,6 +22,7 @@ const UserDetails = () => {
   const { data: allUsers, isLoading } = useAllUsers();
   const { isAdmin: currentUserIsAdmin } = usePermissions();
   const { handleDeleteUser } = Auth();
+  const navigate = useNavigate();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [userToDelete, setUserToDelete] = useState(null);
@@ -81,15 +83,27 @@ const UserDetails = () => {
         },
         {
           key: "ACTIONS",
-          value: showDelete ? (
-            <IconButton
-              icon={<DeleteIcon />}
-              colorScheme="red"
-              variant="ghost"
-              size="sm"
-              onClick={() => onDeleteClick(user.email)}
-              aria-label="Delete User"
-            />
+          value: currentUserIsAdmin ? (
+            <Flex gap={2}>
+              <IconButton
+                icon={<EditIcon />}
+                colorScheme="blue"
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/admin/edit-account/${user._id}`)}
+                aria-label="Edit User"
+              />
+              {showDelete && (
+                <IconButton
+                  icon={<DeleteIcon />}
+                  colorScheme="red"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDeleteClick(user.email)}
+                  aria-label="Delete User"
+                />
+              )}
+            </Flex>
           ) : (
             "-"
           ),
