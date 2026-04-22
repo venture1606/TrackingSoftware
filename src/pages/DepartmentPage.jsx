@@ -128,16 +128,15 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   }, [department, hasAccessToDepartment, navigate]);
 
   return (
-    <div
+    <Box
       className="AppRightContainer DepartmentPageContainer"
-      style={{
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-        width: "100%",
-        overflow: "hidden",
-      }}
+      p={{ base: "10px", md: "20px" }}
+      display="flex"
+      flexDirection="column"
+      gap="20px"
+      width="100%"
+      overflow="hidden"
+      minH="100vh"
     >
       <Suspense fallback={<Loading />}>
         <DepartmentPageContent
@@ -146,7 +145,7 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
           isViewOnly={isViewer}
         />
       </Suspense>
-    </div>
+    </Box>
   );
 }
 
@@ -310,7 +309,7 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
           </>
         )}
 
-        <Box width="180px">
+        <Box width={{ base: "100%", sm: "180px" }}>
           <Select
             placeholder="Select Process"
             value={selectedProcess}

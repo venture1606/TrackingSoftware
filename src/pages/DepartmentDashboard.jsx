@@ -235,7 +235,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Product Success Rate"
         count={`${((data.productSuccess?.data?.avgSuccessRate || 0) * 100).toFixed(2)}%`}
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
       >
         <VStack align="center" justify="center" h="100%" py={2}>
           <Box
@@ -258,7 +258,7 @@ const DepartmentDashboard = ({ Content }) => {
         </VStack>
       </StatCard>
 
-      <StatCard title="Total Products" count={data.products?.data?.totalProducts || 0} minWidth="300px">
+      <StatCard title="Total Products" count={data.products?.data?.totalProducts || 0} minWidth={{ base: "100%", md: "300px" }}>
         <VStack align="stretch" spacing={4} mt={4}>
           <HStack justify="space-between">
             <Text color="gray.600" fontSize="sm">
@@ -287,7 +287,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="NPD Register (Pending)"
         count={data.npd?.count || 0}
-        minWidth="400px"
+        minWidth={{ base: "100%", md: "400px" }}
       >
         <TableChart
           headers={["PART", "FROM", "DUE"]}
@@ -299,7 +299,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Process Success"
         count={data.productSuccess?.data?.totalOpen || 0}
-        minWidth="500px"
+        minWidth={{ base: "100%", lg: "500px" }}
       >
         <TableChart
           headers={["PART NO", "SOLD", "RET", "SUC %"]}
@@ -321,7 +321,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Revision Control (In Revision)"
         count={data.revision?.count || 0}
-        minWidth="400px"
+        minWidth={{ base: "100%", md: "400px" }}
       >
         <TableChart
           headers={["PART NO", "PART NAME", "DUE DATE"]}
@@ -337,7 +337,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Average OEE"
         count={`${data.oee?.data?.averageOEE || 0}%`}
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <GaugeChart
@@ -354,7 +354,7 @@ const DepartmentDashboard = ({ Content }) => {
         />
       </StatCard>
 
-      <StatCard title="OEE Trend" minWidth="450px">
+      <StatCard title="OEE Trend" minWidth={{ base: "100%", lg: "450px" }}>
         <AreaChart
           data={data.prodReport?.data || []}
           xAxisKey="date"
@@ -365,10 +365,16 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="In House Rejection & Action"
-        minWidth="340px"
+        minWidth={{ base: "100%", md: "340px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
-        <HStack justify="space-around" align="center" py={4}>
+        <Flex 
+          justify="space-around" 
+          align="center" 
+          py={4} 
+          direction={{ base: "column", sm: "row" }}
+          gap={4}
+        >
           <VStack bg="red.50" p={4} borderRadius="xl" minW="130px" spacing={1}>
             <Text
               fontSize="3xl"
@@ -417,12 +423,12 @@ const DepartmentDashboard = ({ Content }) => {
               Pending
             </Text>
           </VStack>
-        </HStack>
+        </Flex>
       </StatCard>
 
       <StatCard
         title="In House Rework Status"
-        minWidth="200px"
+        minWidth={{ base: "100%", sm: "200px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <VStack justify="center" h="100%" py={2}>
@@ -456,10 +462,17 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Settings Performance"
         count={data.settings?.data?.noOfSettings || 0}
-        minWidth="350px"
+        minWidth={{ base: "100%", md: "350px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
-        <HStack justify="space-around" align="center" py={4} w="100%">
+        <Flex 
+          justify="space-around" 
+          align="center" 
+          py={4} 
+          w="100%"
+          direction={{ base: "column", sm: "row" }}
+          gap={4}
+        >
           <VStack bg="purple.50" p={4} borderRadius="xl" minW="135px" spacing={1}>
             <Text fontSize="2xl" fontWeight="black" color="purple.600">
               {data.settings?.data?.averageSettingTime || 0}
@@ -476,7 +489,7 @@ const DepartmentDashboard = ({ Content }) => {
               Avg Setup<br />Loss (qty)
             </Text>
           </VStack>
-        </HStack>
+        </Flex>
       </StatCard>
       
     </Flex>
@@ -486,10 +499,18 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Customer Complaints"
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
-        <HStack w="100%" h="100%" justify="space-around" align="center" py={4}>
+        <Flex 
+          w="100%" 
+          h="100%" 
+          justify="space-around" 
+          align="center" 
+          py={4}
+          direction={{ base: "column", sm: "row" }}
+          gap={4}
+        >
           <VStack bg="red.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
             <Text
               fontSize="3xl"
@@ -538,13 +559,13 @@ const DepartmentDashboard = ({ Content }) => {
               Pending
             </Text>
           </VStack>
-        </HStack>
+        </Flex>
       </StatCard>
 
       <StatCard
         title="Incoming Inspection"
         count={data.incoming?.data?.pendingCount || 0}
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
       >
         <VStack align="center" justify="center" h="100%" spacing={3}>
           <Box
@@ -568,7 +589,7 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Continuous Improvement"
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <VStack justify="center" h="100%" py={4}>
@@ -603,7 +624,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Quality Audits (Pending)"
         count={data.audits?.data?.totalPending || 0}
-        minWidth="600px"
+        minWidth={{ base: "100%", lg: "600px" }}
       >
         <TableChart
           headers={["DEPARTMENT", "NCs", "RESPONSIBLE", "DUE"]}
@@ -615,7 +636,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Calibration Due Status"
         count={data.calibration?.data?.totalFiltered || 0}
-        minWidth="400px"
+        minWidth={{ base: "100%", md: "400px" }}
       >
         <VStack spacing={4} align="stretch" w="100%">
           <HStack spacing={4} justify="start" pb={2}>
@@ -656,7 +677,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Process Control Plan"
         count={data.pcp?.data?.totalRecords || 0}
-        minWidth="400px"
+        minWidth={{ base: "100%", md: "400px" }}
       >
         <VStack spacing={4} align="stretch" w="100%">
           <HStack spacing={4} justify="start" pb={2}>
@@ -693,7 +714,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Certificate Renewal Status"
         count={(data.certs?.data || []).filter(c => c.isDue).length}
-        minWidth="600px"
+        minWidth={{ base: "100%", lg: "600px" }}
       >
         <VStack spacing={4} align="stretch" w="100%">
           <HStack spacing={4} justify="start" pb={2}>
@@ -727,10 +748,10 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Employee Strength"
         count={data.overhead?.data?.actualOverHead || 0}
-        minWidth="350px"
+        minWidth={{ base: "100%", md: "350px" }}
       >
         <VStack align="center" justify="center" h="100%">
-          <SimpleGrid columns={2} spacing={10} w="100%">
+          <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={10} w="100%">
             <VStack bg="blue.50" p={5} borderRadius="xl">
               <Text fontSize="3xl" fontWeight="bold" color="blue.700">
                 {data.overhead?.data?.actualOverHead || 0}
@@ -751,7 +772,7 @@ const DepartmentDashboard = ({ Content }) => {
         </VStack>
       </StatCard>
 
-      <StatCard title="Department Distribution" minWidth="400px">
+      <StatCard title="Department Distribution" minWidth={{ base: "100%", md: "400px" }}>
         <DonutChart
           data={data.attendance?.data || []}
           nameKey="label"
@@ -766,7 +787,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Pending Procurements"
         count={data.procurement?.data?.totalPending || 0}
-        minWidth="500px"
+        minWidth={{ base: "100%", lg: "500px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <TableChart
@@ -815,7 +836,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Open Inward Payments"
         count={data.inward?.data?.totalOpen || 0}
-        minWidth="500px"
+        minWidth={{ base: "100%", lg: "500px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <TableChart
@@ -859,7 +880,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Customer Count"
         count={data.salesCust?.data?.totalCustomers || 0}
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
       >
         <VStack h="100%" justify="center">
           <Box p={6} bg="orange.50" borderRadius="full">
@@ -873,7 +894,7 @@ const DepartmentDashboard = ({ Content }) => {
         </VStack>
       </StatCard>
 
-      <StatCard title="Sales Trend" minWidth="300px">
+      <StatCard title="Sales Trend" minWidth={{ base: "100%", md: "450px" }}>
         <AreaChart
           data={data.salesTrend?.data || []}
           xAxisKey="month"
@@ -885,7 +906,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Customer Payment Status"
         count={data.dockets?.data?.totalOpen || 0}
-        minWidth="500px"
+        minWidth={{ base: "100%", lg: "500px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <TableChart
@@ -927,7 +948,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Quotation Status"
         count={data.quotation?.count || 0}
-        minWidth="300px"
+        minWidth={{ base: "100%", md: "300px" }}
       >
         <DonutChart
           data={Object.entries(data.quotation?.data || {}).map(
@@ -943,7 +964,7 @@ const DepartmentDashboard = ({ Content }) => {
       <StatCard
         title="Stock Data (Finished Goods)"
         count={data.stock?.totalStockQty || 0}
-        minWidth="600px"
+        minWidth={{ base: "100%", lg: "600px" }}
       >
         <TableChart
           headers={["ITEM CODE", "ITEM NAME", "STOCK"]}
@@ -994,7 +1015,7 @@ const DepartmentDashboard = ({ Content }) => {
       <VStack align="stretch" spacing={6}>
         <HStack justify="space-between">
           <Box>
-            <Heading size="lg" color="blue.700">
+            <Heading size={{ base: "md", md: "lg" }} color="blue.700">
               {Content} Dashboard
             </Heading>
             <Text color="gray.500">

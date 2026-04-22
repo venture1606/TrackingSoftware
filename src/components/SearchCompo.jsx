@@ -19,7 +19,7 @@ const SearchCompo = ({ placeholder = "Search...", onSearch }) => {
   };
 
   return (
-    <InputGroup size="sm" width="240px">
+    <InputGroup size="sm" width={{ base: "100%", md: "240px" }} flexShrink={0}>
       <InputLeftElement pointerEvents="none">
         <SearchIcon color="gray.400" />
       </InputLeftElement>
