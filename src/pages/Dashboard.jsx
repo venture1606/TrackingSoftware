@@ -416,10 +416,7 @@ function Dashboard() {
                     bg="green.50"
                   >
                     <Text fontSize="xl" fontWeight="black" color="green.600">
-                      {(
-                        (productSuccessData?.data?.avgSuccessRate || 0) * 100
-                      ).toFixed(1)}
-                      %
+                      {productSuccessData?.data?.avgSuccessRate || 0}%
                     </Text>
                   </Box>
                   <Text color="gray.500" fontWeight="bold" mt={2} fontSize="xs">
