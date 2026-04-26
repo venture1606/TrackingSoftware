@@ -1018,7 +1018,6 @@ function Dashboard() {
                     <TableChart
                       headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
                       data={(calibrationDeptData?.openRecords || [])
-                        .slice(0, 5)
                         .map((row) => {
                           const items = row.items || [];
                           const formatDate = (val) => {
@@ -1102,7 +1101,6 @@ function Dashboard() {
                     <TableChart
                       headers={["NAME", "DATE", "REV NO"]}
                       data={(pcpDeptData?.pendingRecords || [])
-                        .slice(0, 5)
                         .map((row) => {
                           const items = row.items || [];
                           const formatDate = (val) => {
@@ -1157,7 +1155,7 @@ function Dashboard() {
                 <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
                   <TableChart
                     headers={["CERTIFICATE NAME", "DEPT", "DUE DATE", "REMINDER"]}
-                    data={(certsDeptData || []).slice(0, 5).map(c => {
+                    data={(certsDeptData || []).map(c => {
                       const formatDate = (val) => {
                         if(!val || isNaN(Number(val))) return val || "-";
                         return new Date(Number(val)).toLocaleDateString('en-GB');

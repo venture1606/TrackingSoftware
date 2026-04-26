@@ -90,7 +90,7 @@ function SideBar() {
         padding: sidebarVisible ? "20px 10px" : "20px 10px",
       }}
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      h="calc(100vh - 4rem)" // Matching App Content height
+      h="100%" // Matching App Content height
       bg={bgColor}
       boxShadow="xl"
       borderRadius="2xl"

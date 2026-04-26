@@ -49,33 +49,45 @@ const TableChart = ({ headers = [], data = [], keys = [], colorKeys = [] }) => {
       w="100%"
       sx={{
         '&::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
+          width: '10px',
+          height: '10px',
         },
         '&::-webkit-scrollbar-track': {
-          background: 'gray.50',
+          background: '#f1f1f1',
           borderRadius: '10px',
         },
         '&::-webkit-scrollbar-thumb': {
-          background: 'gray.300',
+          background: '#888',
           borderRadius: '10px',
+          border: '2px solid #f1f1f1',
         },
         '&::-webkit-scrollbar-thumb:hover': {
-          background: 'gray.400',
+          background: '#555',
         },
       }}
     >
       <Table size="sm" variant="simple" layout="fixed">
         <Thead 
-          bg="gray.50" 
+          bg="gray.100" 
           position="sticky" 
           top={0} 
-          zIndex={1}
-          boxShadow="sm"
+          zIndex={2}
+          boxShadow="0 2px 2px -1px rgba(0,0,0,0.1)"
         >
           <Tr>
             {headers.map((h, i) => (
-              <Th key={i} fontSize="10px" color="gray.500" px={2} py={2} whiteSpace="nowrap">{h}</Th>
+              <Th 
+                key={i} 
+                fontSize="11px" 
+                color="gray.600" 
+                px={3} 
+                py={3} 
+                whiteSpace="nowrap"
+                textTransform="uppercase"
+                letterSpacing="wider"
+              >
+                {h}
+              </Th>
             ))}
           </Tr>
         </Thead>

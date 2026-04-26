@@ -136,7 +136,7 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
       gap="20px"
       width="100%"
       overflow="hidden"
-      minH="100vh"
+      height="100%"
     >
       <Suspense fallback={<Loading />}>
         <DepartmentPageContent

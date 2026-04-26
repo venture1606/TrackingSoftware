@@ -41,7 +41,7 @@
   flex-direction: column;
   border-radius: 8px;
   /* height: 100%; */
-  height: calc(100% + 2rem);
+  height: 100%;
   max-width: 250px;
   background-color: var(--third-color);
   color: var(--text-primary-color);
