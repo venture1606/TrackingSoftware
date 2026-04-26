@@ -234,7 +234,7 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Product Success Rate"
-        count={`${((data.productSuccess?.data?.avgSuccessRate || 0) * 100).toFixed(2)}%`}
+        count={`${data.productSuccess?.data?.totalOpen || 0}`}
         minWidth={{ base: "100%", md: "300px" }}
       >
         <VStack align="center" justify="center" h="100%" py={2}>
@@ -249,7 +249,7 @@ const DepartmentDashboard = ({ Content }) => {
             bg="green.50"
           >
             <Text fontSize="xl" fontWeight="black" color="green.600">
-              {((data.productSuccess?.data?.avgSuccessRate || 0) * 100).toFixed(1)}%
+              {data.productSuccess?.data?.avgSuccessRate || 0}%
             </Text>
           </Box>
           <Text color="gray.500" fontWeight="bold" mt={2} fontSize="xs">
@@ -364,7 +364,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
 
       <StatCard
-        title="In House Rejection & Action"
+        title="Rejection"
         minWidth={{ base: "100%", md: "340px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
@@ -427,7 +427,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
 
       <StatCard
-        title="In House Rework Status"
+        title="Rework Status"
         minWidth={{ base: "100%", sm: "200px" }}
         headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
@@ -634,7 +634,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
 
       <StatCard
-        title="Calibration Due Status"
+        title="Instrument Status"
         count={data.calibration?.data?.totalFiltered || 0}
         minWidth={{ base: "100%", md: "400px" }}
       >

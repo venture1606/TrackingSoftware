@@ -599,7 +599,7 @@ function Dashboard() {
           {/* ── 7. In House Rejection & Action ── */}
           {(isAdmin || hasAccessToProcess("MR/R/003")) && (
             <StatCard
-              title="In House Rejection & Action"
+              title="Rejection"
               minWidth="340px"
               headerRight={
                 <DashboardCardFilter
@@ -672,7 +672,7 @@ function Dashboard() {
           {/* ── 8. In House Rework Status ── */}
           {(isAdmin || hasAccessToProcess("MR/R/003A")) && (
             <StatCard
-              title="In House Rework Status"
+              title="Rework Status"
               minWidth="200px"
               headerRight={
                 <DashboardCardFilter
@@ -958,7 +958,7 @@ function Dashboard() {
           {/* ── 14. Calibration Due Status ── */}
           {(isAdmin || hasAccessToProcess("QA/R/002")) && (
             <StatCard
-              title="Calibration Due Status"
+              title="Instrument Status"
               count={calibrationDeptData?.totalFiltered || 0}
               minWidth="400px"
             >
@@ -1506,7 +1506,7 @@ function Dashboard() {
           </StatCard>
 
           <StatCard
-            title="Dispatch Data (Trends)"
+            title="Output (Trends)"
             count={dispatch?.totalQuantity}
             minWidth="400px"
             headerRight={

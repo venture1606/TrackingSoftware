@@ -281,6 +281,41 @@ function Auth() {
     handleAdminCreateAccount,
     handleForgotPassword,
     handleGetAllUser,
+    handleUpdatePassword: async (credentials) => {
+      setLoading(true);
+      try {
+        const response = await axios.put(
+          `${URL}/password/update`,
+          credentials,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        dispatch(
+          setMessage({
+            status: "success",
+            description: response.data.message || "Password Updated Successfully",
+            message: "Update Success",
+          })
+        );
+        return true;
+      } catch (error) {
+        console.log(error);
+        dispatch(
+          setMessage({
+            status: "error",
+            description: error.response?.data?.message || "Password Update Failed",
+            message: "Update Error",
+          })
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
     handleUpdateUser: async (id, credentials) => {
       setLoading(true);
       try {

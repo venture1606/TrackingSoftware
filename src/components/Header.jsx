@@ -7,9 +7,12 @@ import { useState } from 'react'
 // Importing Component
 import DetailsPopOver from '../hooks/DetailsPopOver'
 import ConfirmDialog from './ConfirmDialog'
+import ChangePasswordModal from './ChangePasswordModal'
 
 // Importing API's
 import Auth from '../services/Auth'
+
+import usePermissions from '../services/permissions'
 
 // importing styles
 import '../styles/components.css'
@@ -23,8 +26,10 @@ function Header() {
 
   const { handleLogout } = Auth();
   const userDetails = useSelector((state) => state.auth.userDetails);
+  const { isAdmin } = usePermissions();
 
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleLogoutClick = () => {
     setIsLogoutDialogOpen(true);
@@ -44,7 +49,8 @@ function Header() {
           <DetailsPopOver DetailsContent={userDetails} />
           <span className='HeaderUserName'>{userDetails?.name}</span>
         </div>
-        <Icon icon={"eos-icons:admin-outlined"} className="HeaderIcon" onClick={() => navigate("/admin")}/>
+        {isAdmin && <Icon icon={"eos-icons:admin-outlined"} className="HeaderIcon" onClick={() => navigate("/admin")}/>}
+        <Icon icon={"material-symbols:lock-reset"} className="HeaderIcon" onClick={() => setIsPasswordModalOpen(true)}/>
         <Icon icon={"uil:exit"} className="HeaderIcon" onClick={handleLogoutClick}/>
       </div>
 
@@ -56,6 +62,11 @@ function Header() {
         message="Are you sure you want to log out? You will need to sign in again to access your account."
         confirmText="Logout"
         colorScheme="red"
+      />
+
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
       />
     </nav>
   )
