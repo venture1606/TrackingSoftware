@@ -42,12 +42,40 @@ const isStatusValue = (value) => {
 
 const TableChart = ({ headers = [], data = [], keys = [], colorKeys = [] }) => {
   return (
-    <Box overflowX="auto" w="100%">
-      <Table size="sm" variant="simple">
-        <Thead bg="gray.50">
+    <Box 
+      maxH="400px" 
+      overflowY="auto" 
+      overflowX="auto" 
+      w="100%"
+      sx={{
+        '&::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'gray.50',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'gray.300',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: 'gray.400',
+        },
+      }}
+    >
+      <Table size="sm" variant="simple" layout="fixed">
+        <Thead 
+          bg="gray.50" 
+          position="sticky" 
+          top={0} 
+          zIndex={1}
+          boxShadow="sm"
+        >
           <Tr>
             {headers.map((h, i) => (
-              <Th key={i} fontSize="10px" color="gray.500" px={2} py={1}>{h}</Th>
+              <Th key={i} fontSize="10px" color="gray.500" px={2} py={2} whiteSpace="nowrap">{h}</Th>
             ))}
           </Tr>
         </Thead>

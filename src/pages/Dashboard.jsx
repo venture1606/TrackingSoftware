@@ -1034,7 +1034,6 @@ function Dashboard() {
                                   i.key.includes("INSTRUMENT") ||
                                   i.key.includes("NAME"),
                               )?.value ||
-                              items[0]?.value ||
                               "-",
                             done: formatDate(
                               items.find((i) => i.key === "DONE")?.value ||
