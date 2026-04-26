@@ -7,7 +7,7 @@ import {
   IconButton,
   useDisclosure,
 } from "@chakra-ui/react";
-import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon, RepeatIcon } from "@chakra-ui/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -16,16 +16,24 @@ import AdminTableView from "../../hooks/AdminTableView";
 import { usePermissions } from "../../services/permissions";
 import Auth from "../../services/Auth";
 import ConfirmDialog from "../ConfirmDialog";
+import SecureConfirmDialog from "../SecureConfirmDialog";
 
 const UserDetails = () => {
   const queryClient = useQueryClient();
   const { data: allUsers, isLoading } = useAllUsers();
   const { isAdmin: currentUserIsAdmin } = usePermissions();
-  const { handleDeleteUser } = Auth();
+  const { handleDeleteUser, handleResetUserPassword } = Auth();
   const navigate = useNavigate();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isResetOpen, 
+    onOpen: onResetOpen, 
+    onClose: onResetClose 
+  } = useDisclosure();
+
   const [userToDelete, setUserToDelete] = useState(null);
+  const [userToReset, setUserToReset] = useState(null);
 
   const onDeleteClick = (email) => {
     setUserToDelete(email);
@@ -40,6 +48,18 @@ const UserDetails = () => {
       }
     }
     onClose();
+  };
+
+  const onResetClick = (user) => {
+    setUserToReset(user);
+    onResetOpen();
+  };
+
+  const confirmReset = async () => {
+    if (userToReset) {
+      await handleResetUserPassword(userToReset._id);
+    }
+    onResetClose();
   };
 
   const formattedUsers = useMemo(() => {
@@ -93,6 +113,14 @@ const UserDetails = () => {
                 onClick={() => navigate(`/admin/edit-account/${user._id}`)}
                 aria-label="Edit User"
               />
+              <IconButton
+                icon={<RepeatIcon />}
+                colorScheme="orange"
+                variant="ghost"
+                size="sm"
+                onClick={() => onResetClick(user)}
+                aria-label="Reset Password"
+              />
               {showDelete && (
                 <IconButton
                   icon={<DeleteIcon />}
@@ -133,6 +161,16 @@ const UserDetails = () => {
         onConfirm={confirmDelete}
         title="Delete User Account"
         message={`Are you sure you want to delete the account for ${userToDelete}? This action cannot be undone.`}
+      />
+      <SecureConfirmDialog
+        isOpen={isResetOpen}
+        onClose={onResetClose}
+        onConfirm={confirmReset}
+        title="Reset User Password"
+        message={`Are you sure you want to reset the password for ${userToReset?.name} to the default value '12345'?`}
+        confirmText="Reset Password"
+        colorScheme="orange"
+        holdTime={5}
       />
     </Box>
   );

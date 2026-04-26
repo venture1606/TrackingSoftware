@@ -316,6 +316,41 @@ function Auth() {
         setLoading(false);
       }
     },
+    handleResetUserPassword: async (id) => {
+      setLoading(true);
+      try {
+        const response = await axios.put(
+          `${URL}/admin/reset-password/${id}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        dispatch(
+          setMessage({
+            status: "success",
+            description: response.data.message || "Password Reset to Default",
+            message: "Reset Success",
+          })
+        );
+        return true;
+      } catch (error) {
+        console.log(error);
+        dispatch(
+          setMessage({
+            status: "error",
+            description: error.response?.data?.message || "Password Reset Failed",
+            message: "Reset Error",
+          })
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
     handleUpdateUser: async (id, credentials) => {
       setLoading(true);
       try {
