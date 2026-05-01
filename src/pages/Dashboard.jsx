@@ -1197,9 +1197,11 @@ function Dashboard() {
                     data={(procurementDeptData?.pendingRecords || []).map((row) => {
                       const items = row.items;
                       const dateVal = items.find((i) => i.key === "DATE")?.value;
+                      const leadTime = Number(items.find((i) => i.key === "LEAD TIME")?.value) || 0;
                       let due = "-";
                       if (dateVal && !isNaN(dateVal)) {
-                        const diffDays = Math.ceil((Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24));
+                        const deliveryDate = Number(dateVal) + (leadTime * 24 * 60 * 60 * 1000);
+                        const diffDays = Math.ceil((deliveryDate - Date.now()) / (1000 * 60 * 60 * 24));
                         due = diffDays > 0 ? `${diffDays} days` : diffDays < 0 ? `${Math.abs(diffDays)} days ago` : "Today";
                       }
                       return {
@@ -1236,9 +1238,11 @@ function Dashboard() {
                     data={(inwardDeptData?.openRecords || []).map((row) => {
                       const items = row.items;
                       const dateVal = items.find((i) => i.key === "DELIVERY DATE")?.value;
+                      const creditPeriod = Number(items.find((i) => i.key === "CREDIT PERIOD")?.value) || 0;
                       let due = "-";
                       if (dateVal && !isNaN(dateVal)) {
-                        const diffDays = Math.ceil((Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24));
+                        const dueDate = Number(dateVal) + (creditPeriod * 24 * 60 * 60 * 1000);
+                        const diffDays = Math.ceil((dueDate - Date.now()) / (1000 * 60 * 60 * 24));
                         due = diffDays > 0 ? `${diffDays} days` : diffDays < 0 ? `${Math.abs(diffDays)} days ago` : "Today";
                       }
                       return {

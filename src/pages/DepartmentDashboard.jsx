@@ -802,12 +802,14 @@ const DepartmentDashboard = ({ Content }) => {
           data={(data.procurement?.data?.pendingRecords || []).map((row) => {
             const items = row.items;
             const dateVal = items.find((i) => i.key === "DATE")?.value;
+            const leadTime = Number(items.find((i) => i.key === "LEAD TIME")?.value) || 0;
 
             // Calculate Due
             let due = "-";
             if (dateVal && !isNaN(dateVal)) {
+              const deliveryDate = Number(dateVal) + (leadTime * 24 * 60 * 60 * 1000);
               const diffDays = Math.ceil(
-                (Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24),
+                (deliveryDate - Date.now()) / (1000 * 60 * 60 * 24),
               );
               due =
                 diffDays > 0
@@ -844,11 +846,13 @@ const DepartmentDashboard = ({ Content }) => {
           data={(data.inward?.data?.openRecords || []).map((row) => {
             const items = row.items;
             const dateVal = items.find((i) => i.key === "DELIVERY DATE")?.value;
+            const creditPeriod = Number(items.find((i) => i.key === "CREDIT PERIOD")?.value) || 0;
 
             let due = "-";
             if (dateVal && !isNaN(dateVal)) {
+              const dueDate = Number(dateVal) + (creditPeriod * 24 * 60 * 60 * 1000);
               const diffDays = Math.ceil(
-                (Number(dateVal) - Date.now()) / (1000 * 60 * 60 * 24),
+                (dueDate - Date.now()) / (1000 * 60 * 60 * 24),
               );
               due =
                 diffDays > 0
