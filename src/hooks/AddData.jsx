@@ -175,7 +175,9 @@ function AddData({
     const key = newData[index].key;
 
     if (subIndex !== null && Array.isArray(newData[index].value)) {
-      newData[index].value[subIndex] = val;
+      const updatedArray = [...newData[index].value];
+      updatedArray[subIndex] = val;
+      newData[index].value = updatedArray;
     } else {
       newData[index].value = val;
     }
@@ -204,17 +206,19 @@ function AddData({
   // Add new input for arrayInput
   const handleAddArrayInput = (index) => {
     const newData = [...formData];
-    newData[index].value.push("");
+    newData[index].value = [...newData[index].value, ""];
     setFormData(newData);
   };
 
   // Remove input for arrayInput
   const handleRemoveArrayInput = (index, subIndex) => {
     const newData = [...formData];
-    newData[index].value.splice(subIndex, 1);
-    if (newData[index].value.length === 0) {
-      newData[index].value.push("");
+    const updatedArray = [...newData[index].value];
+    updatedArray.splice(subIndex, 1);
+    if (updatedArray.length === 0) {
+      updatedArray.push("");
     }
+    newData[index].value = updatedArray;
     setFormData(newData);
   };
 
