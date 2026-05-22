@@ -5,9 +5,9 @@ export const groupItemsHelper = (key) => {
     case "TYPE":
     case "MATERIAL":
       return "groupOfItems";
-    case "ITEM-NAME":
-    case "GRADE":
-      return "groupOfItemList";
+    // case "ITEM-NAME":
+    // case "GRADE":
+    //   return "groupOfItemList";
     case "VENDOR-NAME":
       return "groupOfVendorList";
     case "CUSTOMER-NAME":
