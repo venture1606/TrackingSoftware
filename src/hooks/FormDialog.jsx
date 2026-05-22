@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   Button,
   Modal,
@@ -79,7 +79,7 @@ function FormDialog({
   const [dynamicOptions, setDynamicOptions] = useState({});
 
   // Helper to refresh filtered options for all select fields
-  const refreshDynamicOptions = (currentFormValues, currentSelectValues) => {
+  const refreshDynamicOptions = useCallback((currentFormValues, currentSelectValues) => {
     const mergedValues = { ...currentFormValues, ...currentSelectValues };
     const formDataFormat = Object.keys(mergedValues).map((key) => ({
       key,
@@ -120,9 +120,9 @@ function FormDialog({
     }
 
     setDynamicOptions(newDynamicOptions);
-  };
+  }, [SelectArray, FormArray, groupItem, SelectOptionsArray]);
 
-  // Reset on initialData change
+  // Reset and initialize on initialData change
   useEffect(() => {
     // Convert epoch date values back to YYYY-MM-DD for display
     const normalizedData = { ...initialData };
@@ -140,22 +140,20 @@ function FormDialog({
         }
       });
     }
-    setFormValues(normalizedData);
-    refreshDynamicOptions(normalizedData, selectValues);
-  }, [initialData, refreshDynamicOptions, selectValues]);
 
-  useEffect(() => {
+    const initialSelects = {};
     if (SelectArray) {
-      const initialSelects = {};
       SelectArray.forEach((field) => {
         if (initialData[field.key] !== undefined) {
           initialSelects[field.key] = initialData[field.key];
         }
       });
-      setSelectValues(initialSelects);
-      refreshDynamicOptions(formValues, initialSelects);
     }
-  }, [initialData, SelectArray]);
+
+    setFormValues(normalizedData);
+    setSelectValues(initialSelects);
+    refreshDynamicOptions(normalizedData, initialSelects);
+  }, [initialData, SelectArray, FormArray, refreshDynamicOptions, DateFieldsArray]);
 
   const handleInputChange = (field, value, subIndex = null) => {
     let newFormValues;
@@ -606,33 +604,35 @@ function FormDialog({
                               </Text>
                             </Center>
                          </Box>
-
-                         {formValues[field.key]?.previewUrl && (
-                           <Flex direction="column" align="center" gap={2} width="100%">
-                             <Box border="1px solid" borderColor="gray.100" p={1} borderRadius="lg" bg="white">
-                               <img
-                                 src={formValues[field.key].previewUrl}
-                                 alt="Preview"
-                                 style={{
-                                   width: "100%",
-                                   maxHeight: "200px",
-                                   objectFit: "contain",
-                                   borderRadius: "8px",
-                                 }}
-                               />
-                             </Box>
-                             {!noEditableFields.includes(field.key) && (
-                               <Button
-                                 size="xs"
-                                 colorScheme="red"
-                                 variant="ghost"
-                                 onClick={() => handleInputChange(field.key, null)}
-                               >
-                                 Remove Image
-                               </Button>
-                             )}
-                           </Flex>
-                         )}
+                         {(() => {
+                            const previewUrl = formValues[field.key]?.previewUrl || (typeof formValues[field.key] === "string" ? formValues[field.key] : null);
+                            return previewUrl ? (
+                              <Flex direction="column" align="center" gap={2} width="100%">
+                                <Box border="1px solid" borderColor="gray.100" p={1} borderRadius="lg" bg="white">
+                                  <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    style={{
+                                      width: "100%",
+                                      maxHeight: "200px",
+                                      objectFit: "contain",
+                                      borderRadius: "8px",
+                                    }}
+                                  />
+                                </Box>
+                                {!noEditableFields.includes(field.key) && (
+                                  <Button
+                                    size="xs"
+                                    colorScheme="red"
+                                    variant="ghost"
+                                    onClick={() => handleInputChange(field.key, null)}
+                                  >
+                                    Remove Image
+                                  </Button>
+                                )}
+                              </Flex>
+                            ) : null;
+                          })()}
                        </Stack>
                     ) : TimeArrays.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
                       // ✅ Time field
