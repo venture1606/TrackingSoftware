@@ -627,11 +627,11 @@ const EditableRow = ({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          alignItems: "center",
+          alignItems: "start",
           justifyContent: "center",
           gap: "4px",
           width: "100%",
-          padding: "0 5px",
+          padding: "8px 5px",
         }}
       >
         <Button

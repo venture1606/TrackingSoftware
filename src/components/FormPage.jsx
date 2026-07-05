@@ -345,10 +345,10 @@ function FormPage({
         .map((h) =>
           h === "DETAILING PRODUCT"
             ? "minmax(450px, 4fr)"
-            : "minmax(100px, 1fr)",
+            : "minmax(150px, auto)",
         )
         .join(" ") + (canModify ? " 160px" : "")
-    : `repeat(${process?.header?.length || 1}, 100px) max-content`;
+    : `repeat(${process?.header?.length || 1}, 150px) max-content`;
 
   const Row = useCallback(
     ({ index, style }) => {
