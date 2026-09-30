@@ -32,6 +32,7 @@ import "../styles/departmentpage.css";
 import ItemsData from "../utils/ItemsData.json";
 
 // importing API's
+import { DEPARTMENT_URL, PROCESS_URL } from "../config/api";
 import { useDepartments } from "../services/Department";
 import {
   useProcessesByDepartmentId,
@@ -233,8 +234,8 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   );
 }
 
-const DEPT_URL = process.env.REACT_APP_DEPARTMENT_URL;
-const PROC_URL = process.env.REACT_APP_PROCESS_URL;
+const DEPT_URL = DEPARTMENT_URL;
+const PROC_URL = PROCESS_URL;
 
 const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

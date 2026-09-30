@@ -4,9 +4,10 @@ import { useDispatch } from "react-redux";
 
 import { setProducts, setSingleProduct } from "../redux/slices/product";
 import { setMessage } from "../redux/slices/common";
+import { PRODUCT_URL } from "../config/api";
 
 function Product() {
-  const URL = process.env.REACT_APP_PRODUCT_URL;
+  const URL = PRODUCT_URL;
 
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);

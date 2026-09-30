@@ -29,6 +29,7 @@ import ItemsData from "../utils/ItemsData";
 import { updateSelectOptions } from "../redux/slices/auth";
 import { findAutoFillData, getFilteredOptions } from "../utils/constant";
 import DataCheck from "../utils/DataCheck.json";
+import { resolveFileUrl } from "../config/api";
 
 function FormDialog({
   IndicationText,
@@ -605,7 +606,7 @@ function FormDialog({
                             </Center>
                          </Box>
                          {(() => {
-                            const previewUrl = formValues[field.key]?.previewUrl || (typeof formValues[field.key] === "string" ? formValues[field.key] : null);
+                            const previewUrl = formValues[field.key]?.previewUrl || (typeof formValues[field.key] === "string" ? resolveFileUrl(formValues[field.key]) : null);
                             return previewUrl ? (
                               <Flex direction="column" align="center" gap={2} width="100%">
                                 <Box border="1px solid" borderColor="gray.100" p={1} borderRadius="lg" bg="white">

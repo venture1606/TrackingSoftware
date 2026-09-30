@@ -11,8 +11,9 @@ import {
   setLogout,
 } from "../redux/slices/auth";
 import { setMessage } from "../redux/slices/common";
+import { AUTH_URL } from "../config/api";
 
-const URL = process.env.REACT_APP_AUTH_URL;
+const URL = AUTH_URL;
 
 export const useAllUsers = (enabled = true) => {
   const dispatch = useDispatch();
@@ -154,7 +155,7 @@ function Auth() {
     } catch (error) {
       console.log(error);
       const errorMessage = error.response?.data?.message || "An error occurred";
-      const errorStatus = error.response.status;
+      const errorStatus = error.response?.status || "Network/Unknown";
 
       dispatch(
         setMessage({

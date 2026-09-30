@@ -52,8 +52,9 @@ import "../styles/departmentpage.css";
 
 import ItemsData from "../utils/ItemsData.json";
 import { setDetailingProducts } from "../redux/slices/department";
+import { PROCESS_URL } from "../config/api";
 
-const URL = process.env.REACT_APP_PROCESS_URL;
+const URL = PROCESS_URL;
 
 function FormPage({
   process,

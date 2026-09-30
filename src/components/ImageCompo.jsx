@@ -11,6 +11,7 @@ import {
   Image,
   Text,
 } from "@chakra-ui/react";
+import { resolveFileUrl } from "../config/api";
 
 const ImageCompo = ({ imageUrl, onClose }) => {
   const isFileObject = useMemo(() => 
@@ -20,7 +21,7 @@ const ImageCompo = ({ imageUrl, onClose }) => {
 
   const imageSrc = useMemo(() => {
     if (!imageUrl) return null;
-    return isFileObject ? URL.createObjectURL(imageUrl) : imageUrl;
+    return isFileObject ? URL.createObjectURL(imageUrl) : resolveFileUrl(imageUrl);
   }, [imageUrl, isFileObject]);
 
   const handleClose = () => {

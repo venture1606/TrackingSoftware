@@ -3,8 +3,9 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { setDepartments } from "../redux/slices/department";
+import { DEPARTMENT_URL } from "../config/api";
 
-const URL = process.env.REACT_APP_DEPARTMENT_URL;
+const URL = DEPARTMENT_URL;
 
 export const useDepartments = () => {
   const dispatch = useDispatch();

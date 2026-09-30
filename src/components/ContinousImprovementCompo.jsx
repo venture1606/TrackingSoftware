@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { FixedSizeList as List } from "react-window";
 import AddData from "../hooks/AddData";
+import { resolveFileUrl } from "../config/api";
 
 const ContinousImprovementCompo = ({
   rows,
@@ -120,7 +121,7 @@ const ContinousImprovementCompo = ({
                 <Flex justify="center" align="center" h="150px">
                   {rowData["BEFORE"] ? (
                     <Image
-                      src={rowData["BEFORE"]}
+                      src={resolveFileUrl(rowData["BEFORE"])}
                       alt="Before"
                       maxH="100%"
                       borderRadius="lg"
@@ -137,7 +138,7 @@ const ContinousImprovementCompo = ({
                  <Flex justify="center" align="center" h="150px">
                   {rowData["AFTER"] ? (
                     <Image
-                      src={rowData["AFTER"]}
+                      src={resolveFileUrl(rowData["AFTER"])}
                       alt="After"
                       maxH="100%"
                       borderRadius="lg"

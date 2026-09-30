@@ -4,8 +4,9 @@ import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { setGroupItem, setSelectOptionsArray } from "../redux/slices/auth";
 import { useEffect } from "react";
+import { PROCESS_URL } from "../config/api";
 
-const URL = process.env.REACT_APP_PROCESS_URL;
+const URL = PROCESS_URL;
 
 const getAuthHeaders = () => ({
   headers: {

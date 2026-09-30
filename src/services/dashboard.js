@@ -1,6 +1,7 @@
 import axios from "axios";
+import { PROCESS_URL } from "../config/api";
 
-const API_URL = process.env.REACT_APP_PROCESS_URL;
+const API_URL = PROCESS_URL;
 
 const getAuthHeaders = () => ({
   headers: {

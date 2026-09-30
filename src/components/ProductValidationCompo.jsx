@@ -14,6 +14,7 @@ import { EditIcon, DeleteIcon, AttachmentIcon } from "@chakra-ui/icons";
 import { FixedSizeList as List } from "react-window";
 import ConfirmDialog from "./ConfirmDialog";
 import AddData from "../hooks/AddData";
+import { resolveFileUrl } from "../config/api";
 
 const ProductValidationCompo = ({
   rows,
@@ -170,7 +171,7 @@ const ProductValidationCompo = ({
               maxW="400px"
             >
               <Image
-                src={imageUrl}
+                src={resolveFileUrl(imageUrl)}
                 alt={testName}
                 borderRadius="lg"
                 fallbackSrc="https://via.placeholder.com/400x250?text=No+Validation+Image"

@@ -27,6 +27,7 @@ import { useAllProcesses, useSearchSelectOptions } from "../services/Process";
 import Process from "../services/Process";
 import SubProcess from "../components/SubProcess";
 import Loading from "../hooks/Loading";
+import { resolveFileUrl } from "../config/api";
 
 function Qms() {
   const dispatch = useDispatch();
@@ -123,7 +124,7 @@ function Qms() {
           <ModalCloseButton />
           <ModalBody>
             <img
-              src={imagePopupUrl}
+              src={resolveFileUrl(imagePopupUrl)}
               alt="Uploaded"
               style={{ width: "100%", borderRadius: "8px" }}
             />
