@@ -312,7 +312,8 @@ function FormPage({
   };
 
   const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
-    const cell = row[cellIdx];
+    const cell =
+      row.find((c) => c.key === cellKey) || row[cellIdx] || { key: cellKey, value: "" };
     const rowDataId = rowIds[rowIdx];
 
     let id;
@@ -405,7 +406,12 @@ function FormPage({
               height: "100%",
             }}
           >
-            {row.map((cell, cellIdx) => {
+            {(process?.header || []).map((headerKey, cellIdx) => {
+              const cell = row.find((c) => c.key === headerKey) || {
+                key: headerKey,
+                value: "",
+                process: null,
+              };
               if (
                 cell.key === "DETAILING PRODUCT" &&
                 Array.isArray(cell.value)
