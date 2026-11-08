@@ -401,4 +401,93 @@ function Process() {
   };
 }
 
+export const useBulkConfig = (processId, enabled = true) => {
+  return useQuery({
+    queryKey: ["bulkConfig", processId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${URL}/bulk/config/${encodeURIComponent(processId)}`,
+        getAuthHeaders(),
+      );
+      return response.data.data;
+    },
+    enabled: !!processId && enabled,
+    retry: false,
+  });
+};
+
+export const useBulkFetch = () => {
+  const dispatch = useDispatch();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const response = await axios.post(
+        `${URL}/bulk/fetch`,
+        payload,
+        getAuthHeaders(),
+      );
+      return response.data;
+    },
+    onError: (error) => {
+      dispatch(
+        setMessage({
+          status: "error",
+          description:
+            error?.response?.data?.errorMessage ||
+            error?.message ||
+            "Bulk fetch failed",
+          message: "Error",
+        }),
+      );
+    },
+  });
+};
+
+export const useBulkUpsert = () => {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const response = await axios.post(
+        `${URL}/bulk/upsert`,
+        payload,
+        getAuthHeaders(),
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["process"] });
+      const failCount = data?.failed?.length || 0;
+      const failDetails = (data?.failed || [])
+        .slice(0, 3)
+        .map((f) => f.message)
+        .filter(Boolean)
+        .join("; ");
+      const summary = `Created ${data.created || 0}, updated ${data.updated || 0}, closed orders ${data.closedOrders || 0}${failCount ? `, failed ${failCount}` : ""}`;
+      dispatch(
+        setMessage({
+          status: failCount
+            ? data.created || data.updated
+              ? "warning"
+              : "error"
+            : "success",
+          description: failDetails ? `${summary}. ${failDetails}` : summary,
+          message: "Bulk Upsert",
+        }),
+      );
+    },
+    onError: (error) => {
+      dispatch(
+        setMessage({
+          status: "error",
+          description:
+            error?.response?.data?.errorMessage ||
+            error?.message ||
+            "Bulk upsert failed",
+          message: "Error",
+        }),
+      );
+    },
+  });
+};
+
 export default Process;

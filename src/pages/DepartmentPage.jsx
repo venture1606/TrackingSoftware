@@ -24,6 +24,7 @@ import HeaderSection from "../components/HeaderSection";
 import SearchCompo from "../components/SearchCompo";
 import FilterCompo from "../components/FilterCompo";
 import DepartmentDashboard from "./DepartmentDashboard";
+import BulkDialog from "../components/BulkDialog";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -38,6 +39,7 @@ import {
   useProcessesByDepartmentId,
   useProcessById,
   useSearchSelectOptions,
+  useBulkConfig,
 } from "../services/Process";
 import { setMainTableData, setProcess } from "../redux/slices/department";
 import { usePermissions } from "../services/permissions";
@@ -266,6 +268,7 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
   const [isMerged, setIsMerged] = useState(false);
   const [originalMainTable, setOriginalMainTable] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -318,6 +321,12 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
   const selectedProcessId = foundProcess
     ? foundProcess._id || foundProcess.id
     : null;
+  const selectedBusinessProcessId = foundProcess?.processId || null;
+
+  const { data: bulkConfig, isSuccess: hasBulkConfig } = useBulkConfig(
+    selectedBusinessProcessId,
+    !!selectedBusinessProcessId && !isViewOnly,
+  );
 
   const { data: processDataRaw, refetch: refetchProcess } = useSuspenseQuery({
     queryKey: ["process", selectedProcessId],
@@ -658,6 +667,19 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
           </Button>
         )}
 
+        {selectedProcess && !isViewOnly && hasBulkConfig && bulkConfig && (
+          <Button
+            leftIcon={<Icon icon="material-symbols:playlist-add-rounded" />}
+            onClick={() => setIsBulkOpen(true)}
+            colorScheme="teal"
+            variant="solid"
+            size="sm"
+            flexShrink={0}
+          >
+            Bulk Insert
+          </Button>
+        )}
+
         {selectedProcess === "Procurement Register" && (
           <Button
             onClick={handleSortMerge}
@@ -685,6 +707,19 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
           <DepartmentDashboard Content={department} />
         )}
       </Box>
+
+      {isBulkOpen && (
+        <BulkDialog
+          isOpen={isBulkOpen}
+          onClose={() => setIsBulkOpen(false)}
+          processId={selectedBusinessProcessId}
+          mongoProcessId={selectedProcessId}
+          onSuccess={() => {
+            refetchProcess();
+            handleRefresh?.();
+          }}
+        />
+      )}
     </>
   );
 }
