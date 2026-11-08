@@ -116,10 +116,22 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         }
       });
 
-      for (const key of config.filterHeaders || []) {
-        if (!String(mergedFilters[key] ?? "").trim()) {
-          alert(`Enter ${key} in Filters (or Shared fields) before Fetch`);
+      if (config.filtersOptional) {
+        const hasAny = (config.filterHeaders || []).some((key) =>
+          String(mergedFilters[key] ?? "").trim(),
+        );
+        if (!hasAny) {
+          alert(
+            `Enter at least one filter (${(config.filterHeaders || []).join(", ")}) before Fetch`,
+          );
           return;
+        }
+      } else {
+        for (const key of config.filterHeaders || []) {
+          if (!String(mergedFilters[key] ?? "").trim()) {
+            alert(`Enter ${key} in Filters (or Shared fields) before Fetch`);
+            return;
+          }
         }
       }
 
@@ -176,12 +188,18 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   );
 
   useEffect(() => {
-    // Auto-fetch only for dockets (default OPEN filter). Quotation waits for ENQUIRY NO + Fetch.
-    if (isOpen && config?.mode === "parentFetchCreate") {
+    // Auto-fetch only when defaultFilters exist (e.g. Dockets OPEN).
+    // Inward (filtersOptional, no defaultFilters) waits for user filters + Fetch.
+    if (
+      isOpen &&
+      config?.mode === "parentFetchCreate" &&
+      config?.defaultFilters &&
+      Object.keys(config.defaultFilters).length > 0
+    ) {
       runFetch(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, config?.mode]);
+  }, [isOpen, config?.mode, config?.defaultFilters]);
 
   const allSelected = rows.length > 0 && selected.size === rows.length;
   const someSelected = selected.size > 0 && selected.size < rows.length;
@@ -339,6 +357,20 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
             <Text color="red.500">Bulk entry is not configured for this process.</Text>
           ) : (
             <Stack spacing={5}>
+              {config.instructions ? (
+                <Box
+                  bg="blue.50"
+                  borderWidth="1px"
+                  borderColor="blue.100"
+                  borderRadius="md"
+                  px={3}
+                  py={2}
+                >
+                  <Text fontSize="sm" color="blue.800">
+                    {config.instructions}
+                  </Text>
+                </Box>
+              ) : null}
               <Box>
                 <Text fontWeight="bold" mb={2}>
                   Shared fields (applied to every selected row)
@@ -363,9 +395,17 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                     Filters — fetch existing records to bulk edit
                   </Text>
                   <Text fontSize="xs" color="gray.500" mb={2}>
-                    {config.mode === "blankMultiCreate"
-                      ? "Enter ENQUIRY NO and Fetch to load matching quotation rows for edit. Unchecked rows are skipped. Add Row still creates new lines."
-                      : "Adjust filters and Fetch parent orders."}
+                    {config.mode === "parentFetchCreate"
+                      ? config.filtersOptional
+                        ? `Fill any of ${(config.filterHeaders || []).join(" / ")}, then Fetch parent rows. Only filled filters are applied.${
+                            config.excludeParentValues?.["INSPECTION-STATUS"]
+                              ? " Rows already marked Done are excluded."
+                              : ""
+                          }`
+                        : "Adjust filters and Fetch parent orders."
+                      : config.filtersOptional
+                        ? `Fill any of ${(config.filterHeaders || []).join(" / ")}, then Fetch. Only filled filters are applied. Unchecked rows are skipped; Add Row creates new lines.`
+                        : "Enter required filter(s) and Fetch to load matching rows for edit. Unchecked rows are skipped. Add Row still creates new lines."}
                   </Text>
                   <Flex gap={3} align="flex-end" wrap="wrap">
                     {(config.filterHeaders || []).map((key) => (
@@ -461,8 +501,12 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                         <Td colSpan={tableColumns.length + 2}>
                           <Text color="gray.500" py={4} textAlign="center">
                             {config.mode === "parentFetchCreate"
-                              ? "No rows fetched. Adjust filters and Fetch."
-                              : "Enter ENQUIRY NO in Filters and Fetch to edit, or Add Row to create new."}
+                              ? config.filtersOptional
+                                ? "Fill any filter and Fetch to load procurement rows."
+                                : "No rows fetched. Adjust filters and Fetch."
+                              : config.filtersOptional
+                                ? "Fill any filter and Fetch to edit, or Add Row to create new."
+                                : "Enter required filter(s) and Fetch to edit, or Add Row to create new."}
                           </Text>
                         </Td>
                       </Tr>
