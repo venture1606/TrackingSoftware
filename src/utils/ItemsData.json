@@ -405,6 +405,9 @@
     "DATE OF JOINING",
     "TARGET DATE"
   ],
+  "ProcessDateFields": {
+    "MR/R/007": ["FROM", "TO"]
+  },
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
   ],

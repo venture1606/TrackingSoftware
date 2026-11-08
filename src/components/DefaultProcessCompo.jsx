@@ -50,6 +50,7 @@ const DefaultProcessCompo = ({
       {showAddData && (
         <AddData
           headers={nested.header || []}
+          processId={nested.processId || null}
           IndicationText="Add New Data"
           isOpen={showAddData}
           onClose={() => setShowAddData(false)}

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -35,6 +35,7 @@ function AddData({
   onClose,
   onSave,
   currentBomId = null,
+  processId = null,
 }) {
   const dispatch = useDispatch();
 
@@ -51,6 +52,7 @@ function AddData({
     DefaultSelectProcess,
     ArrayValuesProcess,
     DateFieldsArray,
+    ProcessDateFields,
     ImageUploadArray,
     noOthers,
     TimeArrays,
@@ -58,6 +60,20 @@ function AddData({
     MandatoryFields,
     ToggleFieldsArray,
   } = ItemsData;
+
+  const processScopedDateFields = useMemo(() => {
+    if (!processId || !ProcessDateFields?.[processId]) return [];
+    return ProcessDateFields[processId];
+  }, [processId, ProcessDateFields]);
+
+  const isDateFieldKey = (key) => {
+    if (!key) return false;
+    const lowerKey = key.trim().toLowerCase();
+    return (
+      DateFieldsArray.some((h) => h.trim().toLowerCase() === lowerKey) ||
+      processScopedDateFields.some((h) => h.trim().toLowerCase() === lowerKey)
+    );
+  };
 
   const initialRef = useRef(null);
 
@@ -115,7 +131,7 @@ function AddData({
         const lowerKey = key.trim().toLowerCase();
         if (DefaultSelectProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "multiSelect";
         if (ArrayValuesProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "arrayInput";
-        if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) return "date";
+        if (isDateFieldKey(key)) return "date";
         if (ImageUploadArray.some(h => h.trim().toLowerCase() === lowerKey)) return "image";
         if (TimeArrays.some(h => h.trim().toLowerCase() === lowerKey)) return "time";
         if (NumberFields.some(h => h.trim().toLowerCase() === lowerKey)) return "number";
@@ -158,49 +174,48 @@ function AddData({
 
       return refreshOptions(mappedData);
     });
-  }, [
-    headers,
-    DefaultHeaderAndProcessId,
-    DefaultSelectProcess,
-    ArrayValuesProcess,
-    DateFieldsArray,
-    ImageUploadArray,
-    SelectOptionsArray,
-    groupItem, // Added groupItem dependency
-  ]);
+  }, [headers, processId, SelectOptionsArray, groupItem]);
 
   // Handle value change
   const handleValueChange = (index, val, subIndex = null) => {
-    const newData = [...formData];
-    const key = newData[index].key;
+    setFormData((prev) => {
+      const newData = prev.map((field, i) =>
+        i === index ? { ...field } : field,
+      );
+      const key = newData[index]?.key;
+      if (!key) return prev;
 
-    if (subIndex !== null && Array.isArray(newData[index].value)) {
-      const updatedArray = [...newData[index].value];
-      updatedArray[subIndex] = val;
-      newData[index].value = updatedArray;
-    } else {
-      newData[index].value = val;
-    }
+      if (subIndex !== null && Array.isArray(newData[index].value)) {
+        const updatedArray = [...newData[index].value];
+        updatedArray[subIndex] = val;
+        newData[index].value = updatedArray;
+      } else {
+        newData[index].value = val;
+      }
 
-    // Autofill Logic
-    const autoFillData = findAutoFillData(groupItem, key, val);
-    if (autoFillData) {
-      Object.keys(autoFillData).forEach((autoKey) => {
-        if (autoKey === key) return; // Skip the key that triggered autofill
-        const targetIndex = newData.findIndex((f) => f.key === autoKey);
-        if (targetIndex !== -1) {
-          newData[targetIndex].value = autoFillData[autoKey];
-        }
-      });
-    }
+      // Autofill Logic
+      const autoFillData = findAutoFillData(groupItem, key, val);
+      if (autoFillData) {
+        Object.keys(autoFillData).forEach((autoKey) => {
+          if (autoKey === key) return; // Skip the key that triggered autofill
+          const targetIndex = newData.findIndex((f) => f.key === autoKey);
+          if (targetIndex !== -1) {
+            newData[targetIndex] = {
+              ...newData[targetIndex],
+              value: autoFillData[autoKey],
+            };
+          }
+        });
+      }
 
-    // Refresh dynamic options (dependent dropdowns)
-    const updatedWithDynamicOptions = refreshOptions(newData);
-    setFormData(updatedWithDynamicOptions);
-    // Clear error for this field when user starts typing
-    if (errorFields.includes(newData[index].key)) {
-      setErrorFields(errorFields.filter((k) => k !== newData[index].key));
-    }
+      return refreshOptions(newData);
+    });
+
+    setErrorFields((prev) => {
+      const key = formData[index]?.key;
+      if (!key || !prev.includes(key)) return prev;
+      return prev.filter((k) => k !== key);
+    });
   };
 
   // Add new input for arrayInput
@@ -273,7 +288,7 @@ function AddData({
       }
 
       // Date
-      if (DateFieldsArray.includes(key)) {
+      if (isDateFieldKey(key)) {
         return {
           key,
           value: "",
@@ -574,7 +589,7 @@ function AddData({
                 ) : field.process === "date" ? (
                   <Input
                     type="date"
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => handleValueChange(idx, e.target.value)}
                     borderColor={
                       errorFields.includes(field.key) ? "red.500" : undefined
@@ -649,7 +664,7 @@ function AddData({
                 ) : field.process === "time" ? (
                   <Input
                     type="time"
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => handleValueChange(idx, e.target.value)}
                     borderColor={
                       errorFields.includes(field.key) ? "red.500" : undefined
@@ -661,7 +676,7 @@ function AddData({
                 ) : field.process === "number" ? (
                   <Input
                     type="number"
-                    value={field.value}
+                    value={field.value ?? ""}
                     onChange={(e) => handleValueChange(idx, e.target.value)}
                     borderColor={
                       errorFields.includes(field.key) ? "red.500" : undefined
@@ -686,7 +701,7 @@ function AddData({
                 ) : (
                   <Input
                     ref={idx === 0 ? initialRef : null}
-                    value={field.value}
+                    value={field.value ?? ""}
                     placeholder="Value"
                     onChange={(e) => handleValueChange(idx, e.target.value)}
                     borderColor={

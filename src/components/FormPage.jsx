@@ -78,7 +78,11 @@ function FormPage({
     ShownArray,
     ColorProcess,
     DateFieldsArray,
+    ProcessDateFields,
   } = ItemsData;
+
+  const processScopedDateFields =
+    (process?.processId && ProcessDateFields?.[process.processId]) || [];
 
   const dispatch = useDispatch();
   const { isEditor, isCreator, isViewer, isAdmin } = usePermissions();
@@ -197,7 +201,19 @@ function FormPage({
 
       dispatch(setDetailingProducts(filteredData));
     }
-  }, [process, bomData, currentBomId, dispatch]);
+    // Depend on stable process fields — whole `process` object identity changes often
+    // and was remounting inline edit rows mid-typing.
+  }, [
+    process?.id,
+    process?.process,
+    process?.processId,
+    process?.value,
+    process?.header,
+    process?.rowIds,
+    bomData,
+    currentBomId,
+    dispatch,
+  ]);
 
   const getItemSize = useCallback(
     (index) => {
@@ -363,6 +379,8 @@ function FormPage({
             <EditableRow
               key={rowId}
               headers={process?.header}
+              processId={process?.processId || null}
+              rowId={rowId}
               initialData={row}
               currentBomId={currentBomId}
               onSave={(items) => handleSaveEdit(items, rowId, index)}
@@ -499,9 +517,15 @@ function FormPage({
               }
 
               // Format date fields from epoch to DD/MM/YYYY
-              const isDateField = DateFieldsArray.some(
-                (d) => d.trim().toLowerCase() === cell.key.trim().toLowerCase(),
-              );
+              const isDateField =
+                DateFieldsArray.some(
+                  (d) =>
+                    d.trim().toLowerCase() === cell.key.trim().toLowerCase(),
+                ) ||
+                processScopedDateFields.some(
+                  (d) =>
+                    d.trim().toLowerCase() === cell.key.trim().toLowerCase(),
+                );
               const displayValue = isDateField
                 ? formatEpochToDate(cell.value)
                 : cell.value;
@@ -755,6 +779,8 @@ function FormPage({
               <EditableRow
                 key={`new-row-${newRowKey}`}
                 headers={process.header}
+                processId={process?.processId || null}
+                rowId={`new-row-${newRowKey}`}
                 isNew={true}
                 currentBomId={currentBomId}
                 onSave={handleSaveNew}

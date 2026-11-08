@@ -65,6 +65,7 @@ const transformProcess = (process) => {
   return {
     id: process._id,
     process: process.process,
+    processId: process.processId,
     header: process.headers || [],
     value: dataRows.map((row) =>
       (row.items || []).map((cell) => ({
@@ -92,15 +93,18 @@ const transformProcess = (process) => {
 };
 
 // Detect headers that represent date values
-const detectDateHeaders = (headers = []) => {
+const detectDateHeaders = (headers = [], processId = null) => {
   const DateFieldsArray = ItemsData?.DateFieldsArray || [];
+  const processDateFields =
+    (processId && ItemsData?.ProcessDateFields?.[processId]) || [];
   return headers.filter((h) => {
     if (!h) return false;
     const upper = h.trim().toUpperCase();
     return (
       upper.includes("DATE") ||
       upper.includes("DUE") ||
-      DateFieldsArray.some((d) => d.trim().toUpperCase() === upper)
+      DateFieldsArray.some((d) => d.trim().toUpperCase() === upper) ||
+      processDateFields.some((d) => d.trim().toUpperCase() === upper)
     );
   });
 };
@@ -345,8 +349,8 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
   // Detect date fields in current process headers
   const availableDateFields = useMemo(() => {
     if (!mainTableData?.header) return [];
-    return detectDateHeaders(mainTableData.header);
-  }, [mainTableData?.header]);
+    return detectDateHeaders(mainTableData.header, mainTableData.processId);
+  }, [mainTableData?.header, mainTableData?.processId]);
 
   // Reset search and filters when process changes
   useEffect(() => {

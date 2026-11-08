@@ -41,6 +41,7 @@ function FormDialog({
   onClose,
   initialData = {},
   mode = "form",
+  processId = null,
 }) {
   const dispatch = useDispatch();
 
@@ -58,11 +59,24 @@ function FormDialog({
     ArrayValuesProcess,
     ImageUploadArray,
     DateFieldsArray,
+    ProcessDateFields,
     noOthers,
     TimeArrays,
     NumberFields,
     MandatoryFields,
   } = ItemsData;
+
+  const processScopedDateFields =
+    (processId && ProcessDateFields?.[processId]) || [];
+
+  const isDateKey = (key) => {
+    if (!key) return false;
+    const lowerKey = key.trim().toLowerCase();
+    return (
+      DateFieldsArray.some((h) => h.trim().toLowerCase() === lowerKey) ||
+      processScopedDateFields.some((h) => h.trim().toLowerCase() === lowerKey)
+    );
+  };
 
   const noEditableFields = DataCheck?.noEditableFields || [];
 
@@ -130,7 +144,7 @@ function FormDialog({
     if (FormArray) {
       FormArray.forEach((field) => {
         const lowerKey = field.key.trim().toLowerCase();
-        if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) {
+        if (isDateKey(field.key)) {
           const val = normalizedData[field.key];
           if (val && /^\d+$/.test(String(val))) {
             const d = new Date(Number(val));
@@ -292,7 +306,7 @@ function FormDialog({
           process = "image";
         } else if (ArrayValuesProcess.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "array";
-        } else if (DateFieldsArray.some(h => h.trim().toLowerCase() === lowerKey)) {
+        } else if (isDateKey(key)) {
           process = "date";
         } else if (TimeArrays.some(h => h.trim().toLowerCase() === lowerKey)) {
           process = "time";
@@ -552,7 +566,7 @@ function FormDialog({
                           />
                         )}
                       </Stack>
-                    ) : DateFieldsArray.some(h => h.trim().toLowerCase() === field.key.trim().toLowerCase()) ? (
+                    ) : isDateKey(field.key) ? (
                       // ✅ Date field
                       <Input
                         isDisabled={noEditableFields.includes(field.key)}

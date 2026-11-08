@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Tr,
   Td,
@@ -37,6 +37,8 @@ const EditableRow = ({
   currentBomId = null,
   isNew = false,
   gridTemplateColumns, // Added
+  processId = null,
+  rowId = null,
 }) => {
   const dispatch = useDispatch();
 
@@ -56,6 +58,7 @@ const EditableRow = ({
     DefaultSelectProcess,
     ArrayValuesProcess,
     DateFieldsArray,
+    ProcessDateFields,
     ImageUploadArray,
     noOthers,
     TimeArrays,
@@ -63,6 +66,20 @@ const EditableRow = ({
     MandatoryFields,
     ToggleFieldsArray,
   } = ItemsData;
+
+  const processScopedDateFields = useMemo(() => {
+    if (!processId || !ProcessDateFields?.[processId]) return [];
+    return ProcessDateFields[processId];
+  }, [processId, ProcessDateFields]);
+
+  const isDateFieldKey = (key) => {
+    if (!key) return false;
+    const lowerKey = key.trim().toLowerCase();
+    return (
+      DateFieldsArray.some((h) => h.trim().toLowerCase() === lowerKey) ||
+      processScopedDateFields.some((h) => h.trim().toLowerCase() === lowerKey)
+    );
+  };
 
   const noEditableFields = DataCheck?.noEditableFields || [];
 
@@ -121,8 +138,7 @@ const EditableRow = ({
         return "multiSelect";
       if (ArrayValuesProcess.some((h) => h.trim().toLowerCase() === lowerKey))
         return "arrayInput";
-      if (DateFieldsArray.some((h) => h.trim().toLowerCase() === lowerKey))
-        return "date";
+      if (isDateFieldKey(key)) return "date";
       if (ImageUploadArray.some((h) => h.trim().toLowerCase() === lowerKey))
         return "image";
       if (TimeArrays.some((h) => h.trim().toLowerCase() === lowerKey))
@@ -166,6 +182,8 @@ const EditableRow = ({
             value = d.toISOString().split("T")[0];
           }
         }
+
+        if (value == null) value = "";
 
         const field = { key, value, process };
         if (process === "select") {
@@ -216,10 +234,9 @@ const EditableRow = ({
     }
 
     setFormData(refreshOptions(mappedData));
-
-    // Cleanup on unmount or header change
-    return () => setFormData([]);
-  }, [headers, initialData, DefaultHeaderAndProcessId]);
+    // Re-init only when switching rows / headers / process — not when parent
+    // replaces initialData array identity during a query refresh mid-edit.
+  }, [headers, processId, rowId, isNew]);
 
   // Separate effect for updating options when SelectOptionsArray or groupItem changes
   useEffect(() => {
@@ -230,35 +247,44 @@ const EditableRow = ({
   }, [SelectOptionsArray, groupItem]);
 
   const handleValueChange = (index, val, subIndex = null) => {
-    const newData = [...formData];
-    const key = newData[index].key;
+    setFormData((prev) => {
+      const newData = prev.map((field, i) =>
+        i === index ? { ...field } : field,
+      );
+      const key = newData[index]?.key;
+      if (!key) return prev;
 
-    if (subIndex !== null && Array.isArray(newData[index].value)) {
-      const updatedArray = [...newData[index].value];
-      updatedArray[subIndex] = val;
-      newData[index].value = updatedArray;
-    } else {
-      newData[index].value = val;
-    }
+      if (subIndex !== null && Array.isArray(newData[index].value)) {
+        const updatedArray = [...newData[index].value];
+        updatedArray[subIndex] = val;
+        newData[index].value = updatedArray;
+      } else {
+        newData[index].value = val;
+      }
 
-    // Autofill
-    const autoFillData = findAutoFillData(groupItem, key, val);
-    if (autoFillData) {
-      Object.keys(autoFillData).forEach((autoKey) => {
-        if (autoKey === key) return;
-        const targetIndex = newData.findIndex((f) => f.key === autoKey);
-        if (targetIndex !== -1) {
-          newData[targetIndex].value = autoFillData[autoKey];
-        }
-      });
-    }
+      // Autofill
+      const autoFillData = findAutoFillData(groupItem, key, val);
+      if (autoFillData) {
+        Object.keys(autoFillData).forEach((autoKey) => {
+          if (autoKey === key) return;
+          const targetIndex = newData.findIndex((f) => f.key === autoKey);
+          if (targetIndex !== -1) {
+            newData[targetIndex] = {
+              ...newData[targetIndex],
+              value: autoFillData[autoKey],
+            };
+          }
+        });
+      }
 
-    const updatedWithDynamicOptions = refreshOptions(newData);
-    setFormData(updatedWithDynamicOptions);
+      return refreshOptions(newData);
+    });
 
-    if (errorFields.includes(key)) {
-      setErrorFields(errorFields.filter((k) => k !== key));
-    }
+    setErrorFields((prev) => {
+      const key = formData[index]?.key;
+      if (!key || !prev.includes(key)) return prev;
+      return prev.filter((k) => k !== key);
+    });
   };
 
   const handleValidationAndSave = () => {
@@ -509,7 +535,7 @@ const EditableRow = ({
                 type="date"
                 size="sm"
                 fontSize="xs"
-                value={field.value}
+                value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
@@ -521,7 +547,7 @@ const EditableRow = ({
                 type="time"
                 size="sm"
                 fontSize="xs"
-                value={field.value}
+                value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
@@ -533,7 +559,7 @@ const EditableRow = ({
                 type="number"
                 size="sm"
                 fontSize="xs"
-                value={field.value}
+                value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
@@ -610,7 +636,7 @@ const EditableRow = ({
               <Input
                 size="sm"
                 fontSize="xs"
-                value={field.value}
+                value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isDisabled={isReadOnly}
                 isInvalid={isError}
