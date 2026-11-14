@@ -87,7 +87,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   const [selected, setSelected] = useState(() => new Set());
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [invoiceNoOptions, setInvoiceNoOptions] = useState([]);
   const limit = 500;
+  const NumberFields = ItemsData.NumberFields || [];
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
@@ -211,6 +213,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       setSelected(new Set(fetched.map((r) => r.tempId)));
       setTotal(result.total || 0);
       setPage(result.page || pageNum);
+      if (Array.isArray(result.invoiceNoOptions)) {
+        setInvoiceNoOptions(result.invoiceNoOptions);
+      }
 
       // Prefill shared fields from first fetched row (bulk edit)
       if (result.singleEntryFromFetch) {
@@ -362,7 +367,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     return match?.value || [];
   };
 
-  const renderFieldInput = (key, value, onChange) => {
+  const renderFieldInput = (key, value, onChange, { asFilter = false } = {}) => {
     if (isDateHeader(key, processId)) {
       let display = value || "";
       if (display && /^\d+$/.test(String(display))) {
@@ -378,7 +383,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         />
       );
     }
-    if (key === "QL STATUS" || key === "ORDER STATUS") {
+    if (key === "QL STATUS" || key === "ORDER STATUS" || key === "PAYMENT") {
       return (
         <Select
           size="sm"
@@ -399,6 +404,37 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
             </>
           )}
         </Select>
+      );
+    }
+    if (asFilter && key === "INVOICE NO") {
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select INVOICE NO"
+        >
+          {invoiceNoOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+    if (
+      NumberFields.some(
+        (h) => h.trim().toLowerCase() === String(key || "").trim().toLowerCase(),
+      )
+    ) {
+      return (
+        <Input
+          type="number"
+          size="sm"
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={key}
+        />
       );
     }
     if (key === "CUSTOMER-NAME" || key === "ENQ BY") {
@@ -539,13 +575,18 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                         <Text fontSize="xs" mb={1} color="gray.600">
                           {key}
                         </Text>
-                        {renderFieldInput(key, filters[key] ?? "", (val) => {
-                          setFilters((prev) => ({ ...prev, [key]: val }));
-                          // Keep shared ENQUIRY NO in sync for Quotation
-                          if ((config.singleEntryHeaders || []).includes(key)) {
-                            setSingleEntry((prev) => ({ ...prev, [key]: val }));
-                          }
-                        })}
+                        {renderFieldInput(
+                          key,
+                          filters[key] ?? "",
+                          (val) => {
+                            setFilters((prev) => ({ ...prev, [key]: val }));
+                            // Keep shared ENQUIRY NO in sync for Quotation
+                            if ((config.singleEntryHeaders || []).includes(key)) {
+                              setSingleEntry((prev) => ({ ...prev, [key]: val }));
+                            }
+                          },
+                          { asFilter: true },
+                        )}
                       </Box>
                     ))}
                     <Button

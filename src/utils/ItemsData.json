@@ -434,7 +434,8 @@
     "CYCLE TIME",
     "SETTING TIME",
     "ACTUAL",
-    "REJECT"
+    "REJECT",
+    "CREDIT PERIOD"
   ],
   "MandatoryFields":[
     "CYCLE TIME",
