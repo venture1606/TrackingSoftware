@@ -101,8 +101,11 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [invoiceNoOptions, setInvoiceNoOptions] = useState([]);
+  const [poNoOptions, setPoNoOptions] = useState([]);
+  const [vendorNameOptions, setVendorNameOptions] = useState([]);
   const limit = 500;
   const NumberFields = ItemsData.NumberFields || [];
+  const isInwardBulk = processId === "PR/R/003A";
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
@@ -231,6 +234,12 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       if (Array.isArray(result.invoiceNoOptions)) {
         setInvoiceNoOptions(result.invoiceNoOptions);
       }
+      if (Array.isArray(result.poNoOptions)) {
+        setPoNoOptions(result.poNoOptions);
+      }
+      if (Array.isArray(result.vendorNameOptions)) {
+        setVendorNameOptions(result.vendorNameOptions);
+      }
 
       // Prefill shared fields from first fetched row (bulk edit)
       if (result.singleEntryFromFetch) {
@@ -285,11 +294,24 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
 
   const updateRowItem = (tempId, key, value) => {
     setRows((prev) =>
-      prev.map((r) =>
-        r.tempId === tempId
-          ? { ...r, items: { ...r.items, [key]: value } }
-          : r,
-      ),
+      prev.map((r) => {
+        if (r.tempId !== tempId) return r;
+        let nextVal = value;
+        // Inward: QTY cannot exceed parent PENDING QTY
+        if (isInwardBulk && key === "QTY") {
+          const maxQty = Number(r.items?.["PENDING QTY"]);
+          const n = Number(value);
+          if (
+            Number.isFinite(n) &&
+            Number.isFinite(maxQty) &&
+            maxQty > 0 &&
+            n > maxQty
+          ) {
+            nextVal = String(maxQty);
+          }
+        }
+        return { ...r, items: { ...r.items, [key]: nextVal } };
+      }),
     );
   };
 
@@ -318,6 +340,24 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     if (checkedRows.length === 0) {
       alert("Select at least one row");
       return;
+    }
+
+    if (isInwardBulk) {
+      for (const r of checkedRows) {
+        const qty = Number(r.items?.["QTY"] ?? 0);
+        const pending = Number(r.items?.["PENDING QTY"]);
+        if (
+          Number.isFinite(qty) &&
+          Number.isFinite(pending) &&
+          pending > 0 &&
+          qty > pending
+        ) {
+          alert(
+            `QTY (${qty}) exceeds PENDING QTY (${pending}) for a selected row. Reduce QTY and retry.`,
+          );
+          return;
+        }
+      }
     }
 
     const normalizedSingle = {};
@@ -375,9 +415,14 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   }, [config, parentDisplayHeaders, multiHeaders]);
 
   const getSelectOptionsForKey = (key) => {
-    const match = (SelectOptionsArray || []).find(
-      (item) =>
-        item.key?.trim().toLowerCase() === String(key || "").trim().toLowerCase(),
+    const lower = String(key || "").trim().toLowerCase();
+    const aliases = [lower];
+    if (lower === "item name") aliases.push("item-name");
+    if (lower === "item-name") aliases.push("item name");
+    if (lower === "vendor name") aliases.push("vendor-name");
+    if (lower === "vendor-name") aliases.push("vendor name");
+    const match = (SelectOptionsArray || []).find((item) =>
+      aliases.includes(String(item.key || "").trim().toLowerCase()),
     );
     return match?.value || [];
   };
@@ -396,6 +441,19 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
           value={display}
           onChange={(e) => onChange(e.target.value)}
         />
+      );
+    }
+    if (key === "QC QUALITY INSPECTION") {
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select"
+        >
+          <option value="Move to Inspection">Move to Inspection</option>
+          <option value="Inspection Done">Inspection Done</option>
+        </Select>
       );
     }
     if (key === "QL STATUS" || key === "ORDER STATUS" || key === "PAYMENT") {
@@ -430,6 +488,59 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
           placeholder="Select INVOICE NO"
         >
           {invoiceNoOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+    if (asFilter && isInwardBulk && key === "PO NO") {
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select PO NO (pending)"
+        >
+          {poNoOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+    if (asFilter && isInwardBulk && (key === "VENDOR-NAME" || key === "VENDOR NAME")) {
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select VENDOR (pending)"
+        >
+          {vendorNameOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+    if (
+      asFilter &&
+      isInwardBulk &&
+      (key === "ITEM CATEGORY" || key === "ITEM NAME")
+    ) {
+      const options = getSelectOptionsForKey(key);
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Select ${key}`}
+        >
+          {options.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
             </option>
