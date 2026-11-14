@@ -113,18 +113,27 @@ function FormPage({
     (process?.processId && ProcessDateFields?.[process.processId]) || [];
 
   const dispatch = useDispatch();
-  const { isEditor, isCreator, isViewer, isAdmin } = usePermissions();
+  const { isEditor, isCreator, isViewer, isAdmin, hasAccessToProcess } =
+    usePermissions();
   const detailingProducts = useSelector(
     (state) => state.department.detailingProducts,
   );
   const stateProcess = useSelector((state) => state.department.process);
   const userDetails = useSelector((state) => state.auth.userDetails);
 
-  // Computed permissions
-  const canModify = !isView && !isViewer;
+  // Process-specific authorization (e.g. NPD Register → DD/R/010)
+  const hasProcessAccess =
+    isAdmin ||
+    !process?.processId ||
+    hasAccessToProcess(process.processId);
+
+  // Computed permissions (accessLevel + processAccess)
+  const canModify = !isView && !isViewer && hasProcessAccess;
   const canEdit = canModify && (isEditor || isAdmin);
   const canCreate = canModify && (isEditor || isCreator || isAdmin);
   const canDelete = canModify && (isEditor || isAdmin);
+  // UPDATE / nested process buttons (PROTO, VALIDATION, …)
+  const canClickUpdate = canModify && (isEditor || isAdmin || isCreator);
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -379,10 +388,30 @@ function FormPage({
     }
   };
 
-  const handleCellButtonClick = async (row, rowIdx, cellIdx, cellKey) => {
+  const handleCellButtonClick = async (
+    row,
+    rowIdx,
+    cellIdx,
+    cellKey,
+    { forceView = false } = {},
+  ) => {
     const cell =
       row.find((c) => c.key === cellKey) || row[cellIdx] || { key: cellKey, value: "" };
     const rowDataId = rowIds[rowIdx];
+
+    const isViewOnlyCell =
+      forceView ||
+      DefaultSelectProcess.includes(cell.key) ||
+      !canClickUpdate;
+
+    // UPDATE requires process permission + edit/create access
+    if (
+      !DefaultSelectProcess.includes(cell.key) &&
+      !canClickUpdate &&
+      !forceView
+    ) {
+      return;
+    }
 
     let id;
     if (cell.key === "DETAILING PRODUCT") {
@@ -412,6 +441,7 @@ function FormPage({
         cellIdx,
         nestedProcess: response || null,
         rowDataId,
+        openAsView: isViewOnlyCell,
       });
       onOpen();
     } catch (error) {
@@ -649,6 +679,15 @@ function FormPage({
                             ? `${cell.process !== "value" ? `${cell.process}` : "red"}`
                             : "blue"
                         }
+                        isDisabled={
+                          !DefaultSelectProcess.includes(cell.key) &&
+                          !canClickUpdate
+                        }
+                        disabledReason={
+                          !hasProcessAccess
+                            ? "No process permission for this register"
+                            : "Your access level cannot update this process"
+                        }
                         onClick={() =>
                           handleCellButtonClick(row, index, cellIdx, cell.key)
                         }
@@ -711,7 +750,10 @@ function FormPage({
       canModify,
       canEdit,
       canDelete,
+      canClickUpdate,
+      hasProcessAccess,
       handleSaveEdit,
+      handleCellButtonClick,
       processScopedDateFields,
     ],
   );
@@ -877,7 +919,18 @@ function FormPage({
         </div>
       </div>
 
-      <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} />
+      <SubProcess
+        isOpen={isOpen}
+        onClose={onClose}
+        data={popupData}
+        isView={
+          isView ||
+          isViewer ||
+          !hasProcessAccess ||
+          !canClickUpdate ||
+          !!popupData?.openAsView
+        }
+      />
 
       <ConfirmDialog
         isOpen={isDeleteAlertOpen}
