@@ -8,12 +8,9 @@ import {
   Td,
   Box,
   Text,
-  Badge,
 } from "@chakra-ui/react";
-import TruncatedText from "./TruncatedText";
 
 const DetailingProductCompo = ({ bomIds, detailingProducts, ShownArray }) => {
-  // Gather all matching BOM rows
   const bomRows = bomIds
     ?.map((bomId) => detailingProducts?.data?.find((d) => d._id === bomId))
     .filter(Boolean);
@@ -28,44 +25,53 @@ const DetailingProductCompo = ({ bomIds, detailingProducts, ShownArray }) => {
     );
   }
 
+  const visibleHeaders = (detailingProducts?.headers || []).filter((h) =>
+    ShownArray.includes(h),
+  );
+
   return (
-    <Box 
-      className="DetailingTableContainer" 
-      maxH="210px" 
+    <Box
+      className="DetailingTableContainer"
       w="100%"
-      overflowY="auto" 
-      borderRadius="md" 
-      border="1px solid" 
+      minW="max-content"
+      borderRadius="md"
+      border="1px solid"
       borderColor="gray.200"
       bg="gray.50"
       p={1}
+      overflow="visible"
     >
-      <Table size="xs" variant="simple" bg="white" borderRadius="sm" w="100%">
-        <Thead bg="gray.100" position="sticky" top={0} zIndex={1}>
+      <Table
+        size="xs"
+        variant="simple"
+        bg="white"
+        borderRadius="sm"
+        sx={{ tableLayout: "auto" }}
+      >
+        <Thead bg="gray.100">
           <Tr>
-            {detailingProducts?.headers?.map(
-              (header, hIdx) =>
-                ShownArray.includes(header) && (
-                  <Th
-                    key={hIdx}
-                    fontSize="10px"
-                    color="gray.600"
-                    textTransform="uppercase"
-                    letterSpacing="wider"
-                    py={2}
-                    textAlign="center"
-                  >
-                    {header}
-                  </Th>
-                )
-            )}
+            {visibleHeaders.map((header, hIdx) => (
+              <Th
+                key={hIdx}
+                fontSize="10px"
+                color="gray.600"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                py={2}
+                px={2}
+                textAlign="center"
+                whiteSpace="nowrap"
+                width="1%"
+              >
+                {header}
+              </Th>
+            ))}
           </Tr>
         </Thead>
         <Tbody>
           {bomRows.map((bomRow, idx) => (
             <Tr key={idx} _hover={{ bg: "gray.50" }}>
-              {detailingProducts?.headers?.map((header, hIdx) => {
-                if (!ShownArray.includes(header)) return null;
+              {visibleHeaders.map((header, hIdx) => {
                 const item = bomRow.items.find((i) => i.key === header);
                 return (
                   <Td
@@ -74,11 +80,13 @@ const DetailingProductCompo = ({ bomIds, detailingProducts, ShownArray }) => {
                     color="gray.700"
                     fontWeight="medium"
                     py={2}
+                    px={2}
                     textAlign="center"
                     borderBottom="1px solid"
                     borderColor="gray.100"
+                    whiteSpace="nowrap"
                   >
-                     <TruncatedText text={item?.value || "-"} limit={15} />
+                    {item?.value || "-"}
                   </Td>
                 );
               })}

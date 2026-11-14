@@ -1,35 +1,143 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     Button,
     Select,
     useDisclosure,
     Box,
-    Flex
+    Flex,
+    Th,
 } from '@chakra-ui/react'
-import { FixedSizeList as List } from 'react-window';
+import { VariableSizeList as List } from 'react-window';
 
 import Process from '../services/Process'
 import SubProcess from '../components/SubProcess';
+import MeasuredListRow from '../components/MeasuredListRow';
+import {
+    getHeaderBasedGridTemplate,
+    estimateWrappedCellHeight,
+    DEFAULT_ROW_HEIGHT,
+} from '../utils/tableLayout';
 
+const CELL_WRAP_SX = {
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    overflowWrap: 'anywhere',
+};
+
+const USER_HEADERS = [
+    'S.No',
+    'Name',
+    'Email',
+    'Role',
+    'Department',
+    'Process',
+    'Created',
+    'Updated',
+    'Status',
+];
 
 function AdminTableView({ DetailsArray, TableContent }) {
 
     const { isOpen, onOpen, onClose } = useDisclosure()
 
-    // Using for process
-    const {  handleGetSingleProcess } = Process();
+    const { handleGetSingleProcess } = Process();
     const [selectedProcessId, setSelectedProcessId] = useState(null);
-    const [ popupData, setPopupData ] = useState(null);
+    const [popupData, setPopupData] = useState(null);
     const selectedProcess = DetailsArray.find(p => p._id === selectedProcessId);
 
-    const handleViewSubProcess = async (rowDataId, processId) => {
+    const userListRef = useRef(null);
+    const processListRef = useRef(null);
+    const userRowSizeMap = useRef({});
+    const processRowSizeMap = useRef({});
+
+    const userHeaders = useMemo(() => {
+        if (DetailsArray?.[0]?.length) {
+            return DetailsArray[0].map((item) => item.key);
+        }
+        return USER_HEADERS;
+    }, [DetailsArray]);
+
+    const userGridTemplate = useMemo(
+        () => getHeaderBasedGridTemplate(userHeaders),
+        [userHeaders],
+    );
+
+    const processGridTemplate = useMemo(
+        () =>
+            selectedProcess
+                ? getHeaderBasedGridTemplate(selectedProcess.headers || [], {
+                      extraColumns: ['Updated By', 'Created At', 'History'],
+                  })
+                : '',
+        [selectedProcess],
+    );
+
+    const setUserRowSize = useCallback((index, size) => {
+        const next = Math.ceil(size);
+        if (userRowSizeMap.current[index] !== next) {
+            userRowSizeMap.current[index] = next;
+            userListRef.current?.resetAfterIndex(index);
+        }
+    }, []);
+
+    const setProcessRowSize = useCallback((index, size) => {
+        const next = Math.ceil(size);
+        if (processRowSizeMap.current[index] !== next) {
+            processRowSizeMap.current[index] = next;
+            processListRef.current?.resetAfterIndex(index);
+        }
+    }, []);
+
+    const getUserItemSize = useCallback(
+        (index) => {
+            if (userRowSizeMap.current[index] != null) {
+                return userRowSizeMap.current[index];
+            }
+            const row = DetailsArray[index];
+            if (!row) return DEFAULT_ROW_HEIGHT;
+            let maxHeight = DEFAULT_ROW_HEIGHT;
+            row.forEach((cell) => {
+                maxHeight = Math.max(
+                    maxHeight,
+                    estimateWrappedCellHeight(cell?.value, 120),
+                );
+            });
+            return maxHeight;
+        },
+        [DetailsArray],
+    );
+
+    const getProcessItemSize = useCallback(
+        (index) => {
+            if (processRowSizeMap.current[index] != null) {
+                return processRowSizeMap.current[index];
+            }
+            const row = selectedProcess?.data?.[index];
+            if (!row) return DEFAULT_ROW_HEIGHT;
+            let maxHeight = DEFAULT_ROW_HEIGHT;
+            (selectedProcess.headers || []).forEach((header) => {
+                const item = row.items?.find((i) => i.key === header);
+                maxHeight = Math.max(
+                    maxHeight,
+                    estimateWrappedCellHeight(item?.value, 120),
+                );
+            });
+            return maxHeight;
+        },
+        [selectedProcess],
+    );
+
+    useEffect(() => {
+        userRowSizeMap.current = {};
+        userListRef.current?.resetAfterIndex(0);
+    }, [DetailsArray, userGridTemplate]);
+
+    useEffect(() => {
+        processRowSizeMap.current = {};
+        processListRef.current?.resetAfterIndex(0);
+    }, [selectedProcess, processGridTemplate]);
+
+    const handleViewSubProcess = useCallback(async (rowDataId, processId) => {
         let id = processId.split("processId -")[1]?.trim();
         const response = await handleGetSingleProcess(id);
         const nestedProcess = response || null
@@ -43,9 +151,9 @@ function AdminTableView({ DetailsArray, TableContent }) {
             rowDataId,
         })
         onOpen();
-    }
+    }, [handleGetSingleProcess, selectedProcess, onOpen]);
 
-    const handleViewHistory = (rowDataId) => {
+    const handleViewHistory = useCallback((rowDataId) => {
         setPopupData({
             parentProcess: selectedProcess.process,
             type: "history",
@@ -53,64 +161,74 @@ function AdminTableView({ DetailsArray, TableContent }) {
             rowDataId: rowDataId
         });
         onOpen();
-    }
+    }, [selectedProcess, onOpen]);
 
     const UserRow = useCallback(({ index, style }) => {
         const row = DetailsArray[index];
-        // Define a consistent grid template for user table
-        const gridTemplate = "60px 1.5fr 1fr 1.2fr 1.5fr 1.5fr 120px 120px 100px";
 
         return (
-            <div style={{ ...style }}>
+            <MeasuredListRow
+                index={index}
+                style={style}
+                setRowSize={setUserRowSize}
+            >
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: gridTemplate,
+                    gridTemplateColumns: userGridTemplate,
                     backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
-                    padding: "0 10px",
-                    borderBottom: '1px solid #edf2f7', 
+                    padding: "8px 10px",
+                    borderBottom: '1px solid #edf2f7',
                     alignItems: 'center',
-                    height: "100%",
                     transition: "background-color 0.2s"
                 }}>
                     {row.map((cell, cellIndex) => (
-                        <Box 
-                            key={cellIndex} 
-                            px={3} 
-                            fontSize="13px" 
-                            isTruncated 
-                            textAlign={cellIndex === 1 ? "left" : "center"} 
-                            color="#4a5568" 
+                        <Box
+                            key={cellIndex}
+                            px={3}
+                            fontSize="13px"
+                            textAlign={cellIndex === 1 ? "left" : "center"}
+                            color="#4a5568"
                             fontWeight="500"
+                            sx={CELL_WRAP_SX}
                         >
                             {cell?.value && cell?.value !== "" ? cell?.value : "-"}
                         </Box>
                     ))}
                 </div>
-            </div>
+            </MeasuredListRow>
         );
-    }, [DetailsArray]);
+    }, [DetailsArray, userGridTemplate, setUserRowSize]);
 
     const ProcessRow = useCallback(({ index, style }) => {
         const row = selectedProcess.data[index];
-        const gridTemplate = selectedProcess.headers.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + " 150px 160px 100px";
-        
+
         return (
-            <div style={{ ...style }}>
+            <MeasuredListRow
+                index={index}
+                style={style}
+                setRowSize={setProcessRowSize}
+            >
                 <div style={{
-                    display: 'grid', 
-                    gridTemplateColumns: gridTemplate, 
-                    gap: '20px', 
+                    display: 'grid',
+                    gridTemplateColumns: processGridTemplate,
+                    gap: '20px',
                     backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
-                    padding: "0 10px",
-                    borderBottom: '1px solid #edf2f7', 
+                    padding: "8px 10px",
+                    borderBottom: '1px solid #edf2f7',
                     alignItems: 'center',
-                    height: '100%',
                     transition: "background-color 0.2s"
                 }}>
                     {selectedProcess.headers.map((header) => {
                         const item = row.items.find((i) => i.key === header);
                         return (
-                            <Box key={header} fontSize="13px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" textAlign="center" fontWeight="500" color="#4a5568">
+                            <Box
+                                key={header}
+                                fontSize="13px"
+                                textAlign="center"
+                                fontWeight="500"
+                                color="#4a5568"
+                                sx={CELL_WRAP_SX}
+                            >
                                 {item && item.value?.startsWith("processId -") ? (
                                     <Button
                                         size="xs"
@@ -126,28 +244,31 @@ function AdminTableView({ DetailsArray, TableContent }) {
                             </Box>
                         );
                     })}
-                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500">{selectedProcess.updatedBy?.userName || "N/A"}</Box>
-                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500">{new Date(row.createdAt).toLocaleString()}</Box>
+                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500" sx={CELL_WRAP_SX}>
+                        {selectedProcess.updatedBy?.userName || "N/A"}
+                    </Box>
+                    <Box fontSize="13px" textAlign="center" color="#4a5568" fontWeight="500" sx={CELL_WRAP_SX}>
+                        {new Date(row.createdAt).toLocaleString()}
+                    </Box>
                     <Box fontSize="13px" textAlign="center">
                        <Button size="xs" colorScheme="orange" variant="outline" onClick={() => handleViewHistory(row._id)}>History</Button>
                     </Box>
                 </div>
-            </div>
+            </MeasuredListRow>
         );
-    }, [selectedProcess, handleViewSubProcess]);
+    }, [selectedProcess, handleViewSubProcess, handleViewHistory, processGridTemplate, setProcessRowSize]);
 
     const renderContent = () => {
         switch (TableContent) {
             case 'users':
                 if (!DetailsArray || DetailsArray.length === 0) return null;
-                const userGridTemplate = "60px 1.5fr 1fr 1.2fr 1.5fr 1.5fr 120px 120px 100px";
                 return (
-                    <Box 
-                        className='FormPageContainer' 
+                    <Box
+                        className='FormPageContainer'
                         sx={{
-                            overflow: "hidden", // Hide outer scroll since list handles it
-                            maxWidth: "100%", 
-                            borderRadius: "xl", 
+                            overflow: "hidden",
+                            maxWidth: "100%",
+                            borderRadius: "xl",
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                             border: "1px solid",
                             borderColor: "gray.200",
@@ -155,37 +276,38 @@ function AdminTableView({ DetailsArray, TableContent }) {
                             mt: 4
                         }}
                     >
-                        <Box minW="1200px"> {/* Ensure horizontal scroll for many columns */}
-                            {/* Custom Header */}
-                            <Box 
+                        <Box minW="max-content">
+                            <Box
                                 display="grid"
                                 gridTemplateColumns={userGridTemplate}
-                                bg="#f8fafc" 
-                                borderBottom="2px solid #e2e8f0" 
-                                fontWeight="700" 
-                                padding="0 10px" 
-                                position="sticky" 
-                                top={0} 
+                                bg="#f8fafc"
+                                borderBottom="2px solid #e2e8f0"
+                                fontWeight="700"
+                                padding="0 10px"
+                                position="sticky"
+                                top={0}
                                 zIndex={15}
-                                height="50px"
+                                minH="50px"
+                                alignItems="center"
                             >
-                                {DetailsArray[0].map((item, idx) => (
-                                    <Box 
-                                        key={idx} 
-                                        px={3} 
+                                {userHeaders.map((header, idx) => (
+                                    <Box
+                                        key={idx}
+                                        px={3}
                                         display="flex"
                                         alignItems="center"
                                         justifyContent={idx === 1 ? "flex-start" : "center"}
-                                        fontSize="11px" 
-                                        textTransform="uppercase" 
+                                        fontSize="11px"
+                                        textTransform="uppercase"
                                         letterSpacing="wider"
                                         color="#64748b"
+                                        whiteSpace="nowrap"
                                     >
-                                        {item.key}
+                                        {header}
                                     </Box>
                                 ))}
                             </Box>
-                            
+
                             <Box sx={{
                                 "& .custom-scrollbar": {
                                     overflowY: "auto !important",
@@ -207,9 +329,10 @@ function AdminTableView({ DetailsArray, TableContent }) {
                                 }
                             }}>
                                 <List
+                                    ref={userListRef}
                                     height={500}
                                     itemCount={DetailsArray.length}
-                                    itemSize={55}
+                                    itemSize={getUserItemSize}
                                     width="100%"
                                     className="custom-scrollbar"
                                 >
@@ -223,7 +346,6 @@ function AdminTableView({ DetailsArray, TableContent }) {
             case 'process':
                 return (
                     <div>
-                        {/* Dropdown to choose process */}
                         <Flex gap={4} mb={4} align="center">
                             <Select
                                 placeholder="Select Process"
@@ -243,79 +365,76 @@ function AdminTableView({ DetailsArray, TableContent }) {
                             )}
                         </Flex>
 
-                        {/* Render Virtualized List if process selected */}
-                        {selectedProcess && (() => {
-                            const gridTemplateColumns = selectedProcess.headers.map(h => h === "DETAILING PRODUCT" ? "minmax(450px, 4fr)" : "minmax(150px, 1fr)").join(" ") + " 150px 160px 100px";
-                            return (
-                                <Box 
-                                    mt={4} 
-                                    className='FormPageContainer' 
-                                    sx={{
-                                        overflow: "hidden",
-                                        borderRadius: "xl",
-                                        border: "1px solid",
-                                        borderColor: "gray.200",
-                                        boxShadow: "sm",
-                                        bg: "white",
-                                    }}
-                                >
-                                    <Box minW="max-content">
-                                        <Box 
-                                            display="grid" 
-                                            gridTemplateColumns={gridTemplateColumns} 
-                                            gap="20px" 
-                                            bg="#f8fafc" 
-                                            borderBottom="2px solid #e2e8f0" 
-                                            fontWeight="700"
-                                            padding="0 10px"
-                                            position="sticky"
-                                            top={0}
-                                            zIndex={15}
-                                            height="50px"
-                                            alignItems="center"
+                        {selectedProcess && (
+                            <Box
+                                mt={4}
+                                className='FormPageContainer'
+                                sx={{
+                                    overflow: "hidden",
+                                    borderRadius: "xl",
+                                    border: "1px solid",
+                                    borderColor: "gray.200",
+                                    boxShadow: "sm",
+                                    bg: "white",
+                                }}
+                            >
+                                <Box minW="max-content">
+                                    <Box
+                                        display="grid"
+                                        gridTemplateColumns={processGridTemplate}
+                                        gap="20px"
+                                        bg="#f8fafc"
+                                        borderBottom="2px solid #e2e8f0"
+                                        fontWeight="700"
+                                        padding="0 10px"
+                                        position="sticky"
+                                        top={0}
+                                        zIndex={15}
+                                        minH="50px"
+                                        alignItems="center"
+                                    >
+                                        {selectedProcess.headers.map((header) => (
+                                            <Box key={header} fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center" whiteSpace="nowrap">{header}</Box>
+                                        ))}
+                                        <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center" whiteSpace="nowrap">Updated By</Box>
+                                        <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center" whiteSpace="nowrap">Created At</Box>
+                                        <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center" whiteSpace="nowrap">History</Box>
+                                    </Box>
+
+                                    <Box sx={{
+                                        "& .custom-scrollbar": {
+                                            overflowY: "auto !important",
+                                            overflowX: "auto !important",
+                                        },
+                                        "& .custom-scrollbar::-webkit-scrollbar": {
+                                            width: "6px",
+                                            height: "6px",
+                                        },
+                                        "& .custom-scrollbar::-webkit-scrollbar-track": {
+                                            background: "#f1f5f9",
+                                        },
+                                        "& .custom-scrollbar::-webkit-scrollbar-thumb": {
+                                            background: "#cbd5e1",
+                                            borderRadius: "10px",
+                                        },
+                                        "& .custom-scrollbar::-webkit-scrollbar-thumb:hover": {
+                                            background: "#94a3b8",
+                                        }
+                                    }}>
+                                        <List
+                                            ref={processListRef}
+                                            height={500}
+                                            itemCount={selectedProcess.data.length}
+                                            itemSize={getProcessItemSize}
+                                            width="100%"
+                                            className="custom-scrollbar"
                                         >
-                                            {selectedProcess.headers.map((header) => (
-                                                <Box key={header} fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">{header}</Box>
-                                            ))}
-                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">Updated By</Box>
-                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">Created At</Box>
-                                            <Box fontSize="11px" textTransform="uppercase" letterSpacing="wider" color="#64748b" textAlign="center">History</Box>
-                                        </Box>
-                                        
-                                        <Box sx={{
-                                            "& .custom-scrollbar": {
-                                                overflowY: "auto !important",
-                                                overflowX: "auto !important",
-                                            },
-                                            "& .custom-scrollbar::-webkit-scrollbar": {
-                                                width: "6px",
-                                                height: "6px",
-                                            },
-                                            "& .custom-scrollbar::-webkit-scrollbar-track": {
-                                                background: "#f1f5f9",
-                                            },
-                                            "& .custom-scrollbar::-webkit-scrollbar-thumb": {
-                                                background: "#cbd5e1",
-                                                borderRadius: "10px",
-                                            },
-                                            "& .custom-scrollbar::-webkit-scrollbar-thumb:hover": {
-                                                background: "#94a3b8",
-                                            }
-                                        }}>
-                                            <List
-                                                height={500}
-                                                itemCount={selectedProcess.data.length}
-                                                itemSize={55}
-                                                width="100%"
-                                                className="custom-scrollbar"
-                                            >
-                                                {ProcessRow}
-                                            </List>
-                                        </Box>
+                                            {ProcessRow}
+                                        </List>
                                     </Box>
                                 </Box>
-                            )
-                        })()}
+                            </Box>
+                        )}
                         <SubProcess isOpen={isOpen} onClose={onClose} data={popupData} isView={true} />
                     </div>
                 )

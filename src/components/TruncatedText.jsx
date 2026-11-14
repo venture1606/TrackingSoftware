@@ -1,7 +1,21 @@
 import React from "react";
 import { Tooltip, Text } from "@chakra-ui/react";
 
-const TruncatedText = ({ text, limit = 25, ...props }) => {
+const TruncatedText = ({ text, limit = 25, wrap = false, ...props }) => {
+  if (wrap) {
+    return (
+      <Text
+        as="span"
+        whiteSpace="normal"
+        wordBreak="break-word"
+        overflowWrap="anywhere"
+        {...props}
+      >
+        {text == null || text === "" ? "" : String(text)}
+      </Text>
+    );
+  }
+
   const isTruncated = text && text.length > limit;
   const displayText = isTruncated ? `${text.substring(0, limit)}...` : text;
 

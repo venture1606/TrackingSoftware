@@ -102,22 +102,39 @@ const HistoryCompo = ({ type, processId, rowDataId }) => {
         // Fallback for old style changes if they ever existed
         if (record.changes) {
             return (
-                <Table variant="simple" size="sm" mt={2}>
+                <Table variant="simple" size="sm" mt={2} sx={{ tableLayout: "auto" }}>
                     <Thead>
                         <Tr>
-                            <Th>Field</Th>
-                            <Th>Old Value</Th>
-                            <Th>New Value</Th>
+                            <Th whiteSpace="nowrap" width="1%">Field</Th>
+                            <Th whiteSpace="nowrap" width="1%">Old Value</Th>
+                            <Th whiteSpace="nowrap" width="1%">New Value</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {record.changes.map((change, idx) => (
                             <Tr key={idx}>
-                                <Td fontWeight="medium" fontSize="xs">{change.key}</Td>
-                                <Td color="red.500" fontSize="xs">
+                                <Td
+                                    fontWeight="medium"
+                                    fontSize="xs"
+                                    whiteSpace="normal"
+                                    wordBreak="break-word"
+                                >
+                                    {change.key}
+                                </Td>
+                                <Td
+                                    color="red.500"
+                                    fontSize="xs"
+                                    whiteSpace="normal"
+                                    wordBreak="break-word"
+                                >
                                     {change.oldValue ? String(change.oldValue) : "-"}
                                 </Td>
-                                <Td color="green.500" fontSize="xs">
+                                <Td
+                                    color="green.500"
+                                    fontSize="xs"
+                                    whiteSpace="normal"
+                                    wordBreak="break-word"
+                                >
                                     {change.newValue ? String(change.newValue) : "-"}
                                 </Td>
                             </Tr>
@@ -139,19 +156,28 @@ const HistoryCompo = ({ type, processId, rowDataId }) => {
         const hasOldData = record.oldData !== null && oldItems.length > 0;
 
         return (
-            <Table variant="simple" size="sm" mt={2} style={{ whiteSpace: "nowrap" }}>
+            <Table variant="simple" size="sm" mt={2} sx={{ tableLayout: "auto" }}>
                 <Thead>
                     <Tr bg="gray.50">
-                        {hasOldData && <Th width="40px" p={1}></Th>}
+                        {hasOldData && <Th width="40px" p={1} whiteSpace="nowrap"></Th>}
                         {allKeys.map(key => (
-                            <Th key={key} fontSize="xs" color="gray.600">{key}</Th>
+                            <Th
+                                key={key}
+                                fontSize="xs"
+                                color="gray.600"
+                                whiteSpace="nowrap"
+                                width="1%"
+                                sx={{ width: "max-content" }}
+                            >
+                                {key}
+                            </Th>
                         ))}
                     </Tr>
                 </Thead>
                 <Tbody>
                     <Tr>
                         {hasOldData && (
-                            <Td p={1}>
+                            <Td p={1} verticalAlign="top">
                                 <IconButton 
                                     size="xs" 
                                     variant="ghost" 
@@ -166,7 +192,15 @@ const HistoryCompo = ({ type, processId, rowDataId }) => {
                             const oldItem = oldItems.find(i => i.key === key);
                             
                             return (
-                                <Td key={key} color={action === 'DELETE' ? "red.500" : "gray.700"} fontSize="xs">
+                                <Td
+                                    key={key}
+                                    color={action === 'DELETE' ? "red.500" : "gray.700"}
+                                    fontSize="xs"
+                                    verticalAlign="top"
+                                    whiteSpace="normal"
+                                    wordBreak="break-word"
+                                    overflowWrap="anywhere"
+                                >
                                     {renderValue(newItem || oldItem, record.rowId)}
                                 </Td>
                             );
@@ -174,11 +208,19 @@ const HistoryCompo = ({ type, processId, rowDataId }) => {
                     </Tr>
                     {isExpanded && hasOldData && (
                         <Tr bg="#fff5f5">
-                            <Td p={1} fontSize="xs" fontWeight="bold" color="red.500" textAlign="center">OLD</Td>
+                            <Td p={1} fontSize="xs" fontWeight="bold" color="red.500" textAlign="center" verticalAlign="top">OLD</Td>
                             {allKeys.map(key => {
                                 const oldItem = oldItems.find(i => i.key === key);
                                 return (
-                                    <Td key={key} color="red.500" fontSize="xs">
+                                    <Td
+                                        key={key}
+                                        color="red.500"
+                                        fontSize="xs"
+                                        verticalAlign="top"
+                                        whiteSpace="normal"
+                                        wordBreak="break-word"
+                                        overflowWrap="anywhere"
+                                    >
                                         {renderValue(oldItem, record.rowId)}
                                     </Td>
                                 );

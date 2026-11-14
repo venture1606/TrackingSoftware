@@ -94,21 +94,11 @@
     white-space: nowrap;
 }
 
-/* .TableHeaderContent {
-    padding: 0.7rem !important;
-    font-size: 0.7rem !important;
-    white-space: nowrap;
-}
-
-.RowsField{
-    white-space: nowrap;
-    padding: 0.5rem !important;
-    font-size: 0.6rem !important;
-} */
-
 .RowsField{
     text-align: center !important;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .Green{
@@ -129,7 +119,7 @@
     background-color: var(--primary-color);
     width: calc(100% + 0.5rem);
     padding: 0.25rem;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .AddDataContainer{

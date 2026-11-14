@@ -501,12 +501,19 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
         blockScrollOnMount={false}
       >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent maxW="95vw" maxH="90vh">
           <ModalHeader>
               {data?.type === "history" ? `History: ${nested?.process || 'Loading...'}` : (nested?.process || "Loading...")}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody minH="400px" display="flex" flexDirection="column">
+          <ModalBody
+            minH="400px"
+            display="flex"
+            flexDirection="column"
+            overflowX="auto"
+            overflowY="auto"
+            pb={6}
+          >
             {loading || processLoading ? (
               <Flex flex="1" align="center" justify="center" direction="column">
                 <Loading />

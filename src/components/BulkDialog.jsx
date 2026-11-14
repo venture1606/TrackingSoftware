@@ -834,10 +834,10 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
               </Flex>
 
               <Box overflowX="auto" maxH="420px" overflowY="auto" borderWidth="1px" borderRadius="md">
-                <Table size="sm" variant="simple">
+                <Table size="sm" variant="simple" sx={{ tableLayout: "auto" }}>
                   <Thead position="sticky" top={0} bg="gray.50" zIndex={1}>
                     <Tr>
-                      <Th width="40px">
+                      <Th width="40px" whiteSpace="nowrap">
                         <Checkbox
                           isChecked={allSelected}
                           isIndeterminate={someSelected}
@@ -845,11 +845,18 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                         />
                       </Th>
                       {tableColumns.map((h) => (
-                        <Th key={h} whiteSpace="nowrap">
+                        <Th
+                          key={h}
+                          whiteSpace="nowrap"
+                          width="1%"
+                          sx={{ width: "max-content" }}
+                        >
                           {h}
                         </Th>
                       ))}
-                      {config.mode === "blankMultiCreate" && <Th width="50px" />}
+                      {config.mode === "blankMultiCreate" && (
+                        <Th width="50px" whiteSpace="nowrap" />
+                      )}
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -874,16 +881,28 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                           parentDisplayHeaders.includes(h);
                         return (
                           <Tr key={row.tempId}>
-                            <Td>
+                            <Td verticalAlign="top">
                               <Checkbox
                                 isChecked={selected.has(row.tempId)}
                                 onChange={() => toggleOne(row.tempId)}
                               />
                             </Td>
                             {tableColumns.map((h) => (
-                              <Td key={h} minW="120px">
+                              <Td
+                                key={h}
+                                verticalAlign="top"
+                                whiteSpace="normal"
+                                wordBreak="break-word"
+                                overflowWrap="anywhere"
+                              >
                                 {isParentCol(h) ? (
-                                  <Text fontSize="sm">{row.items?.[h] ?? ""}</Text>
+                                  <Text
+                                    fontSize="sm"
+                                    whiteSpace="normal"
+                                    wordBreak="break-word"
+                                  >
+                                    {row.items?.[h] ?? ""}
+                                  </Text>
                                 ) : (
                                   renderFieldInput(h, row.items?.[h], (val) =>
                                     updateRowItem(row.tempId, h, val),
@@ -892,7 +911,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                               </Td>
                             ))}
                             {config.mode === "blankMultiCreate" && (
-                              <Td>
+                              <Td verticalAlign="top">
                                 <IconButton
                                   aria-label="Remove row"
                                   icon={<DeleteIcon />}

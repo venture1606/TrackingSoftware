@@ -391,7 +391,10 @@ const EditableRow = ({
               alignItems: "center",
               justifyContent: "center",
               maxWidth: "100%",
-              overflow: "hidden",
+              overflow: "visible",
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
             }}
           >
             {/* Render logic based on process type */}

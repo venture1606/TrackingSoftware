@@ -44,12 +44,12 @@ const BOMCompo = ({
         </Flex>
         
         <Box 
-          overflowX="auto" 
           p={2} 
           bg="gray.50" 
           borderRadius="xl"
           border="1px solid"
           borderColor="gray.100"
+          overflow="visible"
         >
           <FormPage process={nested} isView={isView} />
         </Box>
@@ -84,12 +84,12 @@ const BOMCompo = ({
 
         {bomProducts ? (
           <Box 
-            overflowX="auto" 
             p={2} 
             bg="gray.50" 
             borderRadius="xl"
             border="1px solid"
             borderColor="gray.100"
+            overflow="visible"
           >
             <FormPage
               process={bomProducts}

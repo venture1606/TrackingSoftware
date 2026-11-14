@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   Table,
   Thead,
@@ -25,6 +31,12 @@ import TruncatedText from "./TruncatedText";
 import { useDispatch, useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import {
+  getHeaderBasedGridTemplate,
+  getHeaderBasedColumnWidths,
+  estimateWrappedCellHeight,
+  DEFAULT_ROW_HEIGHT,
+} from "../utils/tableLayout";
 
 // Importing API
 import {
@@ -46,6 +58,7 @@ import StatusBadgeCompo from "./StatusBadgeCompo";
 import ActionButtonCompo from "./ActionButtonCompo";
 import ConfirmDialog from "./ConfirmDialog";
 import ImageCompo from "./ImageCompo";
+import MeasuredListRow from "./MeasuredListRow";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -55,6 +68,14 @@ import { setDetailingProducts } from "../redux/slices/department";
 import { PROCESS_URL } from "../config/api";
 
 const URL = PROCESS_URL;
+
+const CELL_WRAP_STYLE = {
+  maxWidth: "100%",
+  overflow: "visible",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
+  overflowWrap: "anywhere",
+};
 
 function FormPage({
   process,
@@ -113,6 +134,8 @@ function FormPage({
 
   const tableContainerRef = useRef(null);
   const listRef = useRef(null);
+  const rowSizeMap = useRef({});
+  const [listSizeVersion, setListSizeVersion] = useState(0);
 
   // For SubProcess modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -215,10 +238,36 @@ function FormPage({
     dispatch,
   ]);
 
+  const columnWidths = useMemo(
+    () =>
+      getHeaderBasedColumnWidths(process?.header || [], {
+        extraColumns: canModify ? ["Actions"] : [],
+      }),
+    [process?.header, canModify],
+  );
+
+  const setRowSize = useCallback((index, size) => {
+    const next = Math.ceil(size);
+    if (rowSizeMap.current[index] !== next) {
+      rowSizeMap.current[index] = next;
+      listRef.current?.resetAfterIndex(index);
+      // Re-render so VariableSizeList height tracks measured content (no inner scroll)
+      setListSizeVersion((v) => v + 1);
+    }
+  }, []);
+
   const getItemSize = useCallback(
     (index) => {
+      if (rowSizeMap.current[index] != null) {
+        return rowSizeMap.current[index];
+      }
+
       const row = rows[index];
-      if (!row) return 60;
+      if (!row) return DEFAULT_ROW_HEIGHT;
+
+      if (editingRowId && rowIds[index] === editingRowId) {
+        return Math.max(DEFAULT_ROW_HEIGHT, 120);
+      }
 
       const detailingCell = row.find((c) => c.key === "DETAILING PRODUCT");
       if (
@@ -227,20 +276,29 @@ function FormPage({
         detailingCell.value.length > 0
       ) {
         const count = detailingCell.value.length;
-        // Each sub-row is roughly 32px, header is 35px, plus padding
-        const estimate = count * 32 + 65;
-        return Math.min(250, Math.max(70, estimate));
+        // Header ~32px + each nested row ~28px + padding (no height cap / inner scroll)
+        return Math.max(DEFAULT_ROW_HEIGHT, count * 28 + 48);
       }
-      return 60;
+
+      let maxHeight = DEFAULT_ROW_HEIGHT;
+      (process?.header || []).forEach((headerKey, colIdx) => {
+        const cell = row.find((c) => c.key === headerKey);
+        const width = columnWidths[colIdx] || 120;
+        maxHeight = Math.max(
+          maxHeight,
+          estimateWrappedCellHeight(cell?.value, width),
+        );
+      });
+      return maxHeight;
     },
-    [rows],
+    [rows, rowIds, editingRowId, process?.header, columnWidths],
   );
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.resetAfterIndex(0);
-    }
-  }, [rows, getItemSize]);
+    rowSizeMap.current = {};
+    setListSizeVersion((v) => v + 1);
+    listRef.current?.resetAfterIndex(0);
+  }, [rows, columnWidths, editingRowId]);
 
   const handleDeleteRow = (rowIdx) => {
     setDeleteTargetIdx(rowIdx);
@@ -358,15 +416,13 @@ function FormPage({
     deleteMutation.isPending ||
     addMutation.isPending;
 
-  const gridTemplateColumns = process?.header
-    ? process.header
-        .map((h) =>
-          h === "DETAILING PRODUCT"
-            ? "minmax(450px, 4fr)"
-            : "minmax(150px, auto)",
-        )
-        .join(" ") + (canModify ? " 160px" : "")
-    : `repeat(${process?.header?.length || 1}, 150px) max-content`;
+  const gridTemplateColumns = useMemo(
+    () =>
+      getHeaderBasedGridTemplate(process?.header || [], {
+        extraColumns: canModify ? ["Actions"] : [],
+      }),
+    [process?.header, canModify],
+  );
 
   const Row = useCallback(
     ({ index, style }) => {
@@ -376,7 +432,12 @@ function FormPage({
 
       if (isEditing) {
         return (
-          <div style={{ ...style, marginBottom: "10px" }}>
+          <MeasuredListRow
+            index={index}
+            style={{ ...style, marginBottom: "10px" }}
+            setRowSize={setRowSize}
+            extraPad={10}
+          >
             <EditableRow
               key={rowId}
               headers={process?.header}
@@ -388,22 +449,26 @@ function FormPage({
               onCancel={() => setEditingRowId(null)}
               gridTemplateColumns={gridTemplateColumns}
             />
-          </div>
+          </MeasuredListRow>
         );
       }
 
       return (
-        <div style={{ ...style, paddingBottom: "2px" }}>
+        <MeasuredListRow
+          index={index}
+          style={{ ...style, paddingBottom: "2px" }}
+          setRowSize={setRowSize}
+          extraPad={2}
+        >
           <div
             style={{
               display: "grid",
               gridTemplateColumns: gridTemplateColumns,
               gap: "0",
-              backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9", // Striped layout
+              backgroundColor: index % 2 === 0 ? "#ffffff" : "#f1f5f9",
               padding: "0",
               borderBottom: "1px solid #edf2f7",
               alignItems: "stretch",
-              height: "100%",
             }}
           >
             {(process?.header || []).map((headerKey, cellIdx) => {
@@ -423,10 +488,10 @@ function FormPage({
                       borderRight: "1px solid #edf2f7",
                       padding: "8px 10px",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      alignItems: "stretch",
+                      justifyContent: "stretch",
+                      overflow: "visible",
                       maxWidth: "100%",
-                      overflow: "hidden",
                     }}
                   >
                     <DetailingProductCompo
@@ -452,8 +517,7 @@ function FormPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      maxWidth: "100%",
-                      overflow: "hidden",
+                      ...CELL_WRAP_STYLE,
                     }}
                   >
                     <ArrayDisplayCompo values={cell.value} />
@@ -471,8 +535,7 @@ function FormPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      maxWidth: "100%",
-                      overflow: "hidden",
+                      ...CELL_WRAP_STYLE,
                     }}
                   >
                     <ImagePreviewCompo
@@ -509,8 +572,7 @@ function FormPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      maxWidth: "100%",
-                      overflow: "hidden",
+                      ...CELL_WRAP_STYLE,
                     }}
                   >
                     <StatusBadgeCompo
@@ -522,7 +584,6 @@ function FormPage({
                 );
               }
 
-              // Format date fields from epoch to DD/MM/YYYY
               const isDateField =
                 DateFieldsArray.some(
                   (d) =>
@@ -550,22 +611,19 @@ function FormPage({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    maxWidth: "100%",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    ...(isDateField
+                      ? {
+                          whiteSpace: "nowrap",
+                          overflow: "visible",
+                          maxWidth: "100%",
+                        }
+                      : CELL_WRAP_STYLE),
                   }}
                 >
                   {cell?.process === "multiSelect" ||
                   (typeof cell.value === "string" &&
                     cell.value.startsWith("processId -")) ? (
-                    <div
-                      style={{
-                        maxWidth: "100%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
+                    <div style={{ maxWidth: "100%" }}>
                       <ActionButtonCompo
                         cell={cell}
                         label={
@@ -587,7 +645,7 @@ function FormPage({
                       />
                     </div>
                   ) : (
-                    <TruncatedText text={displayValue} limit={25} />
+                    <TruncatedText text={displayValue} wrap={!isDateField} />
                   )}
                 </div>
               );
@@ -626,7 +684,7 @@ function FormPage({
               </div>
             )}
           </div>
-        </div>
+        </MeasuredListRow>
       );
     },
     [
@@ -634,11 +692,17 @@ function FormPage({
       rowIds,
       editingRowId,
       process?.header,
+      process?.processId,
       currentBomId,
       gridTemplateColumns,
       detailingProducts,
-      isView,
       getStatusStyle,
+      setRowSize,
+      canModify,
+      canEdit,
+      canDelete,
+      handleSaveEdit,
+      processScopedDateFields,
     ],
   );
 
@@ -657,9 +721,8 @@ function FormPage({
         className="FormPageContainer"
         style={{
           overflowX: "auto",
-          overflowY: "auto", // Enable vertical scroll for the container
+          overflowY: "hidden", // Vertical scroll only on the list / parent modal
           maxWidth: "100%",
-          maxHeight: "calc(100vh - 250px)", // Set a max height for the table area
           display: "flex",
           flexDirection: "column",
           position: "relative",
@@ -698,19 +761,10 @@ function FormPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      maxWidth: "100%",
-                      overflow: "hidden",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {col}
-                    </span>
+                    <span style={{ whiteSpace: "nowrap" }}>{col}</span>
                   </div>
                 ))}
                 {canModify && (
@@ -721,11 +775,11 @@ function FormPage({
                       fontSize: "0.75rem",
                       textTransform: "uppercase",
                       textAlign: "center",
-                      minWidth: "max-content",
                       padding: "12px 15px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     Actions
@@ -741,14 +795,27 @@ function FormPage({
             {rows && rows.length > 0 ? (
               <List
                 ref={listRef}
-                height={Math.min(
-                  500,
-                  rows.reduce((acc, _, i) => acc + getItemSize(i), 0),
-                )}
+                height={(() => {
+                  void listSizeVersion; // measured sizes bump this so height recalculates
+                  const total = rows.reduce(
+                    (acc, _, i) => acc + getItemSize(i),
+                    0,
+                  );
+                  // Small tables (e.g. BOM modal): expand fully — parent/modal scrolls once.
+                  // Large tables: keep a capped list viewport for virtualization.
+                  if (rows.length <= 40) {
+                    return Math.max(total, DEFAULT_ROW_HEIGHT);
+                  }
+                  const viewportCap =
+                    typeof window !== "undefined"
+                      ? Math.max(400, window.innerHeight - 280)
+                      : 500;
+                  return Math.min(viewportCap, Math.max(total, DEFAULT_ROW_HEIGHT));
+                })()}
                 itemCount={rows.length}
                 itemSize={getItemSize}
                 width="100%"
-                style={{ overflowX: "hidden" }} // Horizontal scroll is handled by FormPageContainer
+                style={{ overflowX: "hidden" }}
               >
                 {Row}
               </List>
