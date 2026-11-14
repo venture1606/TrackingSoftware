@@ -103,9 +103,11 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   const [invoiceNoOptions, setInvoiceNoOptions] = useState([]);
   const [poNoOptions, setPoNoOptions] = useState([]);
   const [vendorNameOptions, setVendorNameOptions] = useState([]);
+  const [itemCodeOptions, setItemCodeOptions] = useState([]);
   const limit = 500;
   const NumberFields = ItemsData.NumberFields || [];
   const isInwardBulk = processId === "PR/R/003A";
+  const isQiBulk = processId === "QA/R/003" || processId === "QA/R/003A";
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
@@ -239,6 +241,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       }
       if (Array.isArray(result.vendorNameOptions)) {
         setVendorNameOptions(result.vendorNameOptions);
+      }
+      if (Array.isArray(result.itemCodeOptions)) {
+        setItemCodeOptions(result.itemCodeOptions);
       }
 
       // Prefill shared fields from first fetched row (bulk edit)
@@ -427,6 +432,14 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     return match?.value || [];
   };
 
+  const QI_SELECT_FALLBACKS = {
+    DIMENSION: ["Okay", "Not Okay"],
+    "DEFECT FOUND": ["Yes", "No"],
+    "SHORT QUANITY": ["Yes", "No"],
+    "ITEM CHANGED": ["Yes", "No"],
+    "REPORT RECEIVED": ["Yes", "No"],
+  };
+
   const renderFieldInput = (key, value, onChange, { asFilter = false } = {}) => {
     if (isDateHeader(key, processId)) {
       let display = value || "";
@@ -479,6 +492,24 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         </Select>
       );
     }
+    if (!asFilter && QI_SELECT_FALLBACKS[key]) {
+      let options = getSelectOptionsForKey(key);
+      if (options.length === 0) options = QI_SELECT_FALLBACKS[key];
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Select ${key}`}
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
     if (asFilter && key === "INVOICE NO") {
       return (
         <Select
@@ -511,13 +542,19 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         </Select>
       );
     }
-    if (asFilter && isInwardBulk && (key === "VENDOR-NAME" || key === "VENDOR NAME")) {
+    if (
+      asFilter &&
+      (isInwardBulk || isQiBulk) &&
+      (key === "VENDOR-NAME" || key === "VENDOR NAME")
+    ) {
       return (
         <Select
           size="sm"
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Select VENDOR (pending)"
+          placeholder={
+            isInwardBulk ? "Select VENDOR (pending)" : "Select VENDOR NAME"
+          }
         >
           {vendorNameOptions.map((opt) => (
             <option key={opt} value={opt}>
@@ -527,9 +564,25 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         </Select>
       );
     }
+    if (asFilter && isQiBulk && key === "ITEM CODE") {
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select ITEM CODE"
+        >
+          {itemCodeOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
     if (
       asFilter &&
-      isInwardBulk &&
+      (isInwardBulk || isQiBulk) &&
       (key === "ITEM CATEGORY" || key === "ITEM NAME")
     ) {
       const options = getSelectOptionsForKey(key);
