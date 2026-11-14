@@ -486,7 +486,6 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       isView={isView}
       showAddData={showAddData}
       setShowAddData={setShowAddData}
-      handleAddDataSave={handleAddDataSave}
       handleRefresh={handleRefresh}
     />
   );
