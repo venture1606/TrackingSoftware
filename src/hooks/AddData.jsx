@@ -34,6 +34,18 @@ import {
 } from "../services/SerialNumber";
 
 const QUOTATION_PROCESS_ID = "MS/R/005";
+const PROCUREMENT_PROCESS_ID = "PR/R/003";
+
+const SERIAL_FIELD_BY_PROCESS = {
+  [QUOTATION_PROCESS_ID]: {
+    field: "ENQUIRY NO",
+    serialType: SERIAL_TYPES.ENQUIRE_NUMBER,
+  },
+  [PROCUREMENT_PROCESS_ID]: {
+    field: "PO NO",
+    serialType: SERIAL_TYPES.PO_NO,
+  },
+};
 
 function AddData({
   IndicationText = "Add Data",
@@ -47,7 +59,8 @@ function AddData({
   const dispatch = useDispatch();
   const peekSerialMutation = usePeekSerialMutation();
   const allocateSerialMutation = useAllocateSerial();
-  const usesEnquirySerial = processId === QUOTATION_PROCESS_ID;
+  const serialCfg = SERIAL_FIELD_BY_PROCESS[processId];
+  const usesSerialField = !!serialCfg;
 
   const detailingProducts = useSelector(
     (state) => state.department.detailingProducts
@@ -186,30 +199,30 @@ function AddData({
     });
   }, [headers, processId, SelectOptionsArray, groupItem]);
 
-  const peekEnquiryNo = useCallback(async () => {
-    if (!usesEnquirySerial || !isOpen) return;
+  const peekSerialField = useCallback(async () => {
+    if (!usesSerialField || !serialCfg || !isOpen) return;
     try {
-      const data = await peekSerialMutation.mutateAsync(
-        SERIAL_TYPES.ENQUIRE_NUMBER,
-      );
+      const data = await peekSerialMutation.mutateAsync(serialCfg.serialType);
       if (!data?.serial) return;
       setFormData((prev) =>
         prev.map((field) =>
-          field.key === "ENQUIRY NO" ? { ...field, value: data.serial } : field,
+          field.key === serialCfg.field
+            ? { ...field, value: data.serial }
+            : field,
         ),
       );
     } catch {
       /* toast via mutation */
     }
-  }, [usesEnquirySerial, isOpen, peekSerialMutation]);
+  }, [usesSerialField, serialCfg, isOpen, peekSerialMutation]);
 
-  // Auto-peek ENQUIRY NO for Quotation Add Data
+  // Auto-peek serial field (ENQUIRY NO / PO NO) on open
   useEffect(() => {
-    if (!isOpen || !usesEnquirySerial) return;
-    if (!headers.some((h) => h === "ENQUIRY NO")) return;
-    peekEnquiryNo();
+    if (!isOpen || !usesSerialField || !serialCfg) return;
+    if (!headers.some((h) => h === serialCfg.field)) return;
+    peekSerialField();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, usesEnquirySerial, headers]);
+  }, [isOpen, usesSerialField, headers]);
 
   // Handle value change
   const handleValueChange = (index, val, subIndex = null) => {
@@ -374,10 +387,10 @@ function AddData({
     const resetWithDynamicOptions = refreshOptions(mappedData);
     setFormData(resetWithDynamicOptions);
     setErrorFields([]);
-    if (usesEnquirySerial) {
-      // Re-peek after reset so ENQUIRY NO is not left blank
+    if (usesSerialField) {
+      // Re-peek after reset so serial field is not left blank
       setTimeout(() => {
-        peekEnquiryNo();
+        peekSerialField();
       }, 0);
     }
   };
@@ -426,15 +439,15 @@ function AddData({
       return field;
     });
 
-    // Quotation: allocate ENQUIRY NO atomically on create
-    if (usesEnquirySerial) {
+    // Allocate serial field (ENQUIRY NO / PO NO) atomically on create
+    if (usesSerialField && serialCfg) {
       try {
         const allocated = await allocateSerialMutation.mutateAsync(
-          SERIAL_TYPES.ENQUIRE_NUMBER,
+          serialCfg.serialType,
         );
         if (allocated?.serial) {
           items = items.map((field) =>
-            field.key === "ENQUIRY NO"
+            field.key === serialCfg.field
               ? { ...field, value: allocated.serial }
               : field,
           );
@@ -757,12 +770,14 @@ function AddData({
                       colorScheme="green"
                     />
                   </Flex>
-                ) : field.key === "ENQUIRY NO" && usesEnquirySerial ? (
+                ) : usesSerialField &&
+                  serialCfg &&
+                  field.key === serialCfg.field ? (
                   <Flex gap={2} flex="1" align="center">
                     <Input
                       ref={idx === 0 ? initialRef : null}
                       value={field.value ?? ""}
-                      placeholder="Fetch next ENQUIRY NO"
+                      placeholder={`Fetch next ${serialCfg.field}`}
                       isReadOnly
                       borderColor={
                         errorFields.includes(field.key) ? "red.500" : undefined
@@ -774,7 +789,7 @@ function AddData({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={peekEnquiryNo}
+                      onClick={peekSerialField}
                       isLoading={peekSerialMutation.isPending}
                     >
                       Fetch

@@ -42,6 +42,19 @@ import ItemsData from "../utils/ItemsData.json";
 import { findAutoFillData } from "../utils/constant";
 
 const QUOTATION_PROCESS_ID = "MS/R/005";
+const PROCUREMENT_PROCESS_ID = "PR/R/003";
+
+/** processId → { field, serialType } for auto serial shared fields */
+const SERIAL_FIELD_BY_PROCESS = {
+  [QUOTATION_PROCESS_ID]: {
+    field: "ENQUIRY NO",
+    serialType: SERIAL_TYPES.ENQUIRE_NUMBER,
+  },
+  [PROCUREMENT_PROCESS_ID]: {
+    field: "PO NO",
+    serialType: SERIAL_TYPES.PO_NO,
+  },
+};
 
 const { DateFieldsArray = [], ProcessDateFields = {} } = ItemsData;
 
@@ -93,23 +106,25 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
-  const usesEnquirySerial =
-    processId === QUOTATION_PROCESS_ID &&
-    (config?.singleEntryHeaders || []).includes("ENQUIRY NO");
+  const serialCfg = SERIAL_FIELD_BY_PROCESS[processId];
+  const usesSerialField =
+    !!serialCfg &&
+    (config?.singleEntryHeaders || []).includes(serialCfg.field);
 
-  const peekEnquiryNo = useCallback(async () => {
-    if (!usesEnquirySerial) return;
+  const peekSerialField = useCallback(async () => {
+    if (!usesSerialField || !serialCfg) return;
     try {
-      const data = await peekSerialMutation.mutateAsync(
-        SERIAL_TYPES.ENQUIRE_NUMBER,
-      );
+      const data = await peekSerialMutation.mutateAsync(serialCfg.serialType);
       if (data?.serial) {
-        setSingleEntry((prev) => ({ ...prev, "ENQUIRY NO": data.serial }));
+        setSingleEntry((prev) => ({
+          ...prev,
+          [serialCfg.field]: data.serial,
+        }));
       }
     } catch {
       /* toast via mutation */
     }
-  }, [usesEnquirySerial, peekSerialMutation]);
+  }, [usesSerialField, serialCfg, peekSerialMutation]);
 
   useEffect(() => {
     if (!config || !isOpen) return;
@@ -135,14 +150,14 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     }
   }, [config, isOpen]);
 
-  // Auto-peek ENQUIRY NO for Quotation blank create
+  // Auto-peek serial shared field on blank create (ENQUIRY NO / PO NO)
   useEffect(() => {
-    if (!isOpen || !usesEnquirySerial || config?.mode !== "blankMultiCreate") {
+    if (!isOpen || !usesSerialField || config?.mode !== "blankMultiCreate") {
       return;
     }
-    peekEnquiryNo();
+    peekSerialField();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, usesEnquirySerial, config?.mode]);
+  }, [isOpen, usesSerialField, config?.mode]);
 
   const supportsFetch = !!(config?.filterHeaders || []).length;
 
@@ -310,18 +325,18 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       normalizedSingle[k] = toEpochIfDate(k, v, processId);
     });
 
-    // Quotation create-only batch: allocate ENQUIRY NO atomically on submit
+    // Create-only batch: allocate serial field (ENQUIRY NO / PO NO) atomically
     const allCreates = checkedRows.every((r) => !r.rowId);
-    if (usesEnquirySerial && allCreates) {
+    if (usesSerialField && serialCfg && allCreates) {
       try {
         const allocated = await allocateSerialMutation.mutateAsync(
-          SERIAL_TYPES.ENQUIRE_NUMBER,
+          serialCfg.serialType,
         );
         if (allocated?.serial) {
-          normalizedSingle["ENQUIRY NO"] = allocated.serial;
+          normalizedSingle[serialCfg.field] = allocated.serial;
           setSingleEntry((prev) => ({
             ...prev,
-            "ENQUIRY NO": allocated.serial,
+            [serialCfg.field]: allocated.serial,
           }));
         }
       } catch {
@@ -437,8 +452,16 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         />
       );
     }
-    if (key === "CUSTOMER-NAME" || key === "ENQ BY") {
-      const options = getSelectOptionsForKey(key);
+    if (
+      key === "CUSTOMER-NAME" ||
+      key === "ENQ BY" ||
+      key === "VENDOR-NAME" ||
+      key === "PR STATUS"
+    ) {
+      let options = getSelectOptionsForKey(key);
+      if (key === "PR STATUS" && options.length === 0) {
+        options = ["PENDING", "CLOSED"];
+      }
       return (
         <Select
           size="sm"
@@ -521,19 +544,21 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                       <Text fontSize="xs" mb={1} color="gray.600">
                         {key}
                       </Text>
-                      {key === "ENQUIRY NO" && usesEnquirySerial ? (
+                      {usesSerialField &&
+                      serialCfg &&
+                      key === serialCfg.field ? (
                         <Flex gap={2} align="center">
                           <Input
                             size="sm"
                             value={singleEntry[key] ?? ""}
                             isReadOnly
-                            placeholder="Fetch next ENQUIRY NO"
+                            placeholder={`Fetch next ${key}`}
                           />
                           <Button
                             size="sm"
                             variant="outline"
                             flexShrink={0}
-                            onClick={peekEnquiryNo}
+                            onClick={peekSerialField}
                             isLoading={peekSerialMutation.isPending}
                           >
                             Fetch
@@ -612,7 +637,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                           });
                           setRows([{ tempId: id, items: empty }]);
                           setSelected(new Set([id]));
-                          if (usesEnquirySerial) peekEnquiryNo();
+                          if (usesSerialField) peekSerialField();
                         }
                       }}
                     >

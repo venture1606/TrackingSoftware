@@ -14,6 +14,7 @@ const getAuthHeaders = () => ({
 
 export const SERIAL_TYPES = {
   ENQUIRE_NUMBER: "ENQUIRE_NUMBER",
+  PO_NO: "PO_NO",
 };
 
 export const peekSerial = async (type) => {
