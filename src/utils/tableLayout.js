@@ -14,6 +14,9 @@ const CELL_FONT =
 /** Sample date string (DD/MM/YYYY) for column min-width. */
 const DATE_SAMPLE = "00/00/0000";
 
+/** Longest common status label shown in status chips. */
+const STATUS_CHIP_SAMPLE = "Supplied to Customer";
+
 let measureCanvas;
 
 function getMeasureContext(font = DEFAULT_FONT) {
@@ -50,6 +53,26 @@ function isDateLikeHeader(header) {
     h.includes(" DATE ") ||
     /(^|[^A-Z])DATE([^A-Z]|$)/.test(h)
   );
+}
+
+/**
+ * Min width for a status chip column (full label + pill padding).
+ * @returns {number}
+ */
+export function getStatusChipMinWidth(paddingX = 24) {
+  const ctx = getMeasureContext("700 0.75rem system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif");
+  const textWidth = ctx
+    ? ctx.measureText(STATUS_CHIP_SAMPLE).width
+    : STATUS_CHIP_SAMPLE.length * 7.5;
+  // chip horizontal padding (~32) + status dot + gaps (~16)
+  return Math.ceil(textWidth + 48 + paddingX);
+}
+
+function isStatusLikeHeader(header) {
+  const h = String(header || "")
+    .trim()
+    .toUpperCase();
+  return h.includes("STATUS");
 }
 
 /**
@@ -91,16 +114,21 @@ export function getHeaderBasedColumnWidths(headers = [], opts = {}) {
       "SUB PARTS": 120,
       "PART NAME": 140,
       "PART NO": 100,
+      "REVIEW BY": 140,
+      FROM: 140,
+      UPLOAD: 110,
     },
   } = opts;
 
   const dateMin = getDateColumnMinWidth(paddingX);
+  const statusMin = getStatusChipMinWidth(paddingX);
 
   const widths = (headers || []).map((h) => {
     const fromSpecial = specialMins[h];
     const floor = Math.max(
       fromSpecial ?? minWidth,
       isDateLikeHeader(h) ? dateMin : 0,
+      isStatusLikeHeader(h) ? statusMin : 0,
     );
     return measureHeaderWidth(h, { font, paddingX, minWidth: floor });
   });

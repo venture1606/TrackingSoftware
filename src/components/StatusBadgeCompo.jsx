@@ -5,20 +5,26 @@ const StatusBadgeCompo = ({ value, getStatusStyle }) => {
   const { badgeColor, textColor, dotColor } = getStatusStyle(value);
 
   return (
-    <Flex justify="center">
+    <Flex justify="center" w="100%" minW={0}>
       <Flex
         align="center"
-        px={4}
-        py={1.5}
+        flexShrink={0}
+        px={3}
+        py={1}
         borderRadius="full"
         bg={badgeColor}
         border="1px solid"
-        borderColor={badgeColor === "#fff" || badgeColor === "white" ? "gray.200" : badgeColor}
+        borderColor={
+          badgeColor === "#fff" || badgeColor === "white"
+            ? "gray.200"
+            : badgeColor
+        }
         color={textColor}
         fontSize="xs"
         fontWeight="bold"
         whiteSpace="nowrap"
         shadow="sm"
+        maxW="100%"
       >
         <Box
           w="6px"
@@ -26,8 +32,11 @@ const StatusBadgeCompo = ({ value, getStatusStyle }) => {
           borderRadius="50%"
           bg={dotColor}
           mr={2}
+          flexShrink={0}
         />
-        {value}
+        <Box as="span" whiteSpace="nowrap">
+          {value}
+        </Box>
       </Flex>
     </Flex>
   );

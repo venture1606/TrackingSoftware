@@ -71,10 +71,17 @@ const URL = PROCESS_URL;
 
 const CELL_WRAP_STYLE = {
   maxWidth: "100%",
-  overflow: "visible",
+  overflow: "hidden",
   whiteSpace: "normal",
   wordBreak: "break-word",
-  overflowWrap: "anywhere",
+  overflowWrap: "break-word",
+};
+
+const STATUS_CELL_STYLE = {
+  maxWidth: "100%",
+  overflow: "visible",
+  whiteSpace: "nowrap",
+  minWidth: 0,
 };
 
 function FormPage({
@@ -575,7 +582,7 @@ function FormPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      ...CELL_WRAP_STYLE,
+                      ...STATUS_CELL_STYLE,
                     }}
                   >
                     <StatusBadgeCompo
