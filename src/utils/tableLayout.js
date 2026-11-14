@@ -81,9 +81,17 @@ export function getHeaderBasedColumnWidths(headers = [], opts = {}) {
     extraColumns = [],
     font = DEFAULT_FONT,
     paddingX = 24,
-    minWidth = 72,
-    // Nested BOM mini-table needs room for ShownArray columns without inner scroll
-    specialMins = { "DETAILING PRODUCT": 720 },
+    minWidth = 96,
+    specialMins = {
+      // Nested BOM mini-table needs room without inner scroll
+      "DETAILING PRODUCT": 720,
+      // Keep common BOM / product fields readable on one line where possible
+      "ITEM-NAME": 160,
+      "ITEM CODE": 120,
+      "SUB PARTS": 120,
+      "PART NAME": 140,
+      "PART NO": 100,
+    },
   } = opts;
 
   const dateMin = getDateColumnMinWidth(paddingX);

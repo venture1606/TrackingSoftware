@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  Tr,
-  Td,
-  Button,
   Input,
   Select,
   Checkbox,
@@ -357,19 +354,37 @@ const EditableRow = ({
     setFormData(newData);
   };
 
+  const cellStyle = {
+    borderRight: "1px solid #edf2f7",
+    padding: "6px 8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 0,
+    width: "100%",
+    overflow: "hidden",
+    boxSizing: "border-box",
+  };
+
+  const controlSx = {
+    w: "100%",
+    minW: 0,
+    fontSize: "xs",
+  };
+
   return (
     <div
       style={{
         display: "grid",
         gridTemplateColumns: gridTemplateColumns,
         gap: "0",
-        backgroundColor: "white",
+        backgroundColor: "#ebf8ff",
         padding: "0",
-        borderRadius: "8px",
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        border: "1px solid #3182ce", // Highlight edit mode
-        alignItems: "stretch", // Changed from center
-        marginBottom: "10px",
+        borderRadius: "6px",
+        border: "1px solid #63b3ed",
+        alignItems: "stretch",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {formData.map((field, idx) => {
@@ -382,83 +397,74 @@ const EditableRow = ({
         const isError = errorFields.includes(field.key);
 
         return (
-          <div
-            key={idx}
-            style={{
-              borderRight: "1px solid #edf2f7",
-              padding: "8px 10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              maxWidth: "100%",
-              overflow: "visible",
-              whiteSpace: "normal",
-              wordBreak: "break-word",
-              overflowWrap: "anywhere",
-            }}
-          >
-            {/* Render logic based on process type */}
+          <div key={idx} style={cellStyle}>
             {field.process === "processId" ? (
               <Input
                 size="sm"
-                fontSize="xs"
                 value={field.value}
                 isReadOnly
                 bg="gray.50"
                 variant="filled"
                 placeholder={field.key}
+                sx={controlSx}
               />
             ) : field.process === "multiSelect" ? (
               <CheckboxGroup
                 value={field.value || []}
                 onChange={(vals) => handleValueChange(idx, vals)}
               >
-                <SimpleGrid columns={5} spacing={3} py={2}>
+                <SimpleGrid columns={2} spacing={2} py={1} w="100%">
                   {(options[field.key] || []).map((opt, i) => (
                     <Checkbox key={i} value={opt.value} size="sm">
-                      {opt.label}
+                      <Text fontSize="xs" noOfLines={1}>
+                        {opt.label}
+                      </Text>
                     </Checkbox>
                   ))}
                 </SimpleGrid>
               </CheckboxGroup>
             ) : field.process === "arrayInput" ? (
-              <Stack spacing={1} width="100%">
-                {field.value.map((val, subIdx) => (
-                  <div key={subIdx} style={{ display: "flex", gap: "5px" }}>
-                    <Input
-                      size="sm"
-                      fontSize="xs"
-                      value={val}
-                      onChange={(e) =>
-                        handleValueChange(idx, e.target.value, subIdx)
-                      }
-                      isInvalid={isError}
-                      bg="white"
-                      placeholder={field.key}
-                    />
-                    <IconButton
-                      size="xs"
-                      icon={<CloseIcon />}
-                      colorScheme="red"
-                      onClick={() => handleRemoveArrayInput(idx, subIdx)}
-                    />
-                  </div>
-                ))}
-                <Button
+              <Stack spacing={1} width="100%" minW={0}>
+                {(Array.isArray(field.value) ? field.value : [""]).map(
+                  (val, subIdx) => (
+                    <Flex key={subIdx} gap={1} align="center" minW={0}>
+                      <Input
+                        size="sm"
+                        value={val}
+                        onChange={(e) =>
+                          handleValueChange(idx, e.target.value, subIdx)
+                        }
+                        isInvalid={isError}
+                        bg="white"
+                        placeholder={field.key}
+                        sx={controlSx}
+                      />
+                      <IconButton
+                        size="xs"
+                        flexShrink={0}
+                        icon={<CloseIcon boxSize={2} />}
+                        colorScheme="red"
+                        variant="ghost"
+                        aria-label={`Remove ${field.key} value`}
+                        onClick={() => handleRemoveArrayInput(idx, subIdx)}
+                      />
+                    </Flex>
+                  ),
+                )}
+                <IconButton
                   size="xs"
-                  width="100%"
+                  alignSelf="flex-start"
+                  icon={<AddIcon boxSize={2.5} />}
                   variant="outline"
                   colorScheme="blue"
+                  aria-label={`Add ${field.key} value`}
                   onClick={() => handleAddArrayInput(idx)}
-                >
-                  + Add
-                </Button>
+                />
               </Stack>
             ) : field.process === "select" ? (
-              <Stack spacing={1} width="100%">
+              <Stack spacing={1} width="100%" minW={0}>
                 <Select
                   size="sm"
-                  fontSize="xs"
                   value={
                     field.value === "others" ? "others" : field.value || ""
                   }
@@ -477,6 +483,7 @@ const EditableRow = ({
                   isInvalid={isError}
                   isDisabled={isReadOnly}
                   bg="white"
+                  sx={controlSx}
                 >
                   {field.options
                     ?.filter((o) => o.toLowerCase() !== "others")
@@ -492,7 +499,6 @@ const EditableRow = ({
                 {field.value === "others" && (
                   <Input
                     size="sm"
-                    fontSize="xs"
                     placeholder={`Enter ${field.key}`}
                     value={field.otherValue || ""}
                     onChange={(e) => {
@@ -506,7 +512,6 @@ const EditableRow = ({
                         const newData = [...formData];
                         newData[idx].value = customVal;
 
-                        // Add to local options so the Select can display it
                         if (
                           newData[idx].options &&
                           !newData[idx].options.includes(customVal)
@@ -520,7 +525,6 @@ const EditableRow = ({
                         delete newData[idx].otherValue;
                         setFormData(newData);
 
-                        // Also update global/shared options
                         dispatch(
                           updateSelectOptions({
                             key: field.key,
@@ -530,6 +534,7 @@ const EditableRow = ({
                       }
                     }}
                     bg="white"
+                    sx={controlSx}
                   />
                 )}
               </Stack>
@@ -537,40 +542,40 @@ const EditableRow = ({
               <Input
                 type="date"
                 size="sm"
-                fontSize="xs"
                 value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
                 bg="white"
                 placeholder={field.key}
+                sx={controlSx}
               />
             ) : field.process === "time" ? (
               <Input
                 type="time"
                 size="sm"
-                fontSize="xs"
                 value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
                 bg="white"
                 placeholder={field.key}
+                sx={controlSx}
               />
             ) : field.process === "number" ? (
               <Input
                 type="number"
                 size="sm"
-                fontSize="xs"
                 value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isInvalid={isError}
                 isDisabled={isReadOnly}
                 bg="white"
                 placeholder={field.key}
+                sx={controlSx}
               />
             ) : field.process === "image" ? (
-              <Stack spacing={2} align="center" width="100%">
+              <Stack spacing={1} align="center" width="100%" minW={0}>
                 <input
                   type="file"
                   accept="image/*"
@@ -597,9 +602,9 @@ const EditableRow = ({
                   width="100%"
                   bg="white"
                 >
-                  <Center gap={2}>
-                    <AttachmentIcon color="gray.500" />
-                    <Text fontSize="sm" color="gray.600" fontWeight="500">
+                  <Center gap={1}>
+                    <AttachmentIcon color="gray.500" boxSize={3} />
+                    <Text fontSize="xs" color="gray.600" fontWeight="500">
                       Upload
                     </Text>
                   </Center>
@@ -615,14 +620,14 @@ const EditableRow = ({
                     <img
                       src={field.value.previewUrl}
                       alt="prev"
-                      width="80"
+                      width="48"
                       style={{ borderRadius: "4px" }}
                     />
                   </Box>
                 )}
               </Stack>
             ) : field.process === "toggle" ? (
-              <Flex align="center" gap={3}>
+              <Flex align="center" gap={2}>
                 <Text fontSize="xs" fontWeight="bold">
                   {field.value === "YES" ? "YES" : "NO"}
                 </Text>
@@ -638,53 +643,54 @@ const EditableRow = ({
             ) : (
               <Input
                 size="sm"
-                fontSize="xs"
                 value={field.value ?? ""}
                 onChange={(e) => handleValueChange(idx, e.target.value)}
                 isDisabled={isReadOnly}
                 isInvalid={isError}
                 bg="white"
                 placeholder={field.key}
+                sx={controlSx}
               />
             )}
           </div>
         );
       })}
 
-      {/* Actions Column */}
+      {/* Actions — icon buttons so they fit the Actions column track */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          alignItems: "start",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
           justifyContent: "center",
-          gap: "4px",
+          gap: "6px",
           width: "100%",
-          padding: "8px 5px",
+          minWidth: 0,
+          padding: "6px 8px",
+          boxSizing: "border-box",
         }}
       >
-        <Button
-          // leftIcon={!isNew && <CheckIcon />}
-          colorScheme="green"
-          size="sm"
-          onClick={handleValidationAndSave}
-          aria-label="Save"
-          px={isNew ? 4 : 2}
-          width="100%"
-          boxShadow="sm"
-        >
-          {isNew ? "Add Row" : "Save"}
-        </Button>
-        <Button
-          // leftIcon={!isNew && <CloseIcon />}
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          aria-label="Cancel"
-          width="100%"
-        >
-          {isNew ? "Clear" : "Cancel"}
-        </Button>
+        <Tooltip label={isNew ? "Add row" : "Save"} hasArrow>
+          <IconButton
+            icon={<CheckIcon />}
+            colorScheme="green"
+            size="sm"
+            onClick={handleValidationAndSave}
+            aria-label={isNew ? "Add row" : "Save"}
+            flexShrink={0}
+          />
+        </Tooltip>
+        <Tooltip label={isNew ? "Cancel" : "Cancel edit"} hasArrow>
+          <IconButton
+            icon={<CloseIcon />}
+            variant="outline"
+            colorScheme="gray"
+            size="sm"
+            onClick={onCancel}
+            aria-label={isNew ? "Cancel add" : "Cancel"}
+            flexShrink={0}
+          />
+        </Tooltip>
       </div>
     </div>
   );

@@ -241,7 +241,8 @@ function FormPage({
   const columnWidths = useMemo(
     () =>
       getHeaderBasedColumnWidths(process?.header || [], {
-        extraColumns: canModify ? ["Actions"] : [],
+        // Fixed width so edit/add IconButtons fit without clipping
+        extraColumns: canModify ? [100] : [],
       }),
     [process?.header, canModify],
   );
@@ -345,7 +346,7 @@ function FormPage({
       setRows(updatedRows);
 
       if (refresh) {
-        refresh();
+        await refresh();
       }
     } catch (e) {
       console.error("Failed to save edit", e);
@@ -357,13 +358,15 @@ function FormPage({
       await addMutation.mutateAsync({
         items,
         id: process?.id,
-        ...(isDefault && { rowDataId: rowDataId }),
+        ...((isDefault || rowDataId) && { rowDataId: rowDataId }),
       });
       setNewRowKey((prev) => prev + 1); // Reset new row form
       if (setIsAddingNewRow) {
         setIsAddingNewRow(false);
       }
-      refresh();
+      if (refresh) {
+        await refresh();
+      }
     } catch (e) {
       console.error("Failed to add new data", e);
     }
@@ -419,7 +422,7 @@ function FormPage({
   const gridTemplateColumns = useMemo(
     () =>
       getHeaderBasedGridTemplate(process?.header || [], {
-        extraColumns: canModify ? ["Actions"] : [],
+        extraColumns: canModify ? [100] : [],
       }),
     [process?.header, canModify],
   );
@@ -835,7 +838,7 @@ function FormPage({
             </div>
           )}
 
-          {/* Sticky Add New Row at the bottom */}
+          {/* Inline add row — same grid as header/body (no extra horizontal padding) */}
           {canCreate && process?.header?.length > 0 && isAddingNewRow && (
             <div
               style={{
@@ -843,10 +846,9 @@ function FormPage({
                 bottom: 0,
                 backgroundColor: "#f7f9fc",
                 zIndex: 15,
-                padding: "20px 10px",
-                marginTop: "10px",
+                marginTop: "8px",
+                paddingTop: "8px",
                 borderTop: "1px solid #e2e8f0",
-                boxShadow: "0 -4px 6px rgba(0,0,0,0.02)",
               }}
             >
               <EditableRow
@@ -860,7 +862,7 @@ function FormPage({
                 onCancel={() => {
                   setNewRowKey((prev) => prev + 1);
                   if (setIsAddingNewRow) setIsAddingNewRow(false);
-                }} // Reset form and close
+                }}
                 gridTemplateColumns={gridTemplateColumns}
               />
             </div>

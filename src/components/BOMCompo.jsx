@@ -1,7 +1,6 @@
 import { Box, Text, Flex, Badge, Stack, Heading, Button } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+import { AddIcon, CloseIcon } from "@chakra-ui/icons";
 import FormPage from "./FormPage";
-import AddData from "../hooks/AddData";
 
 const BOMCompo = ({
   nested,
@@ -9,83 +8,101 @@ const BOMCompo = ({
   bomProducts,
   showAddData,
   setShowAddData,
-  handleAddDataSave,
   showBOMAddData,
   setShowBOMAddData,
-  handleAddDataSaveForBOM,
+  handleRefresh,
+  handleRefreshBomProducts,
 }) => {
   return (
     <Stack spacing={10}>
       {/* Main BOM Section */}
-      <Box 
-        bg="white" 
-        p={6} 
-        borderRadius="2xl" 
-        shadow="sm" 
-        border="1px solid" 
+      <Box
+        bg="white"
+        p={6}
+        borderRadius="2xl"
+        shadow="sm"
+        border="1px solid"
         borderColor="gray.100"
       >
         <Flex align="center" justify="space-between" mb={6}>
           <Box>
-            <Badge colorScheme="purple" mb={2} px={3} borderRadius="full">Main Structure</Badge>
-            <Heading size="md" color="gray.800">Bill of Materials - Primary</Heading>
+            <Badge colorScheme="purple" mb={2} px={3} borderRadius="full">
+              Main Structure
+            </Badge>
+            <Heading size="md" color="gray.800">
+              Bill of Materials - Primary
+            </Heading>
           </Box>
           {!isView && (
             <Button
-              leftIcon={<AddIcon />}
+              leftIcon={showAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />}
               size="sm"
-              colorScheme="purple"
-              onClick={() => setShowAddData(true)}
+              colorScheme={showAddData ? "red" : "purple"}
+              onClick={() => setShowAddData(!showAddData)}
               borderRadius="lg"
             >
-              Add Main Data
+              {showAddData ? "Cancel Add" : "Add Main Data"}
             </Button>
           )}
         </Flex>
-        
-        <Box 
-          p={2} 
-          bg="gray.50" 
+
+        <Box
+          p={2}
+          bg="gray.50"
           borderRadius="xl"
           border="1px solid"
           borderColor="gray.100"
           overflow="visible"
         >
-          <FormPage process={nested} isView={isView} />
+          <FormPage
+            process={nested}
+            isView={isView}
+            isDefault={!!nested?.rowDataId}
+            rowDataId={nested?.rowDataId}
+            isAddingNewRow={showAddData}
+            setIsAddingNewRow={setShowAddData}
+            refresh={handleRefresh}
+          />
         </Box>
       </Box>
 
       {/* BOM Products Section */}
-      <Box 
-        bg="white" 
-        p={6} 
-        borderRadius="2xl" 
-        shadow="sm" 
-        border="1px solid" 
+      <Box
+        bg="white"
+        p={6}
+        borderRadius="2xl"
+        shadow="sm"
+        border="1px solid"
         borderColor="gray.100"
       >
         <Flex align="center" justify="space-between" mb={6}>
           <Box>
-            <Badge colorScheme="green" mb={2} px={3} borderRadius="full">Inventory Links</Badge>
-            <Heading size="md" color="gray.800">Products Data</Heading>
+            <Badge colorScheme="green" mb={2} px={3} borderRadius="full">
+              Inventory Links
+            </Badge>
+            <Heading size="md" color="gray.800">
+              Products Data
+            </Heading>
           </Box>
-          {!isView && (
+          {!isView && bomProducts && (
             <Button
-              leftIcon={<AddIcon />}
+              leftIcon={
+                showBOMAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />
+              }
               size="sm"
-              colorScheme="green"
-              onClick={() => setShowBOMAddData(true)}
+              colorScheme={showBOMAddData ? "red" : "green"}
+              onClick={() => setShowBOMAddData(!showBOMAddData)}
               borderRadius="lg"
             >
-              Add Product Entry
+              {showBOMAddData ? "Cancel Add" : "Add Product Entry"}
             </Button>
           )}
         </Flex>
 
         {bomProducts ? (
-          <Box 
-            p={2} 
-            bg="gray.50" 
+          <Box
+            p={2}
+            bg="gray.50"
             borderRadius="xl"
             border="1px solid"
             borderColor="gray.100"
@@ -95,44 +112,30 @@ const BOMCompo = ({
               process={bomProducts}
               isView={isView}
               currentBomId={nested?.rowDataId}
+              isDefault={!!bomProducts?.rowDataId}
+              rowDataId={bomProducts?.rowDataId}
+              isAddingNewRow={showBOMAddData}
+              setIsAddingNewRow={setShowBOMAddData}
+              refresh={handleRefreshBomProducts}
             />
           </Box>
         ) : (
-          <Flex 
-            direction="column" 
-            align="center" 
-            justify="center" 
-            py={10} 
-            bg="gray.50" 
-            borderRadius="xl" 
-            border="1px dashed" 
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            py={10}
+            bg="gray.50"
+            borderRadius="xl"
+            border="1px dashed"
             borderColor="gray.300"
           >
-            <Text color="gray.400" fontStyle="italic">No linked product data found for this BOM</Text>
+            <Text color="gray.400" fontStyle="italic">
+              No linked product data found for this BOM
+            </Text>
           </Flex>
         )}
       </Box>
-
-      {/* Modals */}
-      {showAddData && (
-        <AddData
-          headers={nested.header || []}
-          IndicationText="Add New Main Data"
-          isOpen={showAddData}
-          onClose={() => setShowAddData(false)}
-          onSave={handleAddDataSave}
-        />
-      )}
-      {showBOMAddData && (
-        <AddData
-          headers={bomProducts?.header || []}
-          IndicationText="Add New Product Entry"
-          isOpen={showBOMAddData}
-          onClose={() => setShowBOMAddData(false)}
-          onSave={handleAddDataSaveForBOM}
-          currentBomId={nested?.rowDataId}
-        />
-      )}
     </Stack>
   );
 };

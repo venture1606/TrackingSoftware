@@ -447,10 +447,10 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       bomProducts={bomProducts}
       showAddData={showAddData}
       setShowAddData={setShowAddData}
-      handleAddDataSave={handleAddDataSave}
       showBOMAddData={showBOMAddData}
       setShowBOMAddData={setShowBOMAddData}
-      handleAddDataSaveForBOM={handleAddDataSaveForBOM}
+      handleRefresh={handleRefresh}
+      handleRefreshBomProducts={handleBomProducts}
     />
   );
 
