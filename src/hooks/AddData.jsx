@@ -27,6 +27,13 @@ import { useSelector, useDispatch } from "react-redux";
 import ItemsData from "../utils/ItemsData";
 import { updateSelectOptions } from "../redux/slices/auth";
 import { findAutoFillData, getFilteredOptions } from "../utils/constant";
+import {
+  SERIAL_TYPES,
+  useAllocateSerial,
+  usePeekSerialMutation,
+} from "../services/SerialNumber";
+
+const QUOTATION_PROCESS_ID = "MS/R/005";
 
 function AddData({
   IndicationText = "Add Data",
@@ -38,6 +45,9 @@ function AddData({
   processId = null,
 }) {
   const dispatch = useDispatch();
+  const peekSerialMutation = usePeekSerialMutation();
+  const allocateSerialMutation = useAllocateSerial();
+  const usesEnquirySerial = processId === QUOTATION_PROCESS_ID;
 
   const detailingProducts = useSelector(
     (state) => state.department.detailingProducts
@@ -175,6 +185,31 @@ function AddData({
       return refreshOptions(mappedData);
     });
   }, [headers, processId, SelectOptionsArray, groupItem]);
+
+  const peekEnquiryNo = useCallback(async () => {
+    if (!usesEnquirySerial || !isOpen) return;
+    try {
+      const data = await peekSerialMutation.mutateAsync(
+        SERIAL_TYPES.ENQUIRE_NUMBER,
+      );
+      if (!data?.serial) return;
+      setFormData((prev) =>
+        prev.map((field) =>
+          field.key === "ENQUIRY NO" ? { ...field, value: data.serial } : field,
+        ),
+      );
+    } catch {
+      /* toast via mutation */
+    }
+  }, [usesEnquirySerial, isOpen, peekSerialMutation]);
+
+  // Auto-peek ENQUIRY NO for Quotation Add Data
+  useEffect(() => {
+    if (!isOpen || !usesEnquirySerial) return;
+    if (!headers.some((h) => h === "ENQUIRY NO")) return;
+    peekEnquiryNo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, usesEnquirySerial, headers]);
 
   // Handle value change
   const handleValueChange = (index, val, subIndex = null) => {
@@ -339,10 +374,16 @@ function AddData({
     const resetWithDynamicOptions = refreshOptions(mappedData);
     setFormData(resetWithDynamicOptions);
     setErrorFields([]);
+    if (usesEnquirySerial) {
+      // Re-peek after reset so ENQUIRY NO is not left blank
+      setTimeout(() => {
+        peekEnquiryNo();
+      }, 0);
+    }
   };
 
   // Save handler
-  const handleSave = () => {
+  const handleSave = async () => {
     // ✅ Validate mandatory fields
     const errors = [];
     for (const field of formData) {
@@ -368,7 +409,7 @@ function AddData({
     setErrorFields([]);
 
     // ✅ just send structured items
-    const items = formData.map((field) => {
+    let items = formData.map((field) => {
       if (field.process === "image") {
         if (field.value?.file) {
           return { ...field, value: field.value.file }; // keep File object
@@ -384,6 +425,24 @@ function AddData({
       }
       return field;
     });
+
+    // Quotation: allocate ENQUIRY NO atomically on create
+    if (usesEnquirySerial) {
+      try {
+        const allocated = await allocateSerialMutation.mutateAsync(
+          SERIAL_TYPES.ENQUIRE_NUMBER,
+        );
+        if (allocated?.serial) {
+          items = items.map((field) =>
+            field.key === "ENQUIRY NO"
+              ? { ...field, value: allocated.serial }
+              : field,
+          );
+        }
+      } catch {
+        return;
+      }
+    }
 
     onSave && onSave(items); // parent handles API formatting
     onClose();
@@ -698,6 +757,29 @@ function AddData({
                       colorScheme="green"
                     />
                   </Flex>
+                ) : field.key === "ENQUIRY NO" && usesEnquirySerial ? (
+                  <Flex gap={2} flex="1" align="center">
+                    <Input
+                      ref={idx === 0 ? initialRef : null}
+                      value={field.value ?? ""}
+                      placeholder="Fetch next ENQUIRY NO"
+                      isReadOnly
+                      borderColor={
+                        errorFields.includes(field.key) ? "red.500" : undefined
+                      }
+                      borderWidth={
+                        errorFields.includes(field.key) ? "2px" : undefined
+                      }
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={peekEnquiryNo}
+                      isLoading={peekSerialMutation.isPending}
+                    >
+                      Fetch
+                    </Button>
+                  </Flex>
                 ) : (
                   <Input
                     ref={idx === 0 ? initialRef : null}
@@ -721,7 +803,12 @@ function AddData({
           <Button onClick={onClose} variant="outline">
             Cancel
           </Button>
-          <Button ml={3} colorScheme="blue" onClick={handleSave}>
+          <Button
+            ml={3}
+            colorScheme="blue"
+            onClick={handleSave}
+            isLoading={allocateSerialMutation.isPending}
+          >
             Save
           </Button>
         </ModalFooter>

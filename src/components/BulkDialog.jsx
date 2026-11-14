@@ -27,12 +27,21 @@ import {
   Divider,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useSelector } from "react-redux";
 import {
   useBulkConfig,
   useBulkFetch,
   useBulkUpsert,
 } from "../services/Process";
+import {
+  SERIAL_TYPES,
+  useAllocateSerial,
+  usePeekSerialMutation,
+} from "../services/SerialNumber";
 import ItemsData from "../utils/ItemsData.json";
+import { findAutoFillData } from "../utils/constant";
+
+const QUOTATION_PROCESS_ID = "MS/R/005";
 
 const { DateFieldsArray = [], ProcessDateFields = {} } = ItemsData;
 
@@ -61,6 +70,16 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   );
   const fetchMutation = useBulkFetch();
   const upsertMutation = useBulkUpsert();
+  const peekSerialMutation = usePeekSerialMutation();
+  const allocateSerialMutation = useAllocateSerial();
+
+  const SelectOptionsArray =
+    useSelector((state) =>
+      state.auth.SelectOptionsArray?.length > 0
+        ? state.auth.SelectOptionsArray
+        : null,
+    ) || ItemsData.SelectOptionsArray;
+  const groupItem = useSelector((state) => state.auth.groupItem);
 
   const [singleEntry, setSingleEntry] = useState({});
   const [filters, setFilters] = useState({});
@@ -72,6 +91,23 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
+  const usesEnquirySerial =
+    processId === QUOTATION_PROCESS_ID &&
+    (config?.singleEntryHeaders || []).includes("ENQUIRY NO");
+
+  const peekEnquiryNo = useCallback(async () => {
+    if (!usesEnquirySerial) return;
+    try {
+      const data = await peekSerialMutation.mutateAsync(
+        SERIAL_TYPES.ENQUIRE_NUMBER,
+      );
+      if (data?.serial) {
+        setSingleEntry((prev) => ({ ...prev, "ENQUIRY NO": data.serial }));
+      }
+    } catch {
+      /* toast via mutation */
+    }
+  }, [usesEnquirySerial, peekSerialMutation]);
 
   useEffect(() => {
     if (!config || !isOpen) return;
@@ -96,6 +132,15 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       setSelected(new Set([id]));
     }
   }, [config, isOpen]);
+
+  // Auto-peek ENQUIRY NO for Quotation blank create
+  useEffect(() => {
+    if (!isOpen || !usesEnquirySerial || config?.mode !== "blankMultiCreate") {
+      return;
+    }
+    peekEnquiryNo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, usesEnquirySerial, config?.mode]);
 
   const supportsFetch = !!(config?.filterHeaders || []).length;
 
@@ -260,6 +305,25 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       normalizedSingle[k] = toEpochIfDate(k, v, processId);
     });
 
+    // Quotation create-only batch: allocate ENQUIRY NO atomically on submit
+    const allCreates = checkedRows.every((r) => !r.rowId);
+    if (usesEnquirySerial && allCreates) {
+      try {
+        const allocated = await allocateSerialMutation.mutateAsync(
+          SERIAL_TYPES.ENQUIRE_NUMBER,
+        );
+        if (allocated?.serial) {
+          normalizedSingle["ENQUIRY NO"] = allocated.serial;
+          setSingleEntry((prev) => ({
+            ...prev,
+            "ENQUIRY NO": allocated.serial,
+          }));
+        }
+      } catch {
+        return;
+      }
+    }
+
     const payloadRows = checkedRows.map((r) => {
       const items = {};
       Object.entries(r.items || {}).forEach(([k, v]) => {
@@ -289,6 +353,14 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     }
     return multiHeaders;
   }, [config, parentDisplayHeaders, multiHeaders]);
+
+  const getSelectOptionsForKey = (key) => {
+    const match = (SelectOptionsArray || []).find(
+      (item) =>
+        item.key?.trim().toLowerCase() === String(key || "").trim().toLowerCase(),
+    );
+    return match?.value || [];
+  };
 
   const renderFieldInput = (key, value, onChange) => {
     if (isDateHeader(key, processId)) {
@@ -329,6 +401,23 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         </Select>
       );
     }
+    if (key === "CUSTOMER-NAME" || key === "ENQ BY") {
+      const options = getSelectOptionsForKey(key);
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`Select ${key}`}
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
     return (
       <Input
         size="sm"
@@ -337,6 +426,21 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         placeholder={key}
       />
     );
+  };
+
+  const handleSingleEntryChange = (key, val) => {
+    setSingleEntry((prev) => {
+      const next = { ...prev, [key]: val };
+      if (key === "CUSTOMER-NAME") {
+        const autoFillData = findAutoFillData(groupItem, "CUSTOMER-NAME", val);
+        if (autoFillData?.LOCATION != null) {
+          next.LOCATION = autoFillData.LOCATION;
+        } else if (!val) {
+          next.LOCATION = "";
+        }
+      }
+      return next;
+    });
   };
 
   return (
@@ -381,8 +485,30 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                       <Text fontSize="xs" mb={1} color="gray.600">
                         {key}
                       </Text>
-                      {renderFieldInput(key, singleEntry[key], (val) =>
-                        setSingleEntry((prev) => ({ ...prev, [key]: val })),
+                      {key === "ENQUIRY NO" && usesEnquirySerial ? (
+                        <Flex gap={2} align="center">
+                          <Input
+                            size="sm"
+                            value={singleEntry[key] ?? ""}
+                            isReadOnly
+                            placeholder="Fetch next ENQUIRY NO"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            flexShrink={0}
+                            onClick={peekEnquiryNo}
+                            isLoading={peekSerialMutation.isPending}
+                          >
+                            Fetch
+                          </Button>
+                        </Flex>
+                      ) : (
+                        renderFieldInput(
+                          key,
+                          singleEntry[key],
+                          (val) => handleSingleEntryChange(key, val),
+                        )
                       )}
                     </Box>
                   ))}
@@ -445,6 +571,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                           });
                           setRows([{ tempId: id, items: empty }]);
                           setSelected(new Set([id]));
+                          if (usesEnquirySerial) peekEnquiryNo();
                         }
                       }}
                     >
@@ -582,7 +709,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
           <Button
             colorScheme="blue"
             onClick={handleSubmit}
-            isLoading={upsertMutation.isPending}
+            isLoading={
+              upsertMutation.isPending || allocateSerialMutation.isPending
+            }
             isDisabled={!config || selected.size === 0}
           >
             Submit ({selected.size})

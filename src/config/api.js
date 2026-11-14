@@ -7,6 +7,7 @@ export const PROCESS_URL = process.env.REACT_APP_PROCESS_URL || `${API_BASE}/api
 export const AUTH_URL = process.env.REACT_APP_AUTH_URL || `${API_BASE}/api/v1/user`;
 export const DEPARTMENT_URL = process.env.REACT_APP_DEPARTMENT_URL || `${API_BASE}/api/v1/department`;
 export const PRODUCT_URL = process.env.REACT_APP_PRODUCT_URL || `${API_BASE}/api/v1/product`;
+export const SERIAL_URL = process.env.REACT_APP_SERIAL_URL || `${API_BASE}/api/v1/serial`;
 
 // Locally stored uploads are saved as server-relative paths ("/uploads/...").
 // Cloudinary URLs, blob URLs and File objects pass through unchanged.
