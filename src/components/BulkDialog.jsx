@@ -137,7 +137,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     if (!config || !isOpen) return;
     const se = {};
     (config.singleEntryHeaders || []).forEach((h) => {
-      se[h] = "";
+      // Procurement bulk create: PR STATUS defaults to PENDING (never blank)
+      se[h] =
+        processId === "PR/R/003" && h === "PR STATUS" ? "PENDING" : "";
     });
     setSingleEntry(se);
     setFilters({ ...(config.defaultFilters || {}) });
@@ -155,7 +157,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
       setRows([{ tempId: id, items: empty }]);
       setSelected(new Set([id]));
     }
-  }, [config, isOpen]);
+  }, [config, isOpen, processId]);
 
   // Auto-peek serial shared field on blank create (ENQUIRY NO / PO NO)
   useEffect(() => {
@@ -815,6 +817,16 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
                         setRows([]);
                         setSelected(new Set());
                         setTotal(0);
+                        if (isProcurementBulk) {
+                          setSingleEntry((prev) => ({
+                            ...prev,
+                            "PR STATUS":
+                              prev["PR STATUS"] &&
+                              String(prev["PR STATUS"]).trim()
+                                ? prev["PR STATUS"]
+                                : "PENDING",
+                          }));
+                        }
                         if (config.mode === "blankMultiCreate") {
                           const id = nextTempId();
                           const empty = {};
