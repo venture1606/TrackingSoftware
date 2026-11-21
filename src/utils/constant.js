@@ -12,6 +12,7 @@ export const groupItemsHelper = (key) => {
     case "VENDOR NAME":
       return "groupOfVendorList";
     case "CUSTOMER-NAME":
+    case "CUSTOMER NAME":
       return "groupOfCustomerList";
     default:
       return "";

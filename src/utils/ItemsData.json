@@ -391,6 +391,7 @@
     "ORDER DATE",
     "DATE",
     "DELIVERY DATE",
+    "DISPATCH DATE",
     "ISSUE DATE",
     "EXPIRY DATE",
     "NEXT RENEVAL",
