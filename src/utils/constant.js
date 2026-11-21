@@ -9,6 +9,7 @@ export const groupItemsHelper = (key) => {
     // case "GRADE":
     //   return "groupOfItemList";
     case "VENDOR-NAME":
+    case "VENDOR NAME":
       return "groupOfVendorList";
     case "CUSTOMER-NAME":
       return "groupOfCustomerList";

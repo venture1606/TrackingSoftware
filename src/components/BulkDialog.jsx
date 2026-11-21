@@ -686,6 +686,14 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
           next.LOCATION = "";
         }
       }
+      if (key === "VENDOR-NAME" || key === "VENDOR NAME") {
+        const autoFillData = findAutoFillData(groupItem, key, val);
+        if (autoFillData?.ADDRESS != null) {
+          next.ADDRESS = autoFillData.ADDRESS;
+        } else if (!val) {
+          next.ADDRESS = "";
+        }
+      }
       return next;
     });
   };
