@@ -2646,9 +2646,9 @@
     {
       "process": "Process Control Plan",
       "header": [
-        "PROCESS NO.",
         "PART NO",
         "PART NAME",
+        "PROCESS NO.",
         "PROCESS DESCRIPTION",
         "MACHINES",
         "NO.",

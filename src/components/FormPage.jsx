@@ -97,6 +97,7 @@ function FormPage({
   refresh,
   isAddingNewRow = false,
   setIsAddingNewRow,
+  initialValues = null,
 }) {
   const queryClient = useQueryClient();
   const updateMutation = useUpdateProcessData();
@@ -512,6 +513,7 @@ function FormPage({
               processId={process?.processId || null}
               rowId={rowId}
               initialData={row}
+              initialValues={initialValues}
               currentBomId={currentBomId}
               onSave={(items) => handleSaveEdit(items, rowId, index)}
               onCancel={() => setEditingRowId(null)}
@@ -949,6 +951,7 @@ function FormPage({
                 processId={process?.processId || null}
                 rowId={`new-row-${newRowKey}`}
                 isNew={true}
+                initialValues={initialValues}
                 currentBomId={currentBomId}
                 onSave={handleSaveNew}
                 onCancel={() => {

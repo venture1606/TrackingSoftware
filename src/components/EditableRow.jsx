@@ -29,6 +29,7 @@ import { updateSelectOptions } from "../redux/slices/auth";
 const EditableRow = ({
   headers,
   initialData = null,
+  initialValues = null,
   onSave,
   onCancel,
   currentBomId = null,
@@ -56,6 +57,7 @@ const EditableRow = ({
     ArrayValuesProcess,
     DateFieldsArray,
     ProcessDateFields,
+    ProcessLockedFields = {},
     ImageUploadArray,
     noOthers,
     TimeArrays,
@@ -68,6 +70,42 @@ const EditableRow = ({
     if (!processId || !ProcessDateFields?.[processId]) return [];
     return ProcessDateFields[processId];
   }, [processId, ProcessDateFields]);
+
+  const processLockedKeys = useMemo(() => {
+    const fromProcess =
+      (processId && ProcessLockedFields?.[processId]) || [];
+    return new Set(
+      fromProcess.map((k) =>
+        String(k || "")
+          .trim()
+          .toLowerCase(),
+      ),
+    );
+  }, [processId, ProcessLockedFields]);
+
+  const isFieldLocked = (key) =>
+    processLockedKeys.has(
+      String(key || "")
+        .trim()
+        .toLowerCase(),
+    );
+
+  const resolveInitialValue = (key) => {
+    if (!initialValues || typeof initialValues !== "object") return undefined;
+    if (initialValues[key] !== undefined && initialValues[key] !== null) {
+      return initialValues[key];
+    }
+    const lower = String(key || "")
+      .trim()
+      .toLowerCase();
+    const matchKey = Object.keys(initialValues).find(
+      (k) =>
+        String(k || "")
+          .trim()
+          .toLowerCase() === lower,
+    );
+    return matchKey !== undefined ? initialValues[matchKey] : undefined;
+  };
 
   const isDateFieldKey = (key) => {
     if (!key) return false;
@@ -167,6 +205,7 @@ const EditableRow = ({
         const cell = initialData.find((item) => item.key === key);
         let value = cell ? cell.value : "";
         let process = getProcessType(key);
+        const seeded = resolveInitialValue(key);
 
         if (process === "arrayInput" && !Array.isArray(value)) {
           value = [value || ""];
@@ -181,6 +220,16 @@ const EditableRow = ({
         }
 
         if (value == null) value = "";
+
+        // Locked / blank cells: fill from parent Product List (etc.)
+        if (
+          seeded !== undefined &&
+          seeded !== null &&
+          String(seeded).trim() !== "" &&
+          (isFieldLocked(key) || String(value).trim() === "")
+        ) {
+          value = seeded;
+        }
 
         const field = { key, value, process };
         if (process === "select") {
@@ -197,9 +246,12 @@ const EditableRow = ({
       // New Mode (Add Data logic)
       mappedData = (headers || []).map((key) => {
         const process = getProcessType(key);
+        const seeded = resolveInitialValue(key);
         let value = "";
 
-        if (process === "processId") {
+        if (seeded !== undefined && seeded !== null && seeded !== "") {
+          value = seeded;
+        } else if (process === "processId") {
           const match = DefaultHeaderAndProcessId.find(
             (item) => item.tableHeader === key,
           );
@@ -216,17 +268,28 @@ const EditableRow = ({
           const hasRed = selectMatch?.value.some(
             (v) => v.toLowerCase() === "red",
           );
-          return {
-            key,
-            value: hasRed ? "Red" : "",
-            process: "select",
-            options: selectMatch?.value || [],
-          };
+          value = hasRed ? "Red" : "";
         } else if (process === "toggle") {
           value = "NO";
         }
 
-        return { key, value, process };
+        if (
+          isFieldLocked(key) &&
+          seeded !== undefined &&
+          seeded !== null
+        ) {
+          value = seeded;
+        }
+
+        const field = { key, value, process };
+        if (process === "select") {
+          const selectMatch = SelectOptionsArray.find(
+            (item) =>
+              item.key.trim().toLowerCase() === key.trim().toLowerCase(),
+          );
+          field.options = selectMatch?.value || [];
+        }
+        return field;
       });
     }
 
@@ -388,17 +451,19 @@ const EditableRow = ({
       }}
     >
       {formData.map((field, idx) => {
+        const locked = isFieldLocked(field.key);
         const isReadOnly =
-          !isNew &&
-          (noEditableFields.some(
-            (h) => h.trim().toLowerCase() === field.key.trim().toLowerCase(),
-          ) ||
-            field.process === "processId");
+          locked ||
+          field.process === "processId" ||
+          (!isNew &&
+            noEditableFields.some(
+              (h) => h.trim().toLowerCase() === field.key.trim().toLowerCase(),
+            ));
         const isError = errorFields.includes(field.key);
 
         return (
           <div key={idx} style={cellStyle}>
-            {field.process === "processId" ? (
+            {field.process === "processId" || locked ? (
               <Input
                 size="sm"
                 value={field.value}

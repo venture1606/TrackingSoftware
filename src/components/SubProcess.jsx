@@ -511,6 +511,34 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
     />
   );
 
+  const parentPrefillForProcess = (() => {
+    if (!nested?.processId || !parentRowItems.length) return null;
+    const locked =
+      ItemsData.ProcessLockedFields?.[nested.processId] || [];
+    if (!locked.length) return null;
+    const parentMap = {};
+    for (const cell of parentRowItems) {
+      if (cell?.key) {
+        parentMap[String(cell.key).trim().toUpperCase()] = cell.value;
+      }
+    }
+    const values = {};
+    for (const key of locked) {
+      const upper = String(key).trim().toUpperCase();
+      // Prefer exact header; also try PART-NO / PART-NAME variants
+      const aliases = [upper, upper.replace(/\s+/g, "-"), upper.replace(/-/g, " ")];
+      let val = "";
+      for (const a of aliases) {
+        if (parentMap[a] != null && String(parentMap[a]).trim() !== "") {
+          val = parentMap[a];
+          break;
+        }
+      }
+      values[key] = val;
+    }
+    return values;
+  })();
+
   const renderDefault = () => (
     <DefaultProcessCompo 
       nested={nested}
@@ -518,6 +546,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
       showAddData={showAddData}
       setShowAddData={setShowAddData}
       handleRefresh={handleRefresh}
+      initialValues={parentPrefillForProcess}
     />
   );
 

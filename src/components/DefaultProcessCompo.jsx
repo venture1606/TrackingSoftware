@@ -11,6 +11,7 @@ const DefaultProcessCompo = ({
   showAddData,
   setShowAddData,
   handleRefresh,
+  initialValues = null,
 }) => {
   const addDisabled = !!isView;
   const addDeniedReason = getAccessDeniedReason({
@@ -60,6 +61,7 @@ const DefaultProcessCompo = ({
           refresh={handleRefresh}
           isAddingNewRow={showAddData}
           setIsAddingNewRow={setShowAddData}
+          initialValues={initialValues}
         />
       </Box>
     </Box>
