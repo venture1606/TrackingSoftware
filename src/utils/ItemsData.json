@@ -409,7 +409,8 @@
     "MR/R/007": ["FROM", "TO"]
   },
   "ProcessLockedFields": {
-    "DD/R/014": ["NO.", "PART", "from."]
+    "DD/R/014": ["NO.", "PART", "from."],
+    "ST/R/006": ["STOCK", "FOLLOW UP"]
   },
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
@@ -440,7 +441,12 @@
     "SETTING TIME",
     "ACTUAL",
     "REJECT",
-    "CREDIT PERIOD"
+    "CREDIT PERIOD",
+    "IN",
+    "OUT",
+    "REQUEST",
+    "STOCK",
+    "FOLLOW UP"
   ],
   "MandatoryFields":[
     "CYCLE TIME",

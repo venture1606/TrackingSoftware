@@ -2960,9 +2960,12 @@
         "ITEM CATEGORY",
         "ITEM CODE",
         "ITEM NAME",
-        "IN ",
+        "IN",
         "OUT",
-        "STOCK"
+        "REJECT",
+        "REQUEST",
+        "STOCK",
+        "FOLLOW UP"
       ]
     },
     {
