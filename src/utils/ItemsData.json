@@ -412,7 +412,8 @@
   "ProcessLockedFields": {
     "DD/R/014": ["NO.", "PART", "from."],
     "ST/R/006": ["STOCK", "FOLLOW UP"],
-    "QA/R/009": ["PART NO", "PART NAME"]
+    "QA/R/009": ["PART NO", "PART NAME"],
+    "QA/R/011A": ["CERTIFICATE NAME"]
   },
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
