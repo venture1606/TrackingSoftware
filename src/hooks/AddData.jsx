@@ -55,6 +55,8 @@ function AddData({
   onSave,
   currentBomId = null,
   processId = null,
+  initialValues = null,
+  lockedKeys = null,
 }) {
   const dispatch = useDispatch();
   const peekSerialMutation = usePeekSerialMutation();
@@ -82,12 +84,37 @@ function AddData({
     NumberFields,
     MandatoryFields,
     ToggleFieldsArray,
+    ProcessLockedFields = {},
   } = ItemsData;
 
   const processScopedDateFields = useMemo(() => {
     if (!processId || !ProcessDateFields?.[processId]) return [];
     return ProcessDateFields[processId];
   }, [processId, ProcessDateFields]);
+
+  const processLockedKeys = useMemo(() => {
+    const fromProcess =
+      (processId && ProcessLockedFields?.[processId]) || [];
+    const fromProp = Array.isArray(lockedKeys) ? lockedKeys : [];
+    const set = new Set(
+      [...fromProcess, ...fromProp].map((k) =>
+        String(k || "")
+          .trim()
+          .toLowerCase(),
+      ),
+    );
+    return set;
+  }, [processId, ProcessLockedFields, lockedKeys]);
+
+  const isFieldLocked = useCallback(
+    (key) =>
+      processLockedKeys.has(
+        String(key || "")
+          .trim()
+          .toLowerCase(),
+      ),
+    [processLockedKeys],
+  );
 
   const isDateFieldKey = (key) => {
     if (!key) return false;
@@ -97,6 +124,26 @@ function AddData({
       processScopedDateFields.some((h) => h.trim().toLowerCase() === lowerKey)
     );
   };
+
+  const resolveInitialValue = useCallback(
+    (key) => {
+      if (!initialValues || typeof initialValues !== "object") return undefined;
+      if (initialValues[key] !== undefined && initialValues[key] !== null) {
+        return initialValues[key];
+      }
+      const lower = String(key || "")
+        .trim()
+        .toLowerCase();
+      const matchKey = Object.keys(initialValues).find(
+        (k) =>
+          String(k || "")
+            .trim()
+            .toLowerCase() === lower,
+      );
+      return matchKey !== undefined ? initialValues[matchKey] : undefined;
+    },
+    [initialValues],
+  );
 
   const initialRef = useRef(null);
 
@@ -168,9 +215,12 @@ function AddData({
       const mappedData = headers.map((key) => {
         const prevField = prevData.find((f) => f.key === key);
         const process = getProcessType(key);
+        const seeded = resolveInitialValue(key);
         let value = prevField?.value;
 
-        if (value === undefined) {
+        if (seeded !== undefined && seeded !== null && seeded !== "") {
+          value = seeded;
+        } else if (value === undefined) {
              if (process === "multiSelect") value = [];
              else if (process === "arrayInput") value = [""];
              else if (process === "processId") {
@@ -186,6 +236,15 @@ function AddData({
              }
         }
 
+        // Locked fields always prefer seed from parent / initialValues
+        if (
+          isFieldLocked(key) &&
+          seeded !== undefined &&
+          seeded !== null
+        ) {
+          value = seeded;
+        }
+
         const field = { key, value, process };
         if (process === "select") {
             const selectMatch = SelectOptionsArray.find(item => item.key.trim().toLowerCase() === key.trim().toLowerCase());
@@ -197,7 +256,14 @@ function AddData({
 
       return refreshOptions(mappedData);
     });
-  }, [headers, processId, SelectOptionsArray, groupItem]);
+  }, [
+    headers,
+    processId,
+    SelectOptionsArray,
+    groupItem,
+    resolveInitialValue,
+    isFieldLocked,
+  ]);
 
   const peekSerialField = useCallback(async () => {
     if (!usesSerialField || !serialCfg || !isOpen) return;
@@ -232,6 +298,7 @@ function AddData({
       );
       const key = newData[index]?.key;
       if (!key) return prev;
+      if (isFieldLocked(key)) return prev;
 
       if (subIndex !== null && Array.isArray(newData[index].value)) {
         const updatedArray = [...newData[index].value];
@@ -288,6 +355,15 @@ function AddData({
   // Reset form to initial state
   const handleReset = () => {
     const mappedData = headers.map((key) => {
+      const seeded = resolveInitialValue(key);
+      if (isFieldLocked(key) && seeded !== undefined && seeded !== null) {
+        return {
+          key,
+          value: seeded,
+          process: "value",
+        };
+      }
+
       const match = DefaultHeaderAndProcessId.find(
         (item) => item.tableHeader === key
       );
@@ -800,6 +876,9 @@ function AddData({
                     ref={idx === 0 ? initialRef : null}
                     value={field.value ?? ""}
                     placeholder="Value"
+                    isDisabled={isFieldLocked(field.key)}
+                    isReadOnly={isFieldLocked(field.key)}
+                    bg={isFieldLocked(field.key) ? "gray.50" : undefined}
                     onChange={(e) => handleValueChange(idx, e.target.value)}
                     borderColor={
                       errorFields.includes(field.key) ? "red.500" : undefined

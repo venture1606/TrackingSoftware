@@ -1,6 +1,35 @@
 import { useSelector } from "react-redux";
 import { useMemo } from "react";
 
+/** Shared copy for disabled action buttons when the user lacks access. */
+export const ACCESS_DENIED_TOOLTIP =
+  "Not accessible. Ask admin for permission.";
+
+/**
+ * Build a short reason for why an action is blocked.
+ * @param {{ hasProcessAccess?: boolean, isViewer?: boolean, isView?: boolean, action?: string }} opts
+ */
+export const getAccessDeniedReason = ({
+  hasProcessAccess = true,
+  isViewer = false,
+  isView = false,
+  action = "",
+} = {}) => {
+  if (!hasProcessAccess) {
+    return "No access to this process. Ask admin for permission.";
+  }
+  if (isViewer || isView) {
+    return "Read-only access. Ask admin for permission.";
+  }
+  if (action === "edit" || action === "delete") {
+    return "Your access level cannot edit this. Ask admin for permission.";
+  }
+  if (action === "create") {
+    return "Your access level cannot create records. Ask admin for permission.";
+  }
+  return ACCESS_DENIED_TOOLTIP;
+};
+
 /**
  * Custom hook to manage and provide user permissions and accessibility.
  * Extracts data from the Redux auth state (synchronized with localStorage).

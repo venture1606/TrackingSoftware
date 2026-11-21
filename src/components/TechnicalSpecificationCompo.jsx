@@ -11,6 +11,8 @@ import {
 import { EditIcon, AddIcon } from "@chakra-ui/icons";
 import TruncatedText from "./TruncatedText";
 import AddData from "../hooks/AddData";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const TechnicalSpecificationCompo = ({
   nested,
@@ -31,18 +33,27 @@ const TechnicalSpecificationCompo = ({
            <Text fontSize="xl" fontWeight="bold" color="gray.800">Technical Specifications</Text>
            <Text fontSize="sm" color="gray.500">Manage detailed technical requirement and revisions</Text>
         </Box>
-        {!isView && (
+        <DisabledWithTooltip
+          isDisabled={!!isView}
+          label={getAccessDeniedReason({ isView: !!isView, action: "create" })}
+        >
           <Button
             leftIcon={<AddIcon />}
             colorScheme="blue"
-            onClick={() => setShowAddData(true)}
+            onClick={isView ? undefined : () => setShowAddData(true)}
+            isDisabled={!!isView}
+            pointerEvents={isView ? "none" : "auto"}
             borderRadius="lg"
             px={6}
-            _hover={{ transform: "translateY(-1px)", shadow: "md" }}
+            _hover={
+              isView
+                ? undefined
+                : { transform: "translateY(-1px)", shadow: "md" }
+            }
           >
             Add Data
           </Button>
-        )}
+        </DisabledWithTooltip>
       </Flex>
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         {nested.value.map((row, rowIdx) => {
@@ -74,17 +85,22 @@ const TechnicalSpecificationCompo = ({
                 >
                   REV: {revNo || "00"}
                 </Badge>
-                {!isView && (
+                <DisabledWithTooltip
+                  isDisabled={!!isView}
+                  label={getAccessDeniedReason({ isView: !!isView, action: "edit" })}
+                >
                   <Button
                     size="xs"
                     leftIcon={<EditIcon />}
                     variant="ghost"
                     colorScheme="blue"
-                    onClick={() => handleEditClick(rowIdx)}
+                    onClick={isView ? undefined : () => handleEditClick(rowIdx)}
+                    isDisabled={!!isView}
+                    pointerEvents={isView ? "none" : "auto"}
                   >
                     Edit
                   </Button>
-                )}
+                </DisabledWithTooltip>
               </Flex>
 
               {/* Card Body */}

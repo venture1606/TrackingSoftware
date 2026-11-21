@@ -2,6 +2,8 @@ import React from "react";
 import { Box, Button, Flex } from "@chakra-ui/react";
 import { AddIcon, CloseIcon } from "@chakra-ui/icons";
 import FormPage from "./FormPage";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const DefaultProcessCompo = ({
   nested,
@@ -10,21 +12,35 @@ const DefaultProcessCompo = ({
   setShowAddData,
   handleRefresh,
 }) => {
+  const addDisabled = !!isView;
+  const addDeniedReason = getAccessDeniedReason({
+    isView: addDisabled,
+    action: "create",
+  });
+
   return (
     <Box>
       <Flex justify="flex-end" mb={4}>
-        {!isView && (
+        <DisabledWithTooltip isDisabled={addDisabled} label={addDeniedReason}>
           <Button
             leftIcon={showAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />}
             colorScheme={showAddData ? "red" : "blue"}
-            onClick={() => setShowAddData(!showAddData)}
+            onClick={
+              addDisabled ? undefined : () => setShowAddData(!showAddData)
+            }
+            isDisabled={addDisabled}
+            pointerEvents={addDisabled ? "none" : "auto"}
             borderRadius="lg"
             boxShadow="sm"
-            _hover={{ transform: "translateY(-1px)", boxShadow: "md" }}
+            _hover={
+              addDisabled
+                ? undefined
+                : { transform: "translateY(-1px)", boxShadow: "md" }
+            }
           >
             {showAddData ? "Cancel Add" : "Add Data"}
           </Button>
-        )}
+        </DisabledWithTooltip>
       </Flex>
 
       <Box

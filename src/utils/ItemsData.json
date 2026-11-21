@@ -108,7 +108,7 @@
   ],
   "DefaultTemplateForProtoProcess": [
     {
-      "key": "PRODUCT STUDY",
+      "key": "PRODUCT STUDY AND SAMPLES",
       "value": "Pending",
       "process": "value"
     },
@@ -408,6 +408,9 @@
   "ProcessDateFields": {
     "MR/R/007": ["FROM", "TO"]
   },
+  "ProcessLockedFields": {
+    "DD/R/014": ["NO.", "PART", "from."]
+  },
   "ShownArray": [
     "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
   ],
@@ -429,7 +432,9 @@
   "NumberFields":[
     "QTY",
     "DELIVER QTY",
+    "DELIVERY QTY",
     "PENDING QTY",
+    "VALUE",
     "LEAD TIME",
     "CYCLE TIME",
     "SETTING TIME",

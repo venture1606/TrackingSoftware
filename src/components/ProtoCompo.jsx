@@ -9,6 +9,8 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const ProtoCompo = ({
   nested,
@@ -21,6 +23,10 @@ const ProtoCompo = ({
   DefaultTemplateForProtoProcess,
 }) => {
   const gridTemplateColumns = "60px 1fr 200px";
+  const addDeniedReason = getAccessDeniedReason({
+    isView: !!isView,
+    action: "create",
+  });
 
   return (
     <Box 
@@ -176,23 +182,33 @@ const ProtoCompo = ({
           ))}
         </Box>
       ) : (
-        !isView && (
-          <Flex direction="column" align="center" justify="center" py={20} bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.300">
-            <Text color="gray.500" mb={4} fontWeight="medium">No Proto Model data found. Start by creating the page.</Text>
+        <Flex direction="column" align="center" justify="center" py={20} bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.300">
+          <Text color="gray.500" mb={4} fontWeight="medium">No Proto Model data found. Start by creating the page.</Text>
+          <DisabledWithTooltip isDisabled={!!isView} label={addDeniedReason}>
             <Button
               leftIcon={<AddIcon />}
               colorScheme="blue"
               variant="solid"
               px={8}
               borderRadius="lg"
-              onClick={() => handleAddDataSave(DefaultTemplateForProtoProcess)}
+              onClick={
+                isView
+                  ? undefined
+                  : () => handleAddDataSave(DefaultTemplateForProtoProcess)
+              }
+              isDisabled={!!isView}
+              pointerEvents={isView ? "none" : "auto"}
               boxShadow="lg"
-              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _hover={
+                isView
+                  ? undefined
+                  : { transform: "translateY(-2px)", boxShadow: "xl" }
+              }
             >
               Init Proto Model
             </Button>
-          </Flex>
-        )
+          </DisabledWithTooltip>
+        </Flex>
       )}
     </Box>
   );

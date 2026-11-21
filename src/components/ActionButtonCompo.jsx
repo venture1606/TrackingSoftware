@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Tooltip } from "@chakra-ui/react";
+import { ACCESS_DENIED_TOOLTIP } from "../services/permissions";
 
 const ActionButtonCompo = ({
   cell,
@@ -7,7 +8,7 @@ const ActionButtonCompo = ({
   onClick,
   colorScheme,
   isDisabled = false,
-  disabledReason = "No permission for this process",
+  disabledReason = ACCESS_DENIED_TOOLTIP,
 }) => {
   const button = (
     <Button

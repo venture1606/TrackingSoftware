@@ -1,6 +1,8 @@
 import { Box, Text, Flex, Badge, Stack, Heading, Button } from "@chakra-ui/react";
 import { AddIcon, CloseIcon } from "@chakra-ui/icons";
 import FormPage from "./FormPage";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const BOMCompo = ({
   nested,
@@ -13,6 +15,12 @@ const BOMCompo = ({
   handleRefresh,
   handleRefreshBomProducts,
 }) => {
+  const addDisabled = !!isView;
+  const addDeniedReason = getAccessDeniedReason({
+    isView: addDisabled,
+    action: "create",
+  });
+
   return (
     <Stack spacing={10}>
       {/* Main BOM Section */}
@@ -33,17 +41,21 @@ const BOMCompo = ({
               Bill of Materials - Primary
             </Heading>
           </Box>
-          {!isView && (
+          <DisabledWithTooltip isDisabled={addDisabled} label={addDeniedReason}>
             <Button
               leftIcon={showAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />}
               size="sm"
               colorScheme={showAddData ? "red" : "purple"}
-              onClick={() => setShowAddData(!showAddData)}
+              onClick={
+                addDisabled ? undefined : () => setShowAddData(!showAddData)
+              }
+              isDisabled={addDisabled}
+              pointerEvents={addDisabled ? "none" : "auto"}
               borderRadius="lg"
             >
               {showAddData ? "Cancel Add" : "Add Main Data"}
             </Button>
-          )}
+          </DisabledWithTooltip>
         </Flex>
 
         <Box
@@ -84,18 +96,29 @@ const BOMCompo = ({
               Products Data
             </Heading>
           </Box>
-          {!isView && bomProducts && (
-            <Button
-              leftIcon={
-                showBOMAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />
-              }
-              size="sm"
-              colorScheme={showBOMAddData ? "red" : "green"}
-              onClick={() => setShowBOMAddData(!showBOMAddData)}
-              borderRadius="lg"
+          {bomProducts && (
+            <DisabledWithTooltip
+              isDisabled={addDisabled}
+              label={addDeniedReason}
             >
-              {showBOMAddData ? "Cancel Add" : "Add Product Entry"}
-            </Button>
+              <Button
+                leftIcon={
+                  showBOMAddData ? <CloseIcon boxSize={2.5} /> : <AddIcon />
+                }
+                size="sm"
+                colorScheme={showBOMAddData ? "red" : "green"}
+                onClick={
+                  addDisabled
+                    ? undefined
+                    : () => setShowBOMAddData(!showBOMAddData)
+                }
+                isDisabled={addDisabled}
+                pointerEvents={addDisabled ? "none" : "auto"}
+                borderRadius="lg"
+              >
+                {showBOMAddData ? "Cancel Add" : "Add Product Entry"}
+              </Button>
+            </DisabledWithTooltip>
           )}
         </Flex>
 
@@ -120,20 +143,9 @@ const BOMCompo = ({
             />
           </Box>
         ) : (
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            py={10}
-            bg="gray.50"
-            borderRadius="xl"
-            border="1px dashed"
-            borderColor="gray.300"
-          >
-            <Text color="gray.400" fontStyle="italic">
-              No linked product data found for this BOM
-            </Text>
-          </Flex>
+          <Text color="gray.500" fontSize="sm">
+            No linked products process available.
+          </Text>
         )}
       </Box>
     </Stack>

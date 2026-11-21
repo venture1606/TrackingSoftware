@@ -45,7 +45,10 @@ import {
   useProcessById,
   useAddProcessData,
 } from "../services/Process";
-import { usePermissions } from "../services/permissions";
+import {
+  usePermissions,
+  getAccessDeniedReason,
+} from "../services/permissions";
 
 // importing components
 import Loading from "../hooks/Loading";
@@ -59,6 +62,7 @@ import ActionButtonCompo from "./ActionButtonCompo";
 import ConfirmDialog from "./ConfirmDialog";
 import ImageCompo from "./ImageCompo";
 import MeasuredListRow from "./MeasuredListRow";
+import DisabledWithTooltip from "./DisabledWithTooltip";
 
 // importing styles
 import "../styles/departmentpage.css";
@@ -134,6 +138,30 @@ function FormPage({
   const canDelete = canModify && (isEditor || isAdmin);
   // UPDATE / nested process buttons (PROTO, VALIDATION, …)
   const canClickUpdate = canModify && (isEditor || isAdmin || isCreator);
+
+  // Show Actions (disabled + tooltip) when restricted; hide for intentional view-only (e.g. Products)
+  const showActionsColumn =
+    Boolean(process?.header?.length) &&
+    (canModify || isViewer || !hasProcessAccess || (isView && isDefault));
+
+  const editDeniedReason = getAccessDeniedReason({
+    hasProcessAccess,
+    isViewer,
+    isView,
+    action: "edit",
+  });
+  const deleteDeniedReason = getAccessDeniedReason({
+    hasProcessAccess,
+    isViewer,
+    isView,
+    action: "delete",
+  });
+  const updateDeniedReason = getAccessDeniedReason({
+    hasProcessAccess,
+    isViewer,
+    isView,
+    action: "edit",
+  });
 
   const [rows, setRows] = useState([]);
   const [popupData, setPopupData] = useState(null);
@@ -258,9 +286,9 @@ function FormPage({
     () =>
       getHeaderBasedColumnWidths(process?.header || [], {
         // Fixed width so edit/add IconButtons fit without clipping
-        extraColumns: canModify ? [100] : [],
+        extraColumns: showActionsColumn ? [100] : [],
       }),
-    [process?.header, canModify],
+    [process?.header, showActionsColumn],
   );
 
   const setRowSize = useCallback((index, size) => {
@@ -404,10 +432,10 @@ function FormPage({
       DefaultSelectProcess.includes(cell.key) ||
       !canClickUpdate;
 
-    // UPDATE requires process permission + edit/create access
+    // Block nested open only when the process itself is not authorized
     if (
       !DefaultSelectProcess.includes(cell.key) &&
-      !canClickUpdate &&
+      !hasProcessAccess &&
       !forceView
     ) {
       return;
@@ -459,9 +487,9 @@ function FormPage({
   const gridTemplateColumns = useMemo(
     () =>
       getHeaderBasedGridTemplate(process?.header || [], {
-        extraColumns: canModify ? [100] : [],
+        extraColumns: showActionsColumn ? [100] : [],
       }),
-    [process?.header, canModify],
+    [process?.header, showActionsColumn],
   );
 
   const Row = useCallback(
@@ -681,13 +709,9 @@ function FormPage({
                         }
                         isDisabled={
                           !DefaultSelectProcess.includes(cell.key) &&
-                          !canClickUpdate
-                        }
-                        disabledReason={
                           !hasProcessAccess
-                            ? "No process permission for this register"
-                            : "Your access level cannot update this process"
                         }
+                        disabledReason={updateDeniedReason}
                         onClick={() =>
                           handleCellButtonClick(row, index, cellIdx, cell.key)
                         }
@@ -700,7 +724,7 @@ function FormPage({
               );
             })}
 
-            {canModify && (
+            {showActionsColumn && (
               <div
                 style={{
                   display: "flex",
@@ -710,26 +734,42 @@ function FormPage({
                   padding: "8px 10px",
                 }}
               >
-                {canEdit && (
+                <DisabledWithTooltip
+                  isDisabled={!canEdit}
+                  label={editDeniedReason}
+                >
                   <IconButton
                     icon={<EditIcon />}
                     size="sm"
                     variant="ghost"
                     colorScheme="gray"
-                    onClick={() => setEditingRowId(rowIds[index])}
+                    isDisabled={!canEdit}
+                    onClick={
+                      canEdit
+                        ? () => setEditingRowId(rowIds[index])
+                        : undefined
+                    }
                     aria-label="Edit"
+                    pointerEvents={canEdit ? "auto" : "none"}
                   />
-                )}
-                {canDelete && (
+                </DisabledWithTooltip>
+                <DisabledWithTooltip
+                  isDisabled={!canDelete}
+                  label={deleteDeniedReason}
+                >
                   <IconButton
                     icon={<DeleteIcon />}
                     size="sm"
                     variant="ghost"
                     colorScheme="gray"
-                    onClick={() => handleDeleteRow(index)}
+                    isDisabled={!canDelete}
+                    onClick={
+                      canDelete ? () => handleDeleteRow(index) : undefined
+                    }
                     aria-label="Delete"
+                    pointerEvents={canDelete ? "auto" : "none"}
                   />
-                )}
+                </DisabledWithTooltip>
               </div>
             )}
           </div>
@@ -747,11 +787,14 @@ function FormPage({
       detailingProducts,
       getStatusStyle,
       setRowSize,
-      canModify,
+      showActionsColumn,
       canEdit,
       canDelete,
       canClickUpdate,
       hasProcessAccess,
+      editDeniedReason,
+      deleteDeniedReason,
+      updateDeniedReason,
       handleSaveEdit,
       handleCellButtonClick,
       processScopedDateFields,
@@ -819,7 +862,7 @@ function FormPage({
                     <span style={{ whiteSpace: "nowrap" }}>{col}</span>
                   </div>
                 ))}
-                {canModify && (
+                {showActionsColumn && (
                   <div
                     style={{
                       fontWeight: "bold",

@@ -42,7 +42,11 @@ import {
   useBulkConfig,
 } from "../services/Process";
 import { setMainTableData, setProcess } from "../redux/slices/department";
-import { usePermissions } from "../services/permissions";
+import {
+  usePermissions,
+  getAccessDeniedReason,
+} from "../services/permissions";
+import DisabledWithTooltip from "../components/DisabledWithTooltip";
 
 // helper: extract timestamp from MongoDB ObjectId hex string
 const getObjectIdTimestamp = (id) => {
@@ -208,8 +212,14 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
   const params = useParams();
   const department = propDept || params.department;
   const processId = propProcId || params.processId;
-  const { hasAccessToDepartment, hasAccessToProcess, isViewer, isAdmin } =
-    usePermissions();
+  const {
+    hasAccessToDepartment,
+    hasAccessToProcess,
+    isViewer,
+    isAdmin,
+    isEditor,
+    isCreator,
+  } = usePermissions();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -234,6 +244,7 @@ function DepartmentPage({ department: propDept, processId: propProcId }) {
           department={department}
           processId={processId}
           isViewOnly={isViewer}
+          canCreateRecords={isAdmin || isEditor || isCreator}
         />
       </Suspense>
     </Box>
@@ -247,7 +258,12 @@ const getAuthHeaders = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 });
 
-function DepartmentPageContent({ department, processId, isViewOnly }) {
+function DepartmentPageContent({
+  department,
+  processId,
+  isViewOnly,
+  canCreateRecords = false,
+}) {
   const dispatch = useDispatch();
   const mainTableData = useSelector((state) => state.department.mainTableData);
   const navigate = useNavigate();
@@ -325,8 +341,15 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
 
   const { data: bulkConfig, isSuccess: hasBulkConfig } = useBulkConfig(
     selectedBusinessProcessId,
-    !!selectedBusinessProcessId && !isViewOnly,
+    !!selectedBusinessProcessId,
   );
+
+  const addDisabled = isViewOnly || !canCreateRecords;
+  const addDeniedReason = getAccessDeniedReason({
+    isViewer: isViewOnly,
+    isView: addDisabled,
+    action: "create",
+  });
 
   const { data: processDataRaw, refetch: refetchProcess } = useSuspenseQuery({
     queryKey: ["process", selectedProcessId],
@@ -654,30 +677,48 @@ function DepartmentPageContent({ department, processId, isViewOnly }) {
           </Select>
         </Box>
 
-        {selectedProcess && !isViewOnly && (
-          <Button
-            leftIcon={<Icon icon="material-symbols:add-rounded" />}
-            onClick={() => setIsAdding(!isAdding)}
-            colorScheme={isAdding ? "red" : "blue"}
-            variant="solid"
-            size="sm"
-            flexShrink={0}
+        {selectedProcess && (
+          <DisabledWithTooltip
+            isDisabled={addDisabled}
+            label={addDeniedReason}
           >
-            {isAdding ? "Cancel Add" : "Add Data"}
-          </Button>
+            <Button
+              leftIcon={<Icon icon="material-symbols:add-rounded" />}
+              onClick={
+                addDisabled ? undefined : () => setIsAdding(!isAdding)
+              }
+              isDisabled={addDisabled}
+              pointerEvents={addDisabled ? "none" : "auto"}
+              colorScheme={isAdding ? "red" : "blue"}
+              variant="solid"
+              size="sm"
+              flexShrink={0}
+            >
+              {isAdding ? "Cancel Add" : "Add Data"}
+            </Button>
+          </DisabledWithTooltip>
         )}
 
-        {selectedProcess && !isViewOnly && hasBulkConfig && bulkConfig && (
-          <Button
-            leftIcon={<Icon icon="material-symbols:playlist-add-rounded" />}
-            onClick={() => setIsBulkOpen(true)}
-            colorScheme="teal"
-            variant="solid"
-            size="sm"
-            flexShrink={0}
+        {selectedProcess && hasBulkConfig && bulkConfig && (
+          <DisabledWithTooltip
+            isDisabled={addDisabled}
+            label={addDeniedReason}
           >
-            Bulk Insert
-          </Button>
+            <Button
+              leftIcon={
+                <Icon icon="material-symbols:playlist-add-rounded" />
+              }
+              onClick={addDisabled ? undefined : () => setIsBulkOpen(true)}
+              isDisabled={addDisabled}
+              pointerEvents={addDisabled ? "none" : "auto"}
+              colorScheme="teal"
+              variant="solid"
+              size="sm"
+              flexShrink={0}
+            >
+              Bulk Insert
+            </Button>
+          </DisabledWithTooltip>
         )}
 
         {selectedProcess === "Procurement Register" && (

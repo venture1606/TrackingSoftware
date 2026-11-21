@@ -13,6 +13,8 @@ import {
 import { FixedSizeList as List } from "react-window";
 import AddData from "../hooks/AddData";
 import { resolveFileUrl } from "../config/api";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const ContinousImprovementCompo = ({
   rows,
@@ -60,26 +62,38 @@ const ContinousImprovementCompo = ({
               </Box>
             </SimpleGrid>
 
-            {!isView && (
-              <Flex gap={2}>
+            <Flex gap={2}>
+              <DisabledWithTooltip
+                isDisabled={!!isView}
+                label={getAccessDeniedReason({ isView: !!isView, action: "edit" })}
+              >
                 <Button
                   size="sm"
                   variant="ghost"
                   colorScheme="blue"
-                  onClick={() => handleEditClick(rowIndex)}
+                  onClick={isView ? undefined : () => handleEditClick(rowIndex)}
+                  isDisabled={!!isView}
+                  pointerEvents={isView ? "none" : "auto"}
                 >
                   Edit
                 </Button>
+              </DisabledWithTooltip>
+              <DisabledWithTooltip
+                isDisabled={!!isView}
+                label={getAccessDeniedReason({ isView: !!isView, action: "delete" })}
+              >
                 <Button
                   size="sm"
                   variant="ghost"
                   colorScheme="red"
-                  onClick={() => handleDeleteRow(rowIndex)}
+                  onClick={isView ? undefined : () => handleDeleteRow(rowIndex)}
+                  isDisabled={!!isView}
+                  pointerEvents={isView ? "none" : "auto"}
                 >
                   Delete
                 </Button>
-              </Flex>
-            )}
+              </DisabledWithTooltip>
+            </Flex>
           </Flex>
 
           <Divider mb={6} />
@@ -163,19 +177,24 @@ const ContinousImprovementCompo = ({
            <Text fontSize="xl" fontWeight="bold" color="gray.800">Improvement Records</Text>
            <Text fontSize="sm" color="gray.500">Track and manage continuous improvement initiatives</Text>
         </Box>
-        {!isView && (
+        <DisabledWithTooltip
+          isDisabled={!!isView}
+          label={getAccessDeniedReason({ isView: !!isView, action: "create" })}
+        >
           <Button
             leftIcon={<Box as="span">+</Box>}
             colorScheme="blue"
             bg="blue.700"
-            _hover={{ bg: "blue.800" }}
-            onClick={() => setShowAddData(true)}
+            _hover={isView ? undefined : { bg: "blue.800" }}
+            onClick={isView ? undefined : () => setShowAddData(true)}
+            isDisabled={!!isView}
+            pointerEvents={isView ? "none" : "auto"}
             borderRadius="lg"
             px={6}
           >
             Add Data
           </Button>
-        )}
+        </DisabledWithTooltip>
       </Flex>
       
       <Box height="700px">

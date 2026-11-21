@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Box,
   Flex,
@@ -15,11 +15,37 @@ import { FixedSizeList as List } from "react-window";
 import ConfirmDialog from "./ConfirmDialog";
 import AddData from "../hooks/AddData";
 import { resolveFileUrl } from "../config/api";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
+import ItemsData from "../utils/ItemsData";
+
+const VALIDATION_PARENT_ALIASES = {
+  "NO.": ["NO.", "NO"],
+  PART: ["PART"],
+  "from.": ["from.", "FROM"],
+};
+
+const pickParentValue = (parentRowItems, aliases) => {
+  if (!Array.isArray(parentRowItems)) return "";
+  for (const alias of aliases) {
+    const hit = parentRowItems.find(
+      (c) =>
+        String(c?.key || "")
+          .trim()
+          .toUpperCase() === String(alias).trim().toUpperCase(),
+    );
+    if (hit != null && String(hit.value ?? "").trim() !== "") {
+      return hit.value;
+    }
+  }
+  return "";
+};
 
 const ProductValidationCompo = ({
   rows,
   nested,
   isView,
+  parentRowItems = [],
   handleEditClick,
   handleDeleteRow,
   showAddData,
@@ -30,6 +56,21 @@ const ProductValidationCompo = ({
 }) => {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
   const [deleteTargetIdx, setDeleteTargetIdx] = React.useState(null);
+
+  const lockedKeys =
+    ItemsData.ProcessLockedFields?.[nested?.processId || "DD/R/014"] || [
+      "NO.",
+      "PART",
+      "from.",
+    ];
+
+  const parentPrefill = useMemo(() => {
+    const values = {};
+    for (const [key, aliases] of Object.entries(VALIDATION_PARENT_ALIASES)) {
+      values[key] = pickParentValue(parentRowItems, aliases);
+    }
+    return values;
+  }, [parentRowItems]);
 
   const handleDeleteTrigger = (idx) => {
     setDeleteTargetIdx(idx);
@@ -47,6 +88,9 @@ const ProductValidationCompo = ({
     const row = rows[index];
     const rowIndex = index;
 
+    const noVal = row.find((i) => i.key === "NO.")?.value || "";
+    const partVal = row.find((i) => i.key === "PART")?.value || "";
+    const fromVal = row.find((i) => i.key === "from.")?.value || "";
     const testName = row.find((i) => i.key === "TEST NAME")?.value || "-";
     const apparatus = row.find((i) => i.key === "APPARATUS")?.value || "-";
     const evidence = row.find((i) => i.key === "EVIDENCE")?.value || "-";
@@ -72,6 +116,40 @@ const ProductValidationCompo = ({
           {/* Left Content */}
           <Box flex="1">
             <Stack spacing={6}>
+              {(noVal || partVal || fromVal) && (
+                <Flex gap={6} wrap="wrap">
+                  {noVal ? (
+                    <Box>
+                      <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                        NO.
+                      </Text>
+                      <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                        {noVal}
+                      </Text>
+                    </Box>
+                  ) : null}
+                  {partVal ? (
+                    <Box>
+                      <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                        PART
+                      </Text>
+                      <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                        {partVal}
+                      </Text>
+                    </Box>
+                  ) : null}
+                  {fromVal ? (
+                    <Box>
+                      <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
+                        from.
+                      </Text>
+                      <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                        {fromVal}
+                      </Text>
+                    </Box>
+                  ) : null}
+                </Flex>
+              )}
               <Box>
                 <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider" mb={1}>
                   TEST NAME
@@ -137,29 +215,41 @@ const ProductValidationCompo = ({
 
           {/* Right Content - Image and Actions */}
           <Box position="relative">
-            {!isView && (
-              <Flex position="absolute" top="-10px" right="-10px" zIndex={10} gap={2}>
+            <Flex position="absolute" top="-10px" right="-10px" zIndex={10} gap={2}>
+              <DisabledWithTooltip
+                isDisabled={!!isView}
+                label={getAccessDeniedReason({ isView: !!isView, action: "edit" })}
+              >
                 <IconButton
                   icon={<EditIcon />}
                   size="sm"
                   bg="white"
                   boxShadow="md"
-                  _hover={{ bg: "gray.50" }}
-                  onClick={() => handleEditClick(rowIndex)}
+                  _hover={isView ? undefined : { bg: "gray.50" }}
+                  onClick={isView ? undefined : () => handleEditClick(rowIndex)}
+                  isDisabled={!!isView}
+                  pointerEvents={isView ? "none" : "auto"}
                   aria-label="Edit report"
                 />
+              </DisabledWithTooltip>
+              <DisabledWithTooltip
+                isDisabled={!!isView}
+                label={getAccessDeniedReason({ isView: !!isView, action: "delete" })}
+              >
                 <IconButton
                   icon={<DeleteIcon />}
                   size="sm"
                   bg="white"
                   boxShadow="md"
                   color="red.500"
-                  _hover={{ bg: "gray.50" }}
-                  onClick={() => handleDeleteTrigger(rowIndex)}
+                  _hover={isView ? undefined : { bg: "gray.50" }}
+                  onClick={isView ? undefined : () => handleDeleteTrigger(rowIndex)}
+                  isDisabled={!!isView}
+                  pointerEvents={isView ? "none" : "auto"}
                   aria-label="Delete report"
                 />
-              </Flex>
-            )}
+              </DisabledWithTooltip>
+            </Flex>
 
             <Box
               p={2}
@@ -201,19 +291,24 @@ const ProductValidationCompo = ({
             View and manage technical validation data for NPD.
           </Text>
         </Box>
-        {!isView && (
+        <DisabledWithTooltip
+          isDisabled={!!isView}
+          label={getAccessDeniedReason({ isView: !!isView, action: "create" })}
+        >
           <Button
             leftIcon={<Box as="span" fontSize="lg">+</Box>}
             colorScheme="blue"
             bg="blue.700"
-            _hover={{ bg: "blue.800" }}
-            onClick={() => setShowAddData(true)}
+            _hover={isView ? undefined : { bg: "blue.800" }}
+            onClick={isView ? undefined : () => setShowAddData(true)}
+            isDisabled={!!isView}
+            pointerEvents={isView ? "none" : "auto"}
             borderRadius="lg"
             px={6}
           >
             Add Data
           </Button>
-        )}
+        </DisabledWithTooltip>
       </Flex>
 
       {/* Reports List with Virtualization */}
@@ -242,6 +337,9 @@ const ProductValidationCompo = ({
           isOpen={showAddData}
           onClose={() => setShowAddData(false)}
           onSave={handleAddDataSave}
+          processId={nested?.processId || "DD/R/014"}
+          initialValues={parentPrefill}
+          lockedKeys={lockedKeys}
         />
       )}
     </Box>

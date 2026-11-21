@@ -11,6 +11,8 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, AddIcon } from "@chakra-ui/icons";
 import AddData from "../hooks/AddData";
+import DisabledWithTooltip from "./DisabledWithTooltip";
+import { getAccessDeniedReason } from "../services/permissions";
 
 const BreakHourCompo = ({
   rows,
@@ -28,16 +30,23 @@ const BreakHourCompo = ({
            <Text fontSize="xl" fontWeight="bold" color="gray.800">Break Hour Configurations</Text>
            <Text fontSize="sm" color="gray.500">Track and manage employee break and setup loss times</Text>
         </Box>
-        {!isView && rows.length === 0 && (
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={() => setShowAddData(true)}
-            borderRadius="lg"
-            px={6}
+        {rows.length === 0 && (
+          <DisabledWithTooltip
+            isDisabled={!!isView}
+            label={getAccessDeniedReason({ isView: !!isView, action: "create" })}
           >
-            Add Data
-          </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              onClick={isView ? undefined : () => setShowAddData(true)}
+              isDisabled={!!isView}
+              pointerEvents={isView ? "none" : "auto"}
+              borderRadius="lg"
+              px={6}
+            >
+              Add Data
+            </Button>
+          </DisabledWithTooltip>
         )}
       </Flex>
       {rows.length > 0 ? (
@@ -81,18 +90,23 @@ const BreakHourCompo = ({
                     </Heading>
                   </Flex>
                   
-                  {!isView && (
+                  <DisabledWithTooltip
+                    isDisabled={!!isView}
+                    label={getAccessDeniedReason({ isView: !!isView, action: "edit" })}
+                  >
                     <Button
                       size="sm"
                       leftIcon={<EditIcon />}
                       colorScheme="blue"
                       variant="ghost"
-                      onClick={() => handleEditClick(rowIdx)}
+                      onClick={isView ? undefined : () => handleEditClick(rowIdx)}
+                      isDisabled={!!isView}
+                      pointerEvents={isView ? "none" : "auto"}
                       borderRadius="lg"
                     >
                       Edit
                     </Button>
-                  )}
+                  </DisabledWithTooltip>
                 </Flex>
 
                 {/* Grid Section for fields */}

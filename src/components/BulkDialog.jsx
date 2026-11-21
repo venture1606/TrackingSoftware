@@ -107,7 +107,9 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
   const limit = 500;
   const NumberFields = ItemsData.NumberFields || [];
   const isInwardBulk = processId === "PR/R/003A";
+  const isProcurementBulk = processId === "PR/R/003";
   const isQiBulk = processId === "QA/R/003" || processId === "QA/R/003A";
+  const isDocketBulk = processId === "MS/R/006A";
 
   const multiHeaders = config?.multiEntryHeaders || [];
   const parentDisplayHeaders = config?.parentDisplayHeaders || [];
@@ -526,13 +528,15 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
         </Select>
       );
     }
-    if (asFilter && isInwardBulk && key === "PO NO") {
+    if (asFilter && (isInwardBulk || isDocketBulk) && key === "PO NO") {
       return (
         <Select
           size="sm"
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Select PO NO (pending)"
+          placeholder={
+            isInwardBulk ? "Select PO NO (pending)" : "Select PO NO (Order List)"
+          }
         >
           {poNoOptions.map((opt) => (
             <option key={opt} value={opt}>
@@ -582,7 +586,7 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
     }
     if (
       asFilter &&
-      (isInwardBulk || isQiBulk) &&
+      (isInwardBulk || isQiBulk || isProcurementBulk) &&
       (key === "ITEM CATEGORY" || key === "ITEM NAME")
     ) {
       const options = getSelectOptionsForKey(key);
@@ -592,6 +596,24 @@ function BulkDialog({ isOpen, onClose, processId, mongoProcessId, onSuccess }) {
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={`Select ${key}`}
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      );
+    }
+    if (asFilter && isProcurementBulk && key === "PR STATUS") {
+      let options = getSelectOptionsForKey(key);
+      if (options.length === 0) options = ["PENDING", "CLOSED"];
+      return (
+        <Select
+          size="sm"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Select PR STATUS"
         >
           {options.map((opt) => (
             <option key={opt} value={opt}>

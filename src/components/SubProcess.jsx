@@ -84,6 +84,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
 
     return {
       id: processData._id,
+      processId: processData.processId || null,
       process: processData.process,
       header: processData.headers,
       value: filteredRows.map((row) =>
@@ -235,7 +236,34 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   const handleEditClick = (rowIdx) => {
     setSelectArray([]);
     setFormRowIdx(rowIdx);
-    setFormInitialData(getRowData(rows[rowIdx]));
+    const base = getRowData(rows[rowIdx]);
+
+    // Product Validation: keep NO. / PART / from. filled from NPD parent when blank
+    if (nested?.process === "Product Validation Report" && Array.isArray(data?.row)) {
+      const parentMap = {};
+      for (const cell of data.row) {
+        if (cell?.key) parentMap[String(cell.key).trim().toUpperCase()] = cell.value;
+      }
+      const lockedFill = {
+        "NO.": parentMap["NO."] ?? parentMap["NO"] ?? "",
+        PART: parentMap["PART"] ?? "",
+        "from.": parentMap["FROM."] ?? parentMap["FROM"] ?? "",
+      };
+      for (const [key, val] of Object.entries(lockedFill)) {
+        if (
+          (base[key] === undefined ||
+            base[key] === null ||
+            String(base[key]).trim() === "") &&
+          val !== undefined &&
+          val !== null &&
+          String(val).trim() !== ""
+        ) {
+          base[key] = val;
+        }
+      }
+    }
+
+    setFormInitialData(base);
     setIsFormOpen(true);
   };
 
@@ -309,11 +337,14 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
   // ------------------------
   // Renderers
   // ------------------------
+  const parentRowItems = Array.isArray(data?.row) ? data.row : [];
+
   const renderProductValidationReport = () => (
     <ProductValidationCompo 
       rows={rows}
       nested={nested}
       isView={isView}
+      parentRowItems={parentRowItems}
       handleEditClick={handleEditClick}
       handleDeleteRow={handleDeleteRow}
       showAddData={showAddData}
@@ -568,6 +599,7 @@ function SubProcess({ isOpen, onClose, data, loading, isView = false }) {
           onClose={() => setIsFormOpen(false)}
           loading={loading}
           mode="form"
+          processId={nested?.processId || null}
         />
       )}
       <ImageCompo imageUrl={imagePopupUrl} onClose={() => setImagePopupUrl(null)} />

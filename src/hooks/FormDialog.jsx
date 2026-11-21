@@ -64,6 +64,7 @@ function FormDialog({
     TimeArrays,
     NumberFields,
     MandatoryFields,
+    ProcessLockedFields = {},
   } = ItemsData;
 
   const processScopedDateFields =
@@ -78,7 +79,10 @@ function FormDialog({
     );
   };
 
-  const noEditableFields = DataCheck?.noEditableFields || [];
+  const noEditableFields = [
+    ...(DataCheck?.noEditableFields || []),
+    ...((processId && ProcessLockedFields?.[processId]) || []),
+  ];
 
   const [formValues, setFormValues] = useState(initialData);
   const [selectValues, setSelectValues] = useState({});
