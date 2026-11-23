@@ -288,6 +288,109 @@ export const MANUFACTURING_INFO = {
 };
 
 export const QUALITY_INFO = {
+  // Quality department dashboard (GET /process/quality/dashboard → getQualityDepartmentDashboard)
+  customerRejection: {
+    what: "How much of what you deliver comes back as failed from customers — over time, and for the period you choose — plus how many complaints are still open.",
+    sources: [
+      { process: "Customer Complient Register", id: "QA/R/007", note: "FAILED QTY, DATE, CCR STATUS" },
+      { process: "Dockets", id: "MS/R/006A", note: "DELIVERY QTY and DELIVERY DATE of deliveries made against Order List" },
+    ],
+    chart: {
+      type: "Line chart — rejection % trend",
+      x: "Month (or year, with Year wise) — complaints by their DATE, deliveries by their DELIVERY DATE.",
+      y: "Rejection % for that period = total FAILED QTY ÷ total DELIVERY QTY × 100.",
+      how: "Only periods with a complaint or a delivery are drawn. A period with complaints but no deliveries has no % (nothing to divide by).",
+    },
+    metrics: [
+      { name: "Open complaints", how: "Complaints whose CCR STATUS is not CLOSED (all dates; a blank status counts as open)." },
+      {
+        name: "Overall rejection %",
+        how: "FAILED QTY ÷ DELIVERY QTY × 100 for the month / year chosen in the second dropdown (or All time). Example: 15 failed of 1,000 delivered = 1.5%. \"—\" when nothing was delivered in that period.",
+      },
+    ],
+    dateFilter: "First dropdown: group the trend by month or by year. Second dropdown: the period used for Overall rejection % (defaults to the current month / year).",
+  },
+
+  improvementByDepartment: {
+    what: "How many improvements each department has made — so you can see which teams are driving continuous improvement.",
+    sources: [
+      { process: "Continous Improvement", id: "MR/R/005", note: "one record per improvement, with its DATE" },
+      { process: "Continous Improvement Status", id: "MR/R/005A", note: "DEPARTMENT chosen on the improvement's status record" },
+    ],
+    chart: {
+      type: "Bar chart",
+      x: "Department (taken from DEPARTMENT on the improvement's status record).",
+      y: "Number of improvements for that department.",
+      how: "An improvement whose status records name two departments counts once for each. \"Not assigned\" = no DEPARTMENT chosen yet.",
+    },
+    metrics: [{ name: "Badge number", how: "Total improvements in the chosen year / month." }],
+    dateFilter: "Use the Year and Month dropdowns to count only improvements whose DATE falls in that year / month. Leave both on All to count everything.",
+    tip: "Open IMPROVEMENT STATUS on each improvement and pick its DEPARTMENT so it appears under the right bar.",
+  },
+
+  qualityAuditPending: {
+    what: "Audits that are not closed yet, with how many non-conformities (NCs) each has, who is responsible, and how long it has been open.",
+    sources: [{ process: "Quality Audits", id: "QA/F/005" }],
+    included: "Audits whose AUDIT STATUS is not CLOSED (a blank status counts as open). Longest-open audits are listed first.",
+    metrics: [{ name: "Badge number", how: "Number of open audits." }],
+    columns: [
+      { name: "DEPARTMENT", from: "Quality Audits · DEPARTMENT" },
+      { name: "NC", from: "Quality Audits · NC", how: "Number of non-conformities found." },
+      { name: "RESPONSIBLE", from: "Quality Audits · RESPONSIBLE" },
+      { name: "DUE", from: "Quality Audits · DATE", how: "How long the audit has been open: today − audit DATE (\"12 days open\")." },
+    ],
+  },
+
+  instrumentsPending: {
+    what: "How many measuring instruments need calibrating now.",
+    sources: [{ process: "Calibration Details (under Instrument & Calibration)", id: "QA/R/002A" }],
+    metrics: [
+      {
+        name: "Instruments pending",
+        how: "Calibration records whose DUE date has already passed, or falls within the next 10 days.",
+      },
+      { name: "Overdue / due in 10 days", how: "The same number split into already overdue and coming up soon." },
+    ],
+    tip: "After calibrating, update the DUE date to the next calibration date so the instrument drops off this count.",
+  },
+
+  certificateRenewalPending: {
+    what: "How many company certificates need renewing now.",
+    sources: [
+      { process: "Certificate Renewal", id: "QA/R/011" },
+      { process: "Certificate Renewal Details", id: "QA/R/011A", note: "EXPIRY DATE of each renewal" },
+    ],
+    metrics: [
+      {
+        name: "Renewal pending",
+        how: "Certificates whose latest EXPIRY DATE has passed or is within the next 30 days.",
+      },
+      { name: "Already expired", how: "Of those, how many are past their expiry date." },
+    ],
+    note: "Certificates with no renewal record (no expiry date) are not counted.",
+  },
+
+  pcpRenewalPending: {
+    what: "Products whose Process Control Plan has not kept up with their revisions.",
+    sources: [
+      { process: "Product List", id: "DD/R/001", note: "REV NO — the list of revisions of each product" },
+      { process: "Process Control Plan", id: "QA/R/009", note: "entries made under each product" },
+    ],
+    metrics: [
+      {
+        name: "Renewal pending",
+        how: "Number of products where the count of revisions (REV NO entries) is different from the count of Process Control Plan entries for that product. Example: REV NO 00, 01, A (3 revisions) but 1 control-plan entry → pending.",
+      },
+    ],
+    columns: [
+      { name: "PART NO", from: "Product List · PART NO" },
+      { name: "REVISIONS", from: "Product List · number of REV NO entries" },
+      { name: "PCP ENTRIES", from: "Process Control Plan · entries made for this product" },
+      { name: "MISSING", how: "REVISIONS − PCP ENTRIES. \"N extra\" means there are more control-plan entries than revisions." },
+    ],
+    tip: "Add a Process Control Plan entry for each new revision of a product to clear it from this list.",
+  },
+
   customerComplaints: {
     what: "How much of what customers ordered came back as failed, and how many complaints are still open.",
     sources: [
@@ -464,6 +567,74 @@ const INWARD_COLUMNS = [
 ];
 
 export const PURCHASE_INFO = {
+  // Purchase department dashboard (GET /process/purchase/dashboard → getPurchaseDashboard)
+  procurementDetail: {
+    what: "Material you have ordered from suppliers that has not fully arrived yet — how much is still to come, what it is worth, and how close it is to the expected supply date.",
+    sources: [{ process: "Procurement Register", id: "PR/R/003" }],
+    included: "Procurement records with PENDING QTY above 0 whose PR STATUS is not CLOSED. If PENDING QTY is empty, nothing has been received yet, so the full QTY counts as pending. Closest due dates are listed first.",
+    metrics: [
+      { name: "Total no. of pending (and badge)", how: "Number of pending procurement records shown." },
+      { name: "Total pending qty", how: "PENDING QTY of all those records added together — what is still to be received." },
+    ],
+    columns: [
+      { name: "VENDOR NAME", from: "Procurement Register · VENDOR-NAME" },
+      { name: "PART NO", from: "Procurement Register · PART NO" },
+      { name: "ITEM NAME", from: "Procurement Register · ITEM NAME" },
+      { name: "GRADE", from: "Procurement Register · GRADE" },
+      {
+        name: "PENDING QTY",
+        from: "Procurement Register · PENDING QTY",
+        how: "Ordered QTY minus what has already arrived through Inward.",
+      },
+      {
+        name: "PENDING QTY VALUE",
+        how: "PENDING QTY × VALUE (VALUE on Procurement Register is the price per unit). Example: 1,100 pending × 7.04 = 7,744. Shows 0 when VALUE is empty.",
+      },
+      {
+        name: "DUE",
+        how: "Expected supply = procurement DATE + LEAD TIME days. Shows \"N days left\", \"Due today\" or \"N days overdue\". \"(no lead time)\" means LEAD TIME is empty, so the DATE itself was used.",
+      },
+    ],
+    dateFilter: "No date filter — every pending record is shown. Use the Vendor, Item Name and Part No dropdowns to narrow the list; the counts update to match.",
+  },
+
+  supplierPayment: {
+    what: "Supplier invoices you have received but not paid yet — how much you owe in total, to how many suppliers, and when each payment falls due.",
+    sources: [
+      { process: "Inward", id: "PR/R/003A" },
+      {
+        process: "Procurement Register",
+        id: "PR/R/003",
+        note: "vendor name, when the Inward record has none",
+      },
+    ],
+    included: "Inward records whose PAYMENT is OPEN. Payments due soonest (or overdue) are listed first.",
+    metrics: [
+      { name: "Total sum of value", how: "VALUE of every open invoice added together — the amount still to be paid." },
+      {
+        name: "Total no. of suppliers",
+        how: "Number of different vendors among the open invoices. Invoices with no vendor name are not counted as a supplier.",
+      },
+      { name: "Badge number", how: "Number of open invoices." },
+    ],
+    columns: [
+      {
+        name: "VENDOR",
+        from: "Inward · VENDOR NAME",
+        how: "If the Inward record has no vendor, the VENDOR-NAME of the procurement it was received against is used. \"-\" means neither has a vendor.",
+      },
+      { name: "ITEM NAME", from: "Inward · ITEM NAME" },
+      { name: "VALUE", from: "Inward · VALUE", how: "Invoice value." },
+      { name: "CREDIT PERIOD", from: "Inward · CREDIT PERIOD", how: "Days allowed before payment." },
+      {
+        name: "DUE",
+        how: "Payment due = DELIVERY DATE + CREDIT PERIOD days. Shows \"N days left\", \"Due today\" or \"N days overdue\".",
+      },
+    ],
+    dateFilter: "No date filter — every open invoice is shown. Use the Vendor dropdown to see one supplier.",
+    tip: "Set PAYMENT to CLOSED on the Inward record once the supplier is paid to remove it from this list.",
+  },
+
   pendingProcurements: {
     what: "Purchase requests that are not closed yet, and how close each one is to its expected supply date.",
     sources: [{ process: "Procurement Register", id: "PR/R/003" }],
@@ -484,7 +655,43 @@ export const PURCHASE_INFO = {
 };
 
 export const STOCK_INFO = {
+  // Store department dashboard (GET /process/store/dashboard + /process/store/stock-search)
   finishedGoods: {
+    what: "How much finished-goods stock you have on hand, item by item, and how it moved in and out.",
+    sources: [{ process: "Stock Data", id: "ST/R/006" }],
+    included: "Stock records whose ITEM CATEGORY is Finished Good (also accepts Finished Goods and the misspelling Finsihed Good), sorted by ITEM CODE.",
+    metrics: [{ name: "Badge number", how: "Number of finished-good items listed." }],
+    columns: [
+      { name: "ITEM CODE", from: "Stock Data · ITEM CODE" },
+      { name: "ITEM NAME", from: "Stock Data · ITEM NAME" },
+      { name: "IN", from: "Stock Data · IN", how: "Total quantity received into store." },
+      { name: "OUT", from: "Stock Data · OUT", how: "Total quantity issued / dispatched." },
+      {
+        name: "STOCK",
+        from: "Stock Data · STOCK",
+        how: "IN − OUT − REJECT, kept up to date automatically from Store Register movements. A red, negative number means more went out than was recorded coming in — check the Store Register entries for that item.",
+      },
+    ],
+    dateFilter: ALL_DATES,
+  },
+
+  stockSearch: {
+    what: "Look up the current stock of any item — raw material, seals, springs, rings, finished goods — by typing part of its code or name.",
+    sources: [{ process: "Stock Data", id: "ST/R/006" }],
+    included: "Every stock item whose ITEM CODE or ITEM NAME contains what you type (upper/lower case doesn't matter). Exact matches are listed first, then items that start with your text. Up to 50 results are shown.",
+    columns: [
+      { name: "ITEM", from: "Stock Data · ITEM CODE · ITEM NAME (ITEM CATEGORY)" },
+      {
+        name: "STOCK QTY",
+        from: "Stock Data · STOCK",
+        how: "Current quantity in store (IN − OUT − REJECT). Red = negative stock.",
+      },
+    ],
+    tip: "Typing \"25R\" finds every item named 25R; typing \"RM0\" finds every item code starting with RM0.",
+  },
+
+  // Older finished-goods card (main Dashboard) — data from GET /process/dashboard/stock
+  finishedGoodsMain: {
     what: "How much finished-goods stock you have on hand, item by item.",
     sources: [{ process: "Stock Data", id: "ST/R/006" }],
     included: "Stock records whose ITEM CATEGORY is Finished Good.",
@@ -534,7 +741,7 @@ export const MAIN_INFO = {
   },
 
 
-  stock: { ...STOCK_INFO.finishedGoods },
+  stock: { ...STOCK_INFO.finishedGoodsMain },
 
   pendingProcurements: {
     ...PURCHASE_INFO.pendingProcurements,

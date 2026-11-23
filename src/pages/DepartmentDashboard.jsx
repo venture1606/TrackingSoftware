@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Select,
   Input,
+  InputGroup,
+  InputRightElement,
   Box,
   SimpleGrid,
   Heading,
@@ -18,25 +20,19 @@ import {
   getOEEDashboard,
   getProductionReport,
   getInhouseDashboard,
-  getCustomerQuality,
-  getIncomingInspection,
-  getQualityAudits,
-  getContinuousImprovement,
   getEmployeeOverhead,
   getEmployeeAttendance,
-  getProcurementDashboard,
-  getInwardDashboard,
+  getPurchaseDepartmentDashboard,
   getSalesDashboard,
+  getQualityDepartmentDashboard,
   getSettingsDashboard,
-  getCalibrationDueDashboard,
-  getProcessControlPlanDashboard,
-  getCertificateRenewalDashboard,
-  getDashboardStock,
+  getStoreDashboard,
+  searchStoreStock,
 } from "../services/dashboard";
 
 // Import Dashboard Components
+import { SearchIcon } from "@chakra-ui/icons";
 import StatCard from "../components/dashboard/StatCard";
-import InstrumentStatusBody from "../components/dashboard/InstrumentStatusBody";
 import AreaChart from "../components/dashboard/AreaChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import GaugeChart from "../components/dashboard/GaugeChart";
@@ -55,6 +51,96 @@ const DepartmentDashboard = ({ Content }) => {
   // PER-CARD DATE RANGES: { [cardKey]: { startDate, endDate } } ("YYYY-MM-DD").
   // A card without an entry uses the default: the last 30 days (both days included).
   const [cardRanges, setCardRanges] = useState({});
+
+  // QUALITY FILTERS — rejection trend (month/year + period for the overall %), CI year/month
+  const DEFAULT_QUALITY_FILTERS = { trendBy: "month", period: "", ciYear: "", ciMonth: "" };
+  const [qualityFilters, setQualityFilters] = useState(DEFAULT_QUALITY_FILTERS);
+  const qualityFiltersRef = useRef(DEFAULT_QUALITY_FILTERS);
+  const [qualityLoading, setQualityLoading] = useState(false);
+
+  const updateQualityFilter = async (patch) => {
+    const next = { ...qualityFiltersRef.current, ...patch };
+    qualityFiltersRef.current = next;
+    setQualityFilters(next);
+    setQualityLoading(true);
+    try {
+      const res = await getQualityDepartmentDashboard(next);
+      setData((prev) => ({ ...prev, quality: res?.data || {} }));
+    } catch (error) {
+      toast({
+        title: "Error filtering quality dashboard",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setQualityLoading(false);
+    }
+  };
+
+  // PURCHASE FILTERS — Procurement Detail: vendor / itemName / partNo; Supplier Payment: supplier
+  const [purchaseFilters, setPurchaseFilters] = useState({
+    vendor: "",
+    itemName: "",
+    partNo: "",
+    supplier: "",
+  });
+  const purchaseFiltersRef = useRef(purchaseFilters);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+
+  const updatePurchaseFilter = async (patch) => {
+    const next = { ...purchaseFiltersRef.current, ...patch };
+    purchaseFiltersRef.current = next;
+    setPurchaseFilters(next);
+    setPurchaseLoading(true);
+    try {
+      const res = await getPurchaseDepartmentDashboard(next);
+      setData((prev) => ({ ...prev, purchase: res?.data || {} }));
+    } catch (error) {
+      toast({
+        title: "Error filtering purchase dashboard",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setPurchaseLoading(false);
+    }
+  };
+
+  // STORE STOCK SEARCH (debounced, searches ITEM CODE / ITEM NAME across all stock)
+  const [stockQuery, setStockQuery] = useState("");
+  const [stockSearch, setStockSearch] = useState({ loading: false, total: 0, rows: [], query: "" });
+  useEffect(() => {
+    const q = stockQuery.trim();
+    if (!q) {
+      setStockSearch({ loading: false, total: 0, rows: [], query: "" });
+      return undefined;
+    }
+    setStockSearch((prev) => ({ ...prev, loading: true }));
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchStoreStock(q, 50);
+        if (!cancelled) {
+          setStockSearch({
+            loading: false,
+            total: res?.data?.total || 0,
+            rows: res?.data?.rows || [],
+            query: q,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) setStockSearch({ loading: false, total: 0, rows: [], query: q, error: error.message });
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [stockQuery]);
 
   // SALES TREND FILTERS (group by day / month / year, date range, ENQ BY)
   const [salesTrendFilters, setSalesTrendFilters] = useState(() => ({
@@ -125,32 +211,10 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "quality":
-            const [
-              custQual,
-              incoming,
-              audits,
-              improvement,
-              calibration,
-              pcp,
-              certs,
-            ] = await Promise.all([
-              getCustomerQuality(startTimestamp, endTimestamp),
-              getIncomingInspection(),
-              getQualityAudits(),
-              getContinuousImprovement(startTimestamp, endTimestamp),
-              getCalibrationDueDashboard(),
-              getProcessControlPlanDashboard(),
-              getCertificateRenewalDashboard(),
-            ]);
-            dashboardData = {
-              custQual,
-              incoming,
-              audits,
-              improvement,
-              calibration,
-              pcp,
-              certs,
-            };
+            const quality = await getQualityDepartmentDashboard(
+              qualityFiltersRef.current,
+            );
+            dashboardData = { quality: quality?.data || {} };
             break;
 
           case "hr":
@@ -163,11 +227,10 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "purchase":
-            const [procurement, inward] = await Promise.all([
-              getProcurementDashboard(startTimestamp, endTimestamp),
-              getInwardDashboard(startTimestamp, endTimestamp),
-            ]);
-            dashboardData = { procurement, inward };
+            const purchase = await getPurchaseDepartmentDashboard(
+              purchaseFiltersRef.current,
+            );
+            dashboardData = { purchase: purchase?.data || {} };
             break;
 
           case "sales":
@@ -180,8 +243,8 @@ const DepartmentDashboard = ({ Content }) => {
           case "stock":
           case "store":
           case "stores":
-            const stock = await getDashboardStock();
-            dashboardData = { stock: stock?.data || stock || {} };
+            const store = await getStoreDashboard();
+            dashboardData = { store: store?.data || {} };
             break;
 
           default:
@@ -207,6 +270,11 @@ const DepartmentDashboard = ({ Content }) => {
   useEffect(() => {
     if (Content) {
       setCardRanges({});
+      purchaseFiltersRef.current = { vendor: "", itemName: "", partNo: "", supplier: "" };
+      setPurchaseFilters(purchaseFiltersRef.current);
+      setStockQuery("");
+      qualityFiltersRef.current = { trendBy: "month", period: "", ciYear: "", ciMonth: "" };
+      setQualityFilters(qualityFiltersRef.current);
       fetchData(Content);
     }
   }, [Content, fetchData]);
@@ -216,11 +284,7 @@ const DepartmentDashboard = ({ Content }) => {
     oee: [getOEEDashboard, "oee"],
     oeeTrend: [getProductionReport, "prodReport"],
     rejection: [getInhouseDashboard, "inhouse"],
-    customerComplaints: [getCustomerQuality, "custQual"],
-    improvement: [getContinuousImprovement, "improvement"],
     departmentDistribution: [getEmployeeAttendance, "attendance"],
-    procurement: [getProcurementDashboard, "procurement"],
-    inward: [getInwardDashboard, "inward"],
   };
 
   const applyCardRange = (cardKey) => async ({ startDate, endDate }) => {
@@ -555,226 +619,239 @@ const DepartmentDashboard = ({ Content }) => {
     </Flex>
   );
 
-  const renderQualityDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Customer Complaints"
-            info={QUALITY_INFO.customerComplaints}
-        minWidth={{ base: "100%", md: "300px" }}
-        headerRight={cardFilter("customerComplaints")}
-      >
-        <Flex 
-          w="100%" 
-          h="100%" 
-          justify="space-around" 
-          align="center" 
-          py={4}
-          direction={{ base: "column", sm: "row" }}
-          gap={4}
+  const renderQualityDashboard = () => {
+    const q = data.quality || {};
+    const rej = q.customerRejection || {};
+    const ci = q.continuousImprovement || {};
+    const audits = q.qualityAudits || {};
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const pct = (v) => (v === null || v === undefined ? "—" : `${v}%`);
+
+    // Big circular number used by the single-number cards
+    const BigNumber = ({ value, label, sub, color = "blue" }) => (
+      <VStack h="100%" justify="center" spacing={3} py={2}>
+        <Box
+          boxSize="110px"
+          borderRadius="full"
+          bg={`${color}.700`}
+          color="white"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          boxShadow="md"
         >
-          <VStack bg="red.50" p={4} borderRadius="xl" minW="110px" spacing={1}>
-            <Text
-              fontSize="3xl"
-              fontWeight="black"
-              color="red.600"
-              lineHeight={1}
-            >
-              {data.custQual?.data?.rejectionRate || 0}%
-            </Text>
-            <Text
-              fontSize="10px"
-              fontWeight="bold"
-              color="red.400"
-              textTransform="uppercase"
-              textAlign="center"
-            >
-              Rejection
-              <br />
-              Rate
-            </Text>
-          </VStack>
-          <VStack
-            bg="orange.50"
-            p={4}
-            borderRadius="xl"
-            minW="110px"
-            spacing={1}
-          >
-            <Text
-              fontSize="3xl"
-              fontWeight="black"
-              color="orange.600"
-              lineHeight={1}
-            >
-              {data.custQual?.data?.actionPending || 0}
-            </Text>
-            <Text
-              fontSize="10px"
-              fontWeight="bold"
-              color="orange.400"
-              textTransform="uppercase"
-              textAlign="center"
-            >
-              Action
-              <br />
-              Pending
-            </Text>
-          </VStack>
-        </Flex>
-      </StatCard>
-
-      <StatCard
-        title="Incoming Inspection"
-            info={QUALITY_INFO.incomingInspection}
-        count={data.incoming?.data?.pendingCount || 0}
-        minWidth={{ base: "100%", md: "300px" }}
-      >
-        <VStack align="center" justify="center" h="100%" spacing={3}>
-          <Box
-            boxSize="120px"
-            borderRadius="full"
-            border="10px solid"
-            borderColor="blue.500"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text fontSize="3xl" fontWeight="bold" color="blue.600">
-              {data.incoming?.data?.pendingCount || 0}
-            </Text>
-          </Box>
-          <Text color="gray.500" fontWeight="bold">
-            Pending Inspections
+          <Text fontSize="3xl" fontWeight="black">
+            {value ?? 0}
           </Text>
-        </VStack>
-      </StatCard>
+        </Box>
+        <Text fontSize="sm" fontWeight="bold" color={`${color}.700`} textTransform="uppercase" textAlign="center">
+          {label}
+        </Text>
+        {sub && (
+          <Text fontSize="xs" color="gray.500" textAlign="center">
+            {sub}
+          </Text>
+        )}
+      </VStack>
+    );
 
-      <StatCard
-        title="Continuous Improvement"
-            info={QUALITY_INFO.continuousImprovement}
-        minWidth={{ base: "100%", md: "300px" }}
-        headerRight={cardFilter("improvement")}
-      >
-        <VStack justify="center" h="100%" py={4}>
-          <Box
-            bg="green.50"
-            p={6}
-            borderRadius="2xl"
-            textAlign="center"
-            minW="200px"
-          >
-            <Text
-              fontSize="4xl"
-              fontWeight="black"
-              color="green.600"
-              lineHeight={1}
+    return (
+      <Flex wrap="wrap" gap={6}>
+        <StatCard
+          title="Customer Rejection Rate"
+          info={QUALITY_INFO.customerRejection}
+          minWidth={{ base: "100%", xl: "760px" }}
+        >
+          <Flex gap={2} wrap="wrap" mb={4} align="center">
+            <Select
+              size="sm"
+              w="130px"
+              value={qualityFilters.trendBy}
+              onChange={(e) => updateQualityFilter({ trendBy: e.target.value, period: "" })}
             >
-              {data.improvement?.data?.improvementCount || 0}
-            </Text>
-            <Text
-              fontSize="xs"
-              fontWeight="bold"
-              color="green.400"
-              mt={2}
-              textTransform="uppercase"
+              <option value="month">Month wise</option>
+              <option value="year">Year wise</option>
+            </Select>
+            <Select
+              size="sm"
+              w="150px"
+              value={rej.period || ""}
+              onChange={(e) => updateQualityFilter({ period: e.target.value })}
             >
-              Improvement Initiatives
-            </Text>
-          </Box>
-        </VStack>
-      </StatCard>
-
-      <StatCard
-        title="Quality Audits (Pending)"
-            info={QUALITY_INFO.qualityAudits}
-        count={data.audits?.data?.totalPending || 0}
-        minWidth={{ base: "100%", lg: "600px" }}
-      >
-        <TableChart
-          headers={["DEPARTMENT", "NCs", "RESPONSIBLE", "DUE"]}
-          data={(data.audits?.data?.table || []).slice(0, 5)}
-          keys={["department", "noOfNC", "responsible", "due"]}
-        />
-      </StatCard>
-
-      <StatCard
-        title="Instrument Status"
-            info={QUALITY_INFO.instruments}
-        count={data.calibration?.data?.totalFiltered || 0}
-        minWidth={{ base: "100%", md: "400px" }}
-      >
-        <InstrumentStatusBody data={data.calibration?.data} />
-      </StatCard>
-      <StatCard
-        title="Process Control Plan"
-            info={QUALITY_INFO.processControlPlan}
-        count={data.pcp?.data?.totalRecords || 0}
-        minWidth={{ base: "100%", md: "400px" }}
-      >
-        <VStack spacing={4} align="stretch" w="100%">
-          <HStack spacing={4} justify="start" pb={2}>
-             <Box bg="orange.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="orange.100" minW="150px">
-                <Text fontSize="xs" fontWeight="bold" color="orange.600">PENDING UPLOADS</Text>
-                <Text fontSize="2xl" fontWeight="black" color="orange.700" lineHeight={1}>
-                  {data.pcp?.data?.pendingCount || 0}
+              {(rej.periodOptions || []).map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+              <option value="all">All time</option>
+            </Select>
+            {qualityLoading && <Spinner size="sm" color="blue.500" />}
+          </Flex>
+          <Flex gap={6} direction={{ base: "column", lg: "row" }} align="stretch">
+            <Box flex="2" minW={0}>
+              <Text fontSize="xs" fontWeight="bold" color="gray.500" mb={1}>
+                REJECTION % TREND (FAILED QTY ÷ DELIVERED QTY)
+              </Text>
+              {(rej.trend || []).length ? (
+                <LineChart data={rej.trend} xAxisKey="period" dataKey="rate" height={200} />
+              ) : (
+                <Center h="200px">
+                  <Text color="gray.500" fontSize="sm">No complaints or deliveries recorded yet.</Text>
+                </Center>
+              )}
+            </Box>
+            <VStack flex="1" spacing={4} justify="center">
+              <VStack bg="orange.50" borderRadius="xl" p={4} w="100%" spacing={1}>
+                <Text fontSize="10px" fontWeight="bold" color="orange.600" textTransform="uppercase">
+                  Open complaints (CCR status)
                 </Text>
-             </Box>
-             <VStack align="flex-start" spacing={0}>
-                <Text fontSize="xs" fontWeight="bold" color="gray.400">TOTAL RECORDS</Text>
-                <Text fontSize="md" fontWeight="bold" color="gray.600">
-                  {data.pcp?.data?.totalRecords || 0}
+                <Text fontSize="3xl" fontWeight="black" color="orange.700" lineHeight={1}>
+                  {rej.openComplaints || 0}
                 </Text>
-             </VStack>
-          </HStack>
-
-          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
-             <TableChart
-               headers={["NAME", "DATE", "REV NO"]}
-               data={(data.pcp?.data?.pendingRecords || []).slice(0, 5).map(row => {
-                 const items = row.items || [];
-                 return {
-                   name: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME") || i.key.includes("PART"))?.value || items[0]?.value || "-",
-                   date: formatEpochDate(items.find(i => i.key === "DATE")?.value),
-                   rev: items.find(i => i.key === "REVISION NO")?.value || "-",
-                 }
-               })}
-               keys={["name", "date", "rev"]}
-             />
-          </Box>
-        </VStack>
-      </StatCard>
-      <StatCard
-        title="Certificate Renewal Status"
-            info={QUALITY_INFO.certificates}
-        count={(data.certs?.data || []).filter(c => c.isDue).length}
-        minWidth={{ base: "100%", lg: "600px" }}
-      >
-        <VStack spacing={4} align="stretch" w="100%">
-          <HStack spacing={4} justify="start" pb={2}>
-             <Box bg="purple.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="purple.100" minW="150px">
-                <Text fontSize="xs" fontWeight="bold" color="purple.600">ACTION REQUIRED</Text>
-                <Text fontSize="2xl" fontWeight="black" color="purple.700" lineHeight={1}>
-                  {(data.certs?.data || []).filter(c => c.isDue).length}
+              </VStack>
+              <VStack bg="blue.50" borderRadius="xl" p={4} w="100%" spacing={1}>
+                <Text fontSize="10px" fontWeight="bold" color="blue.600" textTransform="uppercase" textAlign="center">
+                  Overall rejection %
                 </Text>
-             </Box>
-          </HStack>
+                <Text fontSize="3xl" fontWeight="black" color="blue.700" lineHeight={1}>
+                  {pct(rej.overall?.rate)}
+                </Text>
+                <Text fontSize="10px" color="gray.500" textAlign="center">
+                  {rej.overall?.failedQty || 0} failed of {rej.overall?.deliveredQty || 0} delivered
+                </Text>
+              </VStack>
+            </VStack>
+          </Flex>
+        </StatCard>
 
-          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
-             <TableChart
-               headers={["CERTIFICATE NAME", "DEPT", "DUE DATE", "REMINDER"]}
-               data={(data.certs?.data || []).slice(0, 5).map(c => {
-                 return {
-                   ...c,
-                   dueDate: formatEpochDate(c.dueDate),
-                 }
-               })}
-               keys={["certName", "department", "dueDate", "reminder"]}
-             />
-          </Box>
-        </VStack>
-      </StatCard>
-    </Flex>
-  );
+        <StatCard
+          title="Continuous Improvement"
+          info={QUALITY_INFO.improvementByDepartment}
+          count={ci.total || 0}
+          minWidth={{ base: "100%", lg: "460px" }}
+        >
+          <Flex gap={2} wrap="wrap" mb={4} align="center">
+            <Select
+              size="sm"
+              w="120px"
+              placeholder="All years"
+              value={qualityFilters.ciYear}
+              onChange={(e) => updateQualityFilter({ ciYear: e.target.value })}
+            >
+              {(ci.years || []).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </Select>
+            <Select
+              size="sm"
+              w="130px"
+              placeholder="All months"
+              value={qualityFilters.ciMonth}
+              onChange={(e) => updateQualityFilter({ ciMonth: e.target.value })}
+            >
+              {MONTH_NAMES.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </Select>
+          </Flex>
+          {(ci.data || []).length ? (
+            <BarChart
+              data={ci.data}
+              xAxisKey="department"
+              dataKeys={[{ key: "count", name: "Improvements", color: "#3182ce" }]}
+              height={220}
+            />
+          ) : (
+            <Center h="220px">
+              <Text color="gray.500" fontSize="sm">No improvements in this period.</Text>
+            </Center>
+          )}
+        </StatCard>
+
+        <StatCard
+          title="Incoming Inspection"
+          info={QUALITY_INFO.incomingInspection}
+          minWidth={{ base: "100%", md: "260px" }}
+        >
+          <BigNumber value={q.incomingInspection?.pendingCount} label="Inspection pending" color="blue" />
+        </StatCard>
+
+        <StatCard
+          title="Quality Audit Pending"
+          info={QUALITY_INFO.qualityAuditPending}
+          count={audits.pendingCount || 0}
+          minWidth={{ base: "100%", lg: "560px" }}
+        >
+          {(audits.rows || []).length ? (
+            <TableChart
+              headers={["DEPARTMENT", "NC", "RESPONSIBLE", "DUE"]}
+              data={audits.rows}
+              keys={["department", "nc", "responsible", "due"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">No open audits.</Text>
+            </Center>
+          )}
+        </StatCard>
+
+        <StatCard
+          title="Instruments Pending"
+          info={QUALITY_INFO.instrumentsPending}
+          minWidth={{ base: "100%", md: "260px" }}
+        >
+          <BigNumber
+            value={q.instruments?.pendingCount}
+            label="Instruments pending"
+            sub={`${q.instruments?.overdue || 0} overdue · ${q.instruments?.dueSoon || 0} due in ${q.instruments?.dueSoonDays || 10} days`}
+            color="red"
+          />
+        </StatCard>
+
+        <StatCard
+          title="Certificate Renewal"
+          info={QUALITY_INFO.certificateRenewalPending}
+          minWidth={{ base: "100%", md: "260px" }}
+        >
+          <BigNumber
+            value={q.certificates?.pendingCount}
+            label="Renewal pending"
+            sub={`${q.certificates?.overdue || 0} already expired`}
+            color="purple"
+          />
+        </StatCard>
+
+        <StatCard
+          title="Process Control Plan"
+          info={QUALITY_INFO.pcpRenewalPending}
+          minWidth={{ base: "100%", md: "320px" }}
+        >
+          <BigNumber
+            value={q.processControlPlan?.pendingCount}
+            label="Renewal pending"
+            sub="Products whose revisions and control-plan entries don't match"
+            color="teal"
+          />
+          {(q.processControlPlan?.rows || []).length > 0 && (
+            <Box mt={2}>
+              <TableChart
+                headers={["PART NO", "REVISIONS", "PCP ENTRIES", "MISSING"]}
+                data={q.processControlPlan.rows.slice(0, 5).map((r) => ({
+                  ...r,
+                  missing: r.missing > 0 ? r.missing : `${-r.missing} extra`,
+                }))}
+                keys={["partNo", "revisions", "pcpEntries", "missing"]}
+              />
+            </Box>
+          )}
+        </StatCard>
+      </Flex>
+    );
+  };
 
   const renderHRDashboard = () => (
     <Flex wrap="wrap" gap={6}>
@@ -825,104 +902,155 @@ const DepartmentDashboard = ({ Content }) => {
     </Flex>
   );
 
-  const renderPurchaseDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Pending Procurements"
-            info={PURCHASE_INFO.pendingProcurements}
-        count={data.procurement?.data?.totalPending || 0}
-        minWidth={{ base: "100%", lg: "500px" }}
-        headerRight={cardFilter("procurement")}
+  const renderPurchaseDashboard = () => {
+    const purchase = data.purchase || {};
+    const proc = purchase.procurement || {};
+    const pay = purchase.supplierPayment || {};
+    const money = (n) => Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+    const FilterSelect = ({ placeholder, value, options = [], onChange }) => (
+      <Select size="sm" w="160px" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </Select>
+    );
+
+    const Tile = ({ label, value, color }) => (
+      <VStack
+        flex="1 1 150px"
+        bg={`${color}.50`}
+        border="1px solid"
+        borderColor={`${color}.100`}
+        borderRadius="xl"
+        p={3}
+        spacing={1}
       >
-        <TableChart
-          headers={[
-            "PO NUMBER",
-            "ITEM NAME",
-            "VENDOR",
-            "QTY",
-            "SUPPLY DATE",
-            "DUE",
-          ]}
-          data={(data.procurement?.data?.pendingRecords || []).map((row) => {
-            const items = row.items;
-            const dateVal = items.find((i) => i.key === "DATE")?.value;
-            const leadTime = Number(items.find((i) => i.key === "LEAD TIME")?.value) || 0;
+        <Text fontSize="10px" fontWeight="bold" color={`${color}.600`} textTransform="uppercase" textAlign="center">
+          {label}
+        </Text>
+        <Text fontSize="2xl" fontWeight="black" color={`${color}.700`} lineHeight={1}>
+          {value}
+        </Text>
+      </VStack>
+    );
 
-            // Calculate Due
-            let due = "-";
-            if (dateVal && !isNaN(dateVal)) {
-              const deliveryDate = Number(dateVal) + (leadTime * 24 * 60 * 60 * 1000);
-              const diffDays = Math.ceil(
-                (deliveryDate - Date.now()) / (1000 * 60 * 60 * 24),
-              );
-              due =
-                diffDays > 0
-                  ? `${diffDays} days`
-                  : diffDays < 0
-                    ? `${Math.abs(diffDays)} days ago`
-                    : "Today";
-            }
+    const anyProcFilter = purchaseFilters.vendor || purchaseFilters.itemName || purchaseFilters.partNo;
 
-            return {
-              po: items.find((i) => i.key === "PO NO")?.value || "-",
-              item: items.find((i) => i.key === "ITEM NAME")?.value || "-",
-              vendor: items.find((i) => i.key === "VENDOR-NAME")?.value || "-",
-              qty: items.find((i) => i.key === "QTY")?.value || "0",
-              supplyDate:
-                dateVal && !isNaN(dateVal)
-                  ? new Date(Number(dateVal)).toLocaleDateString()
-                  : "-",
-              due,
-            };
-          })}
-          keys={["po", "item", "vendor", "qty", "supplyDate", "due"]}
-        />
-      </StatCard>
+    return (
+      <Flex wrap="wrap" gap={6}>
+        <StatCard
+          title="Procurement Detail"
+          info={PURCHASE_INFO.procurementDetail}
+          count={proc.pendingCount || 0}
+          minWidth={{ base: "100%", lg: "640px" }}
+        >
+          <Flex gap={2} wrap="wrap" mb={3} align="center">
+            <FilterSelect
+              placeholder="All vendors"
+              value={purchaseFilters.vendor}
+              options={proc.options?.vendor}
+              onChange={(v) => updatePurchaseFilter({ vendor: v })}
+            />
+            <FilterSelect
+              placeholder="All item names"
+              value={purchaseFilters.itemName}
+              options={proc.options?.itemName}
+              onChange={(v) => updatePurchaseFilter({ itemName: v })}
+            />
+            <FilterSelect
+              placeholder="All part nos"
+              value={purchaseFilters.partNo}
+              options={proc.options?.partNo}
+              onChange={(v) => updatePurchaseFilter({ partNo: v })}
+            />
+            {anyProcFilter && (
+              <Text
+                as="button"
+                fontSize="xs"
+                color="blue.600"
+                onClick={() => updatePurchaseFilter({ vendor: "", itemName: "", partNo: "" })}
+              >
+                Clear filters
+              </Text>
+            )}
+            {purchaseLoading && <Spinner size="sm" color="blue.500" />}
+          </Flex>
+          <Flex gap={3} wrap="wrap" mb={4}>
+            <Tile label="Total no. of pending" value={proc.pendingCount || 0} color="orange" />
+            <Tile label="Total pending qty" value={money(proc.totalPendingQty)} color="blue" />
+          </Flex>
+          {(proc.rows || []).length ? (
+            <TableChart
+              headers={["VENDOR NAME", "PART NO", "ITEM NAME", "GRADE", "PENDING QTY", "PENDING QTY VALUE", "DUE"]}
+              data={(proc.rows || []).map((r) => ({
+                ...r,
+                vendor: r.vendor || "-",
+                partNo: r.partNo || "-",
+                itemName: r.itemName || "-",
+                grade: r.grade || "-",
+                pendingQty: money(r.pendingQty),
+                pendingValue: money(r.pendingValue),
+                due: r.leadTimeMissing && r.dueDate ? `${r.due} (no lead time)` : r.due,
+              }))}
+              keys={["vendor", "partNo", "itemName", "grade", "pendingQty", "pendingValue", "due"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">
+                {anyProcFilter ? "No pending procurement matches these filters." : "Nothing pending — all procurement is received."}
+              </Text>
+            </Center>
+          )}
+        </StatCard>
 
-      <StatCard
-        title="Open Inward Payments"
-            info={PURCHASE_INFO.inwardPayments}
-        count={data.inward?.data?.totalOpen || 0}
-        minWidth={{ base: "100%", lg: "500px" }}
-        headerRight={cardFilter("inward")}
-      >
-        <TableChart
-          headers={["VENDOR", "INVOICE", "VALUE", "PAYMENT DATE", "DUE"]}
-          data={(data.inward?.data?.openRecords || []).map((row) => {
-            const items = row.items;
-            const dateVal = items.find((i) => i.key === "DELIVERY DATE")?.value;
-            const creditPeriod = Number(items.find((i) => i.key === "CREDIT PERIOD")?.value) || 0;
-
-            let due = "-";
-            if (dateVal && !isNaN(dateVal)) {
-              const dueDate = Number(dateVal) + (creditPeriod * 24 * 60 * 60 * 1000);
-              const diffDays = Math.ceil(
-                (dueDate - Date.now()) / (1000 * 60 * 60 * 24),
-              );
-              due =
-                diffDays > 0
-                  ? `${diffDays} days`
-                  : diffDays < 0
-                    ? `${Math.abs(diffDays)} days ago`
-                    : "Today";
-            }
-
-            return {
-              vendor: items.find((i) => i.key === "VENDOR NAME")?.value || "-",
-              invoice: items.find((i) => i.key === "INVOICE NO")?.value || "-",
-              value: items.find((i) => i.key === "VALUE")?.value || "-",
-              paymentDate:
-                dateVal && !isNaN(dateVal)
-                  ? new Date(Number(dateVal)).toLocaleDateString()
-                  : "-",
-              due,
-            };
-          })}
-          keys={["vendor", "invoice", "value", "paymentDate", "due"]}
-        />
-      </StatCard>
-    </Flex>
-  );
+        <StatCard
+          title="Supplier Payment"
+          info={PURCHASE_INFO.supplierPayment}
+          count={pay.openCount || 0}
+          minWidth={{ base: "100%", lg: "560px" }}
+        >
+          <Flex gap={2} wrap="wrap" mb={3} align="center">
+            <FilterSelect
+              placeholder="All vendors"
+              value={purchaseFilters.supplier}
+              options={pay.options?.supplier}
+              onChange={(v) => updatePurchaseFilter({ supplier: v })}
+            />
+            {purchaseLoading && <Spinner size="sm" color="blue.500" />}
+          </Flex>
+          <Flex gap={3} wrap="wrap" mb={4}>
+            <Tile label="Total sum of value" value={money(pay.totalValue)} color="red" />
+            <Tile label="Total no. of suppliers" value={pay.supplierCount || 0} color="purple" />
+          </Flex>
+          {pay.withoutSupplier > 0 && !purchaseFilters.supplier && (
+            <Text fontSize="xs" color="gray.500" mb={2}>
+              {pay.withoutSupplier} open invoice{pay.withoutSupplier === 1 ? " has" : "s have"} no vendor name (shown as “-”).
+            </Text>
+          )}
+          {(pay.rows || []).length ? (
+            <TableChart
+              headers={["VENDOR", "ITEM NAME", "VALUE", "CREDIT PERIOD", "DUE"]}
+              data={(pay.rows || []).map((r) => ({
+                ...r,
+                vendor: r.vendor || "-",
+                itemName: r.itemName || "-",
+                value: money(r.value),
+                creditPeriod: r.creditPeriodMissing ? "-" : `${r.creditPeriod} days`,
+              }))}
+              keys={["vendor", "itemName", "value", "creditPeriod", "due"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">No open supplier payments.</Text>
+            </Center>
+          )}
+        </StatCard>
+      </Flex>
+    );
+  };
 
   const renderSalesDashboard = () => {
     const sales = data.sales || {};
@@ -1083,26 +1211,91 @@ const DepartmentDashboard = ({ Content }) => {
     );
   };
 
-  const renderStockDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Stock Data (Finished Goods)"
-            info={STOCK_INFO.finishedGoods}
-        count={data.stock?.totalStockQty || 0}
-        minWidth={{ base: "100%", lg: "600px" }}
-      >
-        <TableChart
-          headers={["ITEM CODE", "ITEM NAME", "STOCK"]}
-          data={(data.stock?.data || []).map((row) => ({
-            itemCode: row.items?.find((i) => i.key === "ITEM CODE")?.value || "-",
-            itemName: row.items?.find((i) => i.key === "ITEM NAME")?.value || "-",
-            stockCount: row.items?.find((i) => i.key === "STOCK")?.value || "0",
-          }))}
-          keys={["itemCode", "itemName", "stockCount"]}
-        />
-      </StatCard>
-    </Flex>
-  );
+  const renderStockDashboard = () => {
+    const fg = data.store?.finishedGoods || {};
+    const qty = (n) => {
+      const v = Number(n || 0);
+      const text = v.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+      // Negative stock means more went OUT than came IN — flag it in red
+      return v < 0 ? <Text as="span" color="red.500" fontWeight="bold">{text}</Text> : text;
+    };
+
+    return (
+      <Flex wrap="wrap" gap={6}>
+        <StatCard
+          title="Stock Data (Finished Goods)"
+          info={STOCK_INFO.finishedGoods}
+          count={fg.itemCount || 0}
+          minWidth={{ base: "100%", lg: "600px" }}
+        >
+          {(fg.rows || []).length ? (
+            <TableChart
+              headers={["ITEM CODE", "ITEM NAME", "IN", "OUT", "STOCK"]}
+              data={(fg.rows || []).map((r) => ({
+                itemCode: r.itemCode || "-",
+                itemName: r.itemName || "-",
+                in: qty(r.in),
+                out: qty(r.out),
+                stock: qty(r.stock),
+              }))}
+              keys={["itemCode", "itemName", "in", "out", "stock"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">No finished-good items in Stock Data.</Text>
+            </Center>
+          )}
+        </StatCard>
+
+        <StatCard
+          title="Stock Search"
+          info={STOCK_INFO.stockSearch}
+          minWidth={{ base: "100%", lg: "480px" }}
+        >
+          <InputGroup size="md" mb={4}>
+            <Input
+              placeholder="Type an item code or item name…"
+              value={stockQuery}
+              onChange={(e) => setStockQuery(e.target.value)}
+              borderRadius="full"
+            />
+            <InputRightElement>
+              {stockSearch.loading ? <Spinner size="sm" color="blue.500" /> : <SearchIcon color="gray.400" />}
+            </InputRightElement>
+          </InputGroup>
+          {!stockQuery.trim() ? (
+            <Center h="100px">
+              <Text color="gray.500" fontSize="sm" textAlign="center">
+                Search any item (raw material, seal, spring, finished good…) to see its stock quantity.
+              </Text>
+            </Center>
+          ) : stockSearch.error ? (
+            <Text color="red.500" fontSize="sm">{stockSearch.error}</Text>
+          ) : !stockSearch.loading && stockSearch.query && !stockSearch.rows.length ? (
+            <Center h="100px">
+              <Text color="gray.500" fontSize="sm">No item matches “{stockSearch.query}”.</Text>
+            </Center>
+          ) : (
+            <>
+              <TableChart
+                headers={["ITEM", "STOCK QTY"]}
+                data={stockSearch.rows.map((r) => ({
+                  item: `${r.itemCode || "-"} · ${r.itemName || "-"}${r.itemCategory ? ` (${r.itemCategory})` : ""}`,
+                  stock: qty(r.stock),
+                }))}
+                keys={["item", "stock"]}
+              />
+              {stockSearch.total > stockSearch.rows.length && (
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                  Showing {stockSearch.rows.length} of {stockSearch.total} matches — type more to narrow down.
+                </Text>
+              )}
+            </>
+          )}
+        </StatCard>
+      </Flex>
+    );
+  };
 
   const renderContent = () => {
     const department = Content?.toLowerCase();

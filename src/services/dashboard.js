@@ -178,6 +178,41 @@ export const getEmployeeAttendance = async (startDate, endDate) => {
   return response.data;
 };
 
+// Purchase Department dashboard (single call).
+// params: { vendor, itemName, partNo } filter Procurement Detail; { supplier } filters Supplier Payment
+export const getPurchaseDepartmentDashboard = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/purchase/dashboard`, {
+    ...getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
+// Quality Department dashboard (single call).
+// params: { trendBy: "month" | "year", period: "YYYY-MM" | "YYYY" | "all", ciYear, ciMonth }
+export const getQualityDepartmentDashboard = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/quality/dashboard`, {
+    ...getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
+// Store Department dashboard: finished-goods stock table
+export const getStoreDashboard = async () => {
+  const response = await axios.get(`${API_URL}/store/dashboard`, getAuthHeaders());
+  return response.data;
+};
+
+// Store: search stock by ITEM CODE / ITEM NAME (any category)
+export const searchStoreStock = async (q, limit = 50) => {
+  const response = await axios.get(`${API_URL}/store/stock-search`, {
+    ...getAuthHeaders(),
+    params: { q, limit },
+  });
+  return response.data;
+};
+
 // Purchase Dashboards
 export const getProcurementDashboard = async (startDate, endDate) => {
   const response = await axios.get(`${API_URL}/purchase/procurementDashboard`, {

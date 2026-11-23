@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { withProcessSelectOptions } from "../utils/processSelectOptions";
 import {
   Modal,
   ModalOverlay,
@@ -67,9 +68,14 @@ function AddData({
   const detailingProducts = useSelector(
     (state) => state.department.detailingProducts
   );
-  const SelectOptionsArray =
+  const globalSelectOptions =
     useSelector((state) => (state.auth.SelectOptionsArray?.length > 0 ? state.auth.SelectOptionsArray : null)) ||
     ItemsData.SelectOptionsArray;
+  // Process-scoped dropdowns (ItemsData.ProcessSelectOptions) take priority for this process
+  const SelectOptionsArray = useMemo(
+    () => withProcessSelectOptions(globalSelectOptions, processId),
+    [globalSelectOptions, processId],
+  );
   const groupItem = useSelector((state) => state.auth.groupItem);
 
   const {

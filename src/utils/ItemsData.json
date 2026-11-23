@@ -10,7 +10,7 @@
     "New Development",
     "Master"
   ],
-  "DepartmentsListName":[
+  "DepartmentsListName": [
     "Design",
     "Manufacturing",
     "Quality",
@@ -128,9 +128,9 @@
       "process": "value"
     },
     {
-        "key": "ITEM LIST",
-        "value": "Pending",
-        "process": "value"
+      "key": "ITEM LIST",
+      "value": "Pending",
+      "process": "value"
     },
     {
       "key": "BOM",
@@ -138,24 +138,24 @@
       "process": "value"
     },
     {
-        "key": "PRODUCTION PLAN",
-        "value": "Pending",
-        "process": "value"
+      "key": "PRODUCTION PLAN",
+      "value": "Pending",
+      "process": "value"
     },
     {
-        "key": "VALIDATION",
-        "value": "Pending",
-        "process": "value"
+      "key": "VALIDATION",
+      "value": "Pending",
+      "process": "value"
     },
     {
-        "key": "MASTER PIECE",
-        "value": "Pending",
-        "process": "value"
+      "key": "MASTER PIECE",
+      "value": "Pending",
+      "process": "value"
     },
     {
-        "key": "ADD TO PRODUCT LIST",
-        "value": "Pending",
-        "process": "value"
+      "key": "ADD TO PRODUCT LIST",
+      "value": "Pending",
+      "process": "value"
     }
   ],
   "DefaultSelectProcess": [
@@ -368,7 +368,7 @@
       ]
     }
   ],
-  "ImageUploadArray":[
+  "ImageUploadArray": [
     "UPLOAD",
     "BEFORE",
     "AFTER",
@@ -383,7 +383,7 @@
     "T-REPORT",
     "MASTER PIECE UPLOAD"
   ],
-  "DateFieldsArray":[
+  "DateFieldsArray": [
     "CALIBRATION DONE DATE",
     "CALIBRATION DUE DATE",
     "NEXT SCHEDULE DATE",
@@ -407,21 +407,47 @@
     "TARGET DATE"
   ],
   "ProcessDateFields": {
-    "MR/R/007": ["FROM", "TO"]
+    "MR/R/007": [
+      "FROM",
+      "TO"
+    ]
   },
   "ProcessLockedFields": {
-    "DD/R/014": ["NO.", "PART", "from."],
-    "ST/R/006": ["STOCK", "FOLLOW UP"],
-    "QA/R/009": ["PART NO", "PART NAME"],
-    "QA/R/011A": ["CERTIFICATE NAME"]
+    "DD/R/014": [
+      "NO.",
+      "PART",
+      "from."
+    ],
+    "ST/R/006": [
+      "STOCK",
+      "FOLLOW UP"
+    ],
+    "QA/R/009": [
+      "PART NO",
+      "PART NAME"
+    ],
+    "QA/R/011A": [
+      "CERTIFICATE NAME"
+    ]
+  },
+  "ProcessSelectOptions": {
+    "MR/R/005A": {
+      "DEPARTMENT": "@DepartmentsListName"
+    }
   },
   "ShownArray": [
-    "ITEM CODE", "SUB PARTS", "ITEM-NAME", "GRADE", "QTY", "UNITS"
+    "ITEM CODE",
+    "SUB PARTS",
+    "ITEM-NAME",
+    "GRADE",
+    "QTY",
+    "UNITS"
   ],
-  "noOthers":[
+  "noOthers": [
     "QL STATUS",
     "GRADE",
-    "ITEM-NAME"
+    "ITEM-NAME",
+    "DEPARTMENT"
   ],
   "TimeArrays": [
     "START TIME",
@@ -433,7 +459,7 @@
     "PHOTO COPY",
     "REJECT COPY"
   ],
-  "NumberFields":[
+  "NumberFields": [
     "QTY",
     "DELIVER QTY",
     "DELIVERY QTY",
@@ -451,7 +477,7 @@
     "STOCK",
     "FOLLOW UP"
   ],
-  "MandatoryFields":[
+  "MandatoryFields": [
     "CYCLE TIME",
     "START TIME",
     "END TIME",
