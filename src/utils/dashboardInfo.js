@@ -519,28 +519,103 @@ export const QUALITY_INFO = {
 };
 
 export const HR_INFO = {
+  // HR department dashboard (GET /process/hr/dashboard → getHrDepartmentDashboard)
   employeeStrength: {
-    what: "How many employees are currently working with you.",
-    sources: [{ process: "Employee History", id: "HR/R/001" }],
-    metrics: [
-      { name: "Total Active (badge)", how: "Employees whose DATE OF RELIEVING is empty — people who have not left." },
-      {
-        name: "Retention Rate (12 months)",
-        how: "Of the people who were on staff exactly one year ago (joined on/before that day and not yet relieved), the share still working today. Example: 24 on staff a year ago, 2 have left → 22 ÷ 24 = 91.7%. Shows — when nobody had joined a year ago.",
-      },
+    what: "How many people you have compared with how many you planned to have (the standard overhead).",
+    sources: [
+      { process: "Employee History", id: "HR/R/001", note: "employees, DEPARTMENT, STATUS" },
+      { process: "Overhead", id: "HR/R/010", note: "planned headcount per department for a FROM–TO period" },
     ],
+    metrics: [
+      {
+        name: "No. of employees",
+        how: "Employees whose STATUS is ACTIVE. Where STATUS is still empty, employees with no relieving date count as active.",
+      },
+      {
+        name: "Standard overhead",
+        how: "From the Overhead row whose FROM–TO period covers today (if several, the latest one). With All departments it is the total of every department column; with one department chosen, that department's number.",
+      },
+      { name: "Below / above", how: "No. of employees minus standard overhead, so you can see a shortage or surplus at a glance." },
+    ],
+    included: "Department names are matched between the two lists: PRODUCTION counts as MANUFACTURING and FINANCE as ADMIN.",
+    dateFilter: "No date filter. Use the department dropdown to see one department.",
+    tip: "Add a new Overhead row (with its FROM–TO dates) whenever the planned headcount changes.",
   },
 
+  attendanceTrend: {
+    what: "How well people are turning up — the overall attendance % and how it moves over time.",
+    sources: [{ process: "Attendance Register", id: "HR/R/002", note: "DATE, DEPARTMENT, TOTAL EMPLOYEES, PRESENT" }],
+    metrics: [
+      {
+        name: "Attendance % (badge)",
+        how: "Total PRESENT ÷ total TOTAL EMPLOYEES × 100 over the chosen period and department. Example: 76 present out of 100 = 76%.",
+      },
+    ],
+    chart: {
+      type: "Line chart",
+      x: "Date, month or year of the attendance records (as chosen).",
+      y: "Number of people: blue line = TOTAL EMPLOYEES, orange line = PRESENT, added up for the period.",
+      how: "The gap between the two lines is the number absent. PRESENT is never counted above TOTAL EMPLOYEES.",
+    },
+    dateFilter: "Choose the department, Date / Month / Year wise grouping and a From–To range (default: this year).",
+  },
+
+  safety: {
+    what: "A day-by-day safety picture for one month: which days were fully safe, which had PPE gaps and which had near misses.",
+    sources: [
+      {
+        process: "Safety Follow Ups",
+        id: "HR/R/008",
+        note: "DATE, PPE FOLLOWS (%), NEAR MISS, IMPROVEMENTS, REMARK",
+      },
+    ],
+    colors: [
+      { label: "Green", meaning: "PPE FOLLOWS is 100% and NEAR MISS is 0 — a safe day." },
+      { label: "Yellow", meaning: "PPE FOLLOWS below 100% (and no near miss)." },
+      { label: "Orange", meaning: "NEAR MISS above 0 — this takes priority over the PPE colour." },
+      { label: "Grey", meaning: "Nothing recorded for that day." },
+    ],
+    metrics: [
+      {
+        name: "Safe-day % (badge)",
+        how: "Green days ÷ days with a record in the month × 100. Example: 18 safe days out of 24 recorded = 75%.",
+      },
+      {
+        name: "Several records on one day",
+        how: "Near misses and improvements are added together; the lowest PPE % of the day is used.",
+      },
+    ],
+    dateFilter: "Pick the month to show (default: this month). Hover a day to see its PPE %, near misses, improvements and remark.",
+  },
+
+  fiveS: {
+    what: "How each department scores in 5S audits compared with the target of 5.",
+    sources: [
+      {
+        process: "5s",
+        id: "HR/R/007",
+        note: "one row per S (1S–5S) and DATE, with a 0–5 rating for each department",
+      },
+    ],
+    chart: {
+      type: "Bar chart with target line",
+      x: "Department.",
+      y: "Score from 0 to 5. Bars = the department's average rating across all its 1S–5S ratings in the period; orange line = target (5).",
+    },
+    metrics: [
+      {
+        name: "5S % (badge)",
+        how: "Average of the department scores ÷ 5 × 100. Example: departments averaging 4 out of 5 = 80%.",
+      },
+    ],
+    included: "Only departments that have at least one rating in the period are shown.",
+    dateFilter: "Choose a year and/or month to score only audits dated in that period (default: all).",
+  },
+
+  // Older cards (kept for reference; the HR dashboard now uses the four above)
   departmentDistribution: {
     what: "How your people are spread across departments.",
     sources: [{ process: "Employee History", id: "HR/R/001" }],
-    included: "Employees who were working at some point in the selected range: joined on or before the end date and not relieved before the start date.",
-    chart: {
-      type: "Donut chart",
-      slices: "One slice per DEPARTMENT (\"Unassigned\" when blank). Slice size = number of employees.",
-      how: "Hover a slice to see its count.",
-    },
-    dateFilter: PAGE_DATE_FILTER + " People who left during the chosen range are still included, so the total can differ from Employee Strength.",
   },
 };
 

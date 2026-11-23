@@ -1,5 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { withProcessSelectOptions } from "../utils/processSelectOptions";
+import { withProcessSelectOptions, isProcessSelectField } from "../utils/processSelectOptions";
+import {
+  sanitizeNumberInput,
+  numberInputProps,
+  isPercentField,
+  isProcessNumberField,
+} from "../utils/integerFields";
 import {
   Modal,
   ModalOverlay,
@@ -21,6 +27,8 @@ import {
   Text,
   Center,
   Switch,
+  InputGroup,
+  InputRightAddon,
 } from "@chakra-ui/react";
 import { RepeatIcon, AttachmentIcon } from "@chakra-ui/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -205,6 +213,8 @@ function AddData({
     const getProcessType = (key) => {
         if (!key) return "value";
         const lowerKey = key.trim().toLowerCase();
+        // Number columns that apply to this process only (ItemsData.ProcessNumberFields)
+        if (isProcessNumberField(processId, key)) return "number";
         if (DefaultSelectProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "multiSelect";
         if (ArrayValuesProcess.some(h => h.trim().toLowerCase() === lowerKey)) return "arrayInput";
         if (isDateFieldKey(key)) return "date";
@@ -443,7 +453,7 @@ function AddData({
         };
       }
 
-      if (NumberFields.includes(key)) {
+      if (NumberFields.includes(key) || isProcessNumberField(processId, key)) {
         return {
           key,
           value: "",
@@ -693,7 +703,7 @@ function AddData({
                       ))}
 
                       {/* ONLY add Others when key not in noOthers */}
-                      {!noOthers.includes(field.key) && (
+                      {!noOthers.includes(field.key) && !isProcessSelectField(processId, field.key) && (
                         <option value="others">Others</option>
                       )}
                     </Select>
@@ -828,17 +838,23 @@ function AddData({
                     }
                   />
                 ) : field.process === "number" ? (
-                  <Input
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) => handleValueChange(idx, e.target.value)}
-                    borderColor={
-                      errorFields.includes(field.key) ? "red.500" : undefined
-                    }
-                    borderWidth={
-                      errorFields.includes(field.key) ? "2px" : undefined
-                    }
-                  />
+                  <InputGroup>
+                    <Input
+                      type="number"
+                      {...numberInputProps(field.key, processId)}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        handleValueChange(idx, sanitizeNumberInput(field.key, e.target.value, processId))
+                      }
+                      borderColor={
+                        errorFields.includes(field.key) ? "red.500" : undefined
+                      }
+                      borderWidth={
+                        errorFields.includes(field.key) ? "2px" : undefined
+                      }
+                    />
+                    {isPercentField(field.key, processId) && <InputRightAddon>%</InputRightAddon>}
+                  </InputGroup>
                 ) : field.process === "toggle" ? (
                   <Flex align="center" gap={3}>
                     <Text fontSize="sm" fontWeight="bold">

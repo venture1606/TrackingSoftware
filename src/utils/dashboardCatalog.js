@@ -137,7 +137,9 @@ export const DASHBOARD_GROUPS = [
     legacyDept: "hr",
     cards: [
       { key: "hr.employeeStrength", title: "Employee Strength", info: HR_INFO.employeeStrength },
-      { key: "hr.departmentDistribution", title: "Department Distribution", info: HR_INFO.departmentDistribution },
+      { key: "hr.attendanceTrend", title: "Attendance Trend", info: HR_INFO.attendanceTrend },
+      { key: "hr.safety", title: "Safety Follow Up", info: HR_INFO.safety },
+      { key: "hr.fiveS", title: "5S Score", info: HR_INFO.fiveS },
     ],
   },
 ];

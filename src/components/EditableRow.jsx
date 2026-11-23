@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { withProcessSelectOptions } from "../utils/processSelectOptions";
+import { withProcessSelectOptions, isProcessSelectField } from "../utils/processSelectOptions";
+import {
+  sanitizeNumberInput,
+  numberInputProps,
+  isPercentField,
+  isProcessNumberField,
+} from "../utils/integerFields";
 import {
   Input,
   Select,
@@ -14,6 +20,8 @@ import {
   Center,
   SimpleGrid,
   Switch,
+  InputGroup,
+  InputRightAddon,
 } from "@chakra-ui/react";
 import {
   CheckIcon,
@@ -175,6 +183,8 @@ const EditableRow = ({
     const getProcessType = (key) => {
       if (!key) return "value";
       const lowerKey = key.trim().toLowerCase();
+      // Number columns that apply to this process only (ItemsData.ProcessNumberFields)
+      if (isProcessNumberField(processId, key)) return "number";
       if (DefaultSelectProcess.some((h) => h.trim().toLowerCase() === lowerKey))
         return "multiSelect";
       if (ArrayValuesProcess.some((h) => h.trim().toLowerCase() === lowerKey))
@@ -563,7 +573,7 @@ const EditableRow = ({
                         {opt}
                       </option>
                     ))}
-                  {!noOthers.includes(field.key) && (
+                  {!noOthers.includes(field.key) && !isProcessSelectField(processId, field.key) && (
                     <option value="others">Others</option>
                   )}
                 </Select>
@@ -634,17 +644,23 @@ const EditableRow = ({
                 sx={controlSx}
               />
             ) : field.process === "number" ? (
-              <Input
-                type="number"
-                size="sm"
-                value={field.value ?? ""}
-                onChange={(e) => handleValueChange(idx, e.target.value)}
-                isInvalid={isError}
-                isDisabled={isReadOnly}
-                bg="white"
-                placeholder={field.key}
-                sx={controlSx}
-              />
+              <InputGroup size="sm">
+                <Input
+                  type="number"
+                  size="sm"
+                  {...numberInputProps(field.key, processId)}
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    handleValueChange(idx, sanitizeNumberInput(field.key, e.target.value, processId))
+                  }
+                  isInvalid={isError}
+                  isDisabled={isReadOnly}
+                  bg="white"
+                  placeholder={field.key}
+                  sx={controlSx}
+                />
+                {isPercentField(field.key, processId) && <InputRightAddon>%</InputRightAddon>}
+              </InputGroup>
             ) : field.process === "image" ? (
               <Stack spacing={1} align="center" width="100%" minW={0}>
                 <input

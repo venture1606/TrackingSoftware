@@ -20,8 +20,6 @@ import {
   getOEEDashboard,
   getProductionReport,
   getInhouseDashboard,
-  getEmployeeOverhead,
-  getEmployeeAttendance,
   getPurchaseDepartmentDashboard,
   getSalesDashboard,
   getQualityDepartmentDashboard,
@@ -33,6 +31,7 @@ import {
 // Import Dashboard Components
 import { SearchIcon } from "@chakra-ui/icons";
 import StatCard from "../components/dashboard/StatCard";
+import HrDashboard from "../components/dashboard/HrDashboard";
 import NoDashboardAccess from "../components/dashboard/NoDashboardAccess";
 import { groupIdForDepartment } from "../utils/dashboardCatalog";
 import AreaChart from "../components/dashboard/AreaChart";
@@ -43,7 +42,7 @@ import LineChart from "../components/dashboard/LineChart";
 import BarChart from "../components/dashboard/BarChart";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
 import { formatEpochDate, toDayRange, toInputDate, last30Days } from "../utils/dateUtils";
-import { DESIGN_INFO, SALES_INFO, MANUFACTURING_INFO, QUALITY_INFO, HR_INFO, PURCHASE_INFO, STOCK_INFO } from "../utils/dashboardInfo";
+import { DESIGN_INFO, SALES_INFO, MANUFACTURING_INFO, QUALITY_INFO, PURCHASE_INFO, STOCK_INFO } from "../utils/dashboardInfo";
 
 const DepartmentDashboard = ({ Content }) => {
   const [loading, setLoading] = useState(true);
@@ -221,11 +220,8 @@ const DepartmentDashboard = ({ Content }) => {
 
           case "hr":
           case "human resources":
-            const [overhead, attendance] = await Promise.all([
-              getEmployeeOverhead(),
-              getEmployeeAttendance(startTimestamp, endTimestamp),
-            ]);
-            dashboardData = { overhead, attendance };
+            // The HR dashboard loads its own data (with its own filters) — see HrDashboard.jsx
+            dashboardData = {};
             break;
 
           case "purchase":
@@ -286,7 +282,6 @@ const DepartmentDashboard = ({ Content }) => {
     oee: [getOEEDashboard, "oee"],
     oeeTrend: [getProductionReport, "prodReport"],
     rejection: [getInhouseDashboard, "inhouse"],
-    departmentDistribution: [getEmployeeAttendance, "attendance"],
   };
 
   const applyCardRange = (cardKey) => async ({ startDate, endDate }) => {
@@ -855,54 +850,7 @@ const DepartmentDashboard = ({ Content }) => {
     );
   };
 
-  const renderHRDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Employee Strength"
-            info={HR_INFO.employeeStrength} dashboardKey="hr.employeeStrength"
-        count={data.overhead?.data?.actualOverHead || 0}
-        minWidth={{ base: "100%", md: "350px" }}
-      >
-        <VStack align="center" justify="center" h="100%">
-          <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={10} w="100%">
-            <VStack bg="blue.50" p={5} borderRadius="xl">
-              <Text fontSize="3xl" fontWeight="bold" color="blue.700">
-                {data.overhead?.data?.actualOverHead || 0}
-              </Text>
-              <Text fontSize="xs" color="blue.500" fontWeight="bold">
-                Total Active
-              </Text>
-            </VStack>
-            <VStack bg="green.50" p={5} borderRadius="xl">
-              <Text fontSize="3xl" fontWeight="bold" color="green.700">
-                {data.overhead?.data?.retentionRate != null
-                  ? `${data.overhead.data.retentionRate}%`
-                  : "—"}
-              </Text>
-              <Text fontSize="xs" color="green.500" fontWeight="bold">
-                Retention Rate (12 months)
-              </Text>
-              {data.overhead?.data?.retentionBase > 0 && (
-                <Text fontSize="10px" color="gray.500" textAlign="center">
-                  {data.overhead.data.leftInLast12Months} of {data.overhead.data.retentionBase} left
-                </Text>
-              )}
-            </VStack>
-          </SimpleGrid>
-        </VStack>
-      </StatCard>
-
-      <StatCard title="Department Distribution"
-            info={HR_INFO.departmentDistribution} dashboardKey="hr.departmentDistribution"
-            headerRight={cardFilter("departmentDistribution")} minWidth={{ base: "100%", md: "400px" }}>
-        <DonutChart
-          data={data.attendance?.data || []}
-          nameKey="label"
-          dataKey="value"
-        />
-      </StatCard>
-    </Flex>
-  );
+  const renderHRDashboard = () => <HrDashboard />;
 
   const renderPurchaseDashboard = () => {
     const purchase = data.purchase || {};

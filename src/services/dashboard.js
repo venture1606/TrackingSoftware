@@ -198,6 +198,17 @@ export const getQualityDepartmentDashboard = async (params = {}) => {
   return response.data;
 };
 
+// HR Department dashboard (single call).
+// params: { department, attendanceDepartment, groupBy, startDate, endDate (epoch),
+//           safetyMonth: "YYYY-MM", fiveSYear, fiveSMonth }
+export const getHrDepartmentDashboard = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/hr/dashboard`, {
+    ...getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
 // Store Department dashboard: finished-goods stock table
 export const getStoreDashboard = async () => {
   const response = await axios.get(`${API_URL}/store/dashboard`, getAuthHeaders());

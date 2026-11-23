@@ -44,3 +44,9 @@ export const withProcessSelectOptions = (baseOptions = [], processId) => {
     ...(baseOptions || []).filter((o) => !scopedKeys.has(String(o.key || "").trim().toLowerCase())),
   ];
 };
+
+/** True when `key` is a dropdown defined only for this process — those lists are fixed, so no "Others". */
+export const isProcessSelectField = (processId, key) =>
+  getProcessSelectOptions(processId).some(
+    (o) => o.key.trim().toLowerCase() === String(key || "").trim().toLowerCase(),
+  );

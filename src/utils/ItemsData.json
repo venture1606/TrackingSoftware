@@ -20,6 +20,17 @@
     "Stores",
     "Human Resources"
   ],
+  "HrDepartments": [
+    "DESIGN",
+    "MANUFACTURING",
+    "QUALITY",
+    "PURCHASE",
+    "SALES",
+    "STORES",
+    "HR",
+    "MAINTENANCE",
+    "ADMIN"
+  ],
   "DefaultHeaderAndProcessId": [
     {
       "tableHeader": "MASTER PIECE",
@@ -410,6 +421,10 @@
     "MR/R/007": [
       "FROM",
       "TO"
+    ],
+    "HR/R/010": [
+      "FROM",
+      "TO"
     ]
   },
   "ProcessLockedFields": {
@@ -433,6 +448,30 @@
   "ProcessSelectOptions": {
     "MR/R/005A": {
       "DEPARTMENT": "@DepartmentsListName"
+    },
+    "HR/R/001": {
+      "STATUS": [
+        "ACTIVE",
+        "INACTIVE"
+      ]
+    },
+    "HR/R/003": {
+      "STATUS": [
+        "OPEN",
+        "CLOSE"
+      ]
+    },
+    "HR/R/007": {
+      "5S": [
+        "1S",
+        "2S",
+        "3S",
+        "4S",
+        "5S"
+      ]
+    },
+    "HR/R/002": {
+      "DEPARTMENT": "@HrDepartments"
     }
   },
   "ShownArray": [
@@ -475,8 +514,95 @@
     "OUT",
     "REQUEST",
     "STOCK",
-    "FOLLOW UP"
+    "FOLLOW UP",
+    "PPE FOLLOWS",
+    "NEAR MISS",
+    "IMPROVEMENTS"
   ],
+  "IntegerFields": [
+    "PPE FOLLOWS",
+    "NEAR MISS",
+    "IMPROVEMENTS"
+  ],
+  "IntegerFieldMax": {
+    "PPE FOLLOWS": 100
+  },
+  "PercentFields": [
+    "PPE FOLLOWS"
+  ],
+  "ProcessNumberFields": {
+    "HR/R/010": {
+      "DESIGN": {
+        "integer": true
+      },
+      "MANUFACTURING": {
+        "integer": true
+      },
+      "QUALITY": {
+        "integer": true
+      },
+      "PURCHASE": {
+        "integer": true
+      },
+      "SALES": {
+        "integer": true
+      },
+      "STORES": {
+        "integer": true
+      },
+      "HR": {
+        "integer": true
+      },
+      "MAINTENANCE": {
+        "integer": true
+      },
+      "ADMIN": {
+        "integer": true
+      }
+    },
+    "HR/R/007": {
+      "DESIGN": {
+        "integer": true,
+        "max": 5
+      },
+      "MANUFACTURING": {
+        "integer": true,
+        "max": 5
+      },
+      "QUALITY": {
+        "integer": true,
+        "max": 5
+      },
+      "PURCHASE": {
+        "integer": true,
+        "max": 5
+      },
+      "SALES": {
+        "integer": true,
+        "max": 5
+      },
+      "STORES": {
+        "integer": true,
+        "max": 5
+      },
+      "HR": {
+        "integer": true,
+        "max": 5
+      },
+      "MAINTENANCE": {
+        "integer": true,
+        "max": 5
+      }
+    },
+    "HR/R/002": {
+      "TOTAL EMPLOYEES": {
+        "integer": true
+      },
+      "PRESENT": {
+        "integer": true
+      }
+    }
+  },
   "MandatoryFields": [
     "CYCLE TIME",
     "START TIME",
