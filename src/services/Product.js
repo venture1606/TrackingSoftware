@@ -12,11 +12,12 @@ function Product() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
-  const handleGetAllProducts = async () => {
+  // filters: { category, subCategory } — only the products placed at that node
+  const handleGetAllProducts = async (filters = {}) => {
     setLoading(true);
     try {
       // Fetch products from API
-      const response = await axios.get(`${URL}/all`);
+      const response = await axios.get(`${URL}/all`, { params: filters });
       dispatch(setProducts(response.data.data));
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -53,8 +54,18 @@ function Product() {
           message: `${response.data.data.name || "productName"} has been created.`,
         }),
       );
+      return { ok: true, data: response.data.data };
     } catch (error) {
       console.error("Error creating product:", error);
+      const message = error?.response?.data?.message || error.message;
+      dispatch(
+        setMessage({
+          status: "error",
+          description: "Product was not created",
+          message,
+        }),
+      );
+      return { ok: false, message };
     } finally {
       setLoading(false);
     }
@@ -63,7 +74,11 @@ function Product() {
   const handleUpdateProduct = async (id, productData) => {
     setLoading(true);
     try {
-      const response = await axios.put(`${URL}/${id}`, productData);
+      const response = await axios.put(`${URL}/${id}`, productData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       return response.data;
     } catch (error) {
       console.error("Error updating product:", error);

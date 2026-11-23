@@ -10,7 +10,15 @@ import {
 } from "@chakra-ui/react"
 import { useRef } from "react"
 
-const Confirmation = ({ isOpen, onClose, onConfirm }) => {
+// title / message are optional; defaults keep the original product-delete wording
+const Confirmation = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Are you sure?",
+  message = "This action cannot be undone. This will permanently delete your product and remove it from the system.",
+  confirmLabel = "Delete",
+}) => {
   const cancelRef = useRef()
 
   return (
@@ -21,18 +29,15 @@ const Confirmation = ({ isOpen, onClose, onConfirm }) => {
     >
       <AlertDialogOverlay>
         <AlertDialogContent>
-          <AlertDialogHeader>Are you sure?</AlertDialogHeader>
+          <AlertDialogHeader>{title}</AlertDialogHeader>
           <AlertDialogCloseButton />
-          <AlertDialogBody>
-            This action cannot be undone. This will permanently delete your
-            product and remove it from the system.
-          </AlertDialogBody>
+          <AlertDialogBody>{message}</AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onClose}>
               Cancel
             </Button>
             <Button colorScheme="red" ml={3} onClick={onConfirm}>
-              Delete
+              {confirmLabel}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
