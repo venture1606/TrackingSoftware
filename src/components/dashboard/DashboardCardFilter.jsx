@@ -16,6 +16,7 @@ import {
   Divider,
   Badge,
 } from '@chakra-ui/react';
+import { last30Days } from '../../utils/dateUtils';
 
 // Inline SVG filter funnel icon
 const FunnelIcon = () => (
@@ -35,26 +36,50 @@ const FunnelIcon = () => (
 );
 
 /**
- * DashboardCardFilter
+ * DashboardCardFilter — date range for ONE card.
  *
  * Props:
- *  - onApply({ startDate, endDate, fields }): callback with filter values
+ *  - onApply({ startDate, endDate, fields }): callback with filter values ("YYYY-MM-DD" strings).
+ *    Clear calls onApply({ startDate: "", endDate: "" }) so the card returns to its default range.
+ *  - value: { startDate, endDate } currently applied to the card (shown when the popover opens)
+ *  - defaultValue: { startDate, endDate } shown when nothing is applied (default: last 30 days)
+ *  - defaultLabel: text describing what the card shows with no range applied
  *  - fields: Array of { name: string, label: string, options: string[] }
  *            Optional additional field filters besides date range.
  *  - hasActiveFilter: boolean – highlights the icon when a filter is applied
+ *    (defaults to "value has a start or end date")
  */
-const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) => {
-  const today = new Date().toISOString().split('T')[0];
-  const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const DashboardCardFilter = ({
+  onApply,
+  fields = [],
+  hasActiveFilter,
+  value,
+  defaultValue,
+  defaultLabel,
+}) => {
+  const fallback = defaultValue || last30Days();
+  const isActive =
+    hasActiveFilter !== undefined ? hasActiveFilter : !!(value?.startDate || value?.endDate);
 
-  const [startDate, setStartDate] = useState(oneMonthAgo);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(value?.startDate || fallback.startDate);
+  const [endDate, setEndDate] = useState(value?.endDate || fallback.endDate);
   const [fieldValues, setFieldValues] = useState(
     () => fields.reduce((acc, f) => ({ ...acc, [f.name]: 'All' }), {})
   );
   const [isOpen, setIsOpen] = useState(false);
 
+  // Each time it opens, show the range that is actually applied to this card
+  const open = () => {
+    const base = value?.startDate || value?.endDate ? value : fallback;
+    setStartDate(base.startDate || '');
+    setEndDate(base.endDate || '');
+    setIsOpen(true);
+  };
+
+  const invalidRange = startDate && endDate && startDate > endDate;
+
   const handleApply = () => {
+    if (invalidRange) return;
     if (onApply) {
       onApply({ startDate, endDate, fields: fieldValues });
     }
@@ -62,11 +87,10 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
   };
 
   const handleReset = () => {
-    setStartDate(oneMonthAgo);
-    setEndDate(today);
-    setFieldValues(fields.reduce((acc, f) => ({ ...acc, [f.name]: 'All' }), {}));
+    const cleared = fields.reduce((acc, f) => ({ ...acc, [f.name]: 'All' }), {});
+    setFieldValues(cleared);
     if (onApply) {
-      onApply({ startDate: oneMonthAgo, endDate: today, fields: fields.reduce((acc, f) => ({ ...acc, [f.name]: 'All' }), {}) });
+      onApply({ startDate: '', endDate: '', fields: cleared });
     }
     setIsOpen(false);
   };
@@ -78,7 +102,7 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
           icon={
             <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               <FunnelIcon />
-              {hasActiveFilter && (
+              {isActive && (
                 <Badge
                   position="absolute"
                   top="-4px"
@@ -95,9 +119,14 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
           }
           size="xs"
           variant="ghost"
-          colorScheme={hasActiveFilter ? 'blue' : 'gray'}
-          aria-label="Filter"
-          onClick={() => setIsOpen(!isOpen)}
+          colorScheme={isActive ? 'blue' : 'gray'}
+          aria-label="Filter this card by date"
+          title={
+            isActive
+              ? `Showing ${value?.startDate || '…'} to ${value?.endDate || '…'} — click to change`
+              : 'Filter this card by date'
+          }
+          onClick={() => (isOpen ? setIsOpen(false) : open())}
           _hover={{ bg: 'blue.50', color: 'blue.600' }}
         />
       </PopoverTrigger>
@@ -107,7 +136,14 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
         <PopoverBody p={3}>
           <VStack spacing={3} align="stretch">
             <Text fontSize="11px" fontWeight="bold" color="gray.500" textTransform="uppercase" letterSpacing="wider">
-              Date Range
+              Date Range (this card only)
+            </Text>
+            <Text fontSize="10px" color="gray.500" lineHeight="1.4">
+              {isActive
+                ? 'A custom range is applied. Clear returns to the default.'
+                : defaultLabel
+                  ? `Now showing: ${defaultLabel}.`
+                  : 'Pick From and To (both days included).'}
             </Text>
             <VStack spacing={2} align="stretch">
               <HStack>
@@ -133,6 +169,12 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
                 />
               </HStack>
             </VStack>
+
+            {invalidRange && (
+              <Text fontSize="10px" color="red.500">
+                From date must be on or before To date.
+              </Text>
+            )}
 
             {fields.length > 0 && (
               <>
@@ -163,9 +205,9 @@ const DashboardCardFilter = ({ onApply, fields = [], hasActiveFilter = false }) 
             <Divider />
             <HStack spacing={2} justify="flex-end">
               <Button size="xs" variant="ghost" colorScheme="gray" onClick={handleReset} fontSize="10px">
-                Reset
+                Clear
               </Button>
-              <Button size="xs" colorScheme="blue" onClick={handleApply} fontSize="10px">
+              <Button size="xs" colorScheme="blue" onClick={handleApply} fontSize="10px" isDisabled={!!invalidRange}>
                 Apply
               </Button>
             </HStack>

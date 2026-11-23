@@ -48,9 +48,11 @@ import {
 
 // importing common components
 import StatCard from "../components/dashboard/StatCard";
+import InstrumentStatusBody from "../components/dashboard/InstrumentStatusBody";
 import ChartSkeleton from "../components/dashboard/ChartSkeleton";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
-import { formatEpochDate } from "../utils/dateUtils";
+import { formatEpochDate, toDayRange, dueLabel } from "../utils/dateUtils";
+import { MAIN_INFO } from "../utils/dashboardInfo";
 import { usePermissions } from "../services/permissions";
 
 // importing lazy-loaded chart components
@@ -63,13 +65,9 @@ const GaugeChart = lazy(() => import("../components/dashboard/GaugeChart"));
 
 function Dashboard() {
   const { hasAccessToProcess, isAdmin } = usePermissions();
-  // State to hold global filters
-  const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    salesPerson: "",
-    location: "",
-  });
+  // Date range per card: { [cardKey]: { startDate, endDate } } ("YYYY-MM-DD").
+  // Each card filters only itself; a card with no entry shows its API's default range.
+  const [cardRanges, setCardRanges] = useState({});
 
   // ── Individual section states ─────────────────────────────────────────────
   const [productionPlan, setProductionPlan] = useState({});
@@ -102,27 +100,24 @@ function Dashboard() {
   const [pcpDeptData, setPcpDeptData] = useState(null);
   const [certsDeptData, setCertsDeptData] = useState(null);
 
-  // ── Helper: build timestamp params ───────────────────────────────────────
-  const getTimestamps = React.useCallback(() => ({
-    startTimestamp: filters.startDate ? new Date(filters.startDate).getTime() : undefined,
-    endTimestamp: filters.endDate ? new Date(filters.endDate).getTime() : undefined,
-  }), [filters.startDate, filters.endDate]);
+  // ── Helper: inclusive epoch range for one card ───────────────────────────
+  const rangeOf = (range) => toDayRange(range?.startDate, range?.endDate);
 
   // ── Fetch: Production Plan ────────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
-    getDashboardProductionPlan(startTimestamp, endTimestamp)
+    // This API ignores dates, so the card has no date filter
+    getDashboardProductionPlan()
       .then((res) => setProductionPlan(res.data || {}))
       .catch(() => setProductionPlan({}));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, []);
 
   // ── Fetch: Dispatch ───────────────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.dispatch);
     getDashboardDispatch(startTimestamp, endTimestamp)
       .then((res) => setDispatch(res.data || { totalFiltered: 0, data: [], totalQuantity: 0, graphChart: { monthWise: [], yearWise: [] } }))
       .catch(() => setDispatch({ totalFiltered: 0, data: [], totalQuantity: 0, graphChart: { monthWise: [], yearWise: [] } }));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Quotation List ─────────────────────────────────────────────────
   useEffect(() => {
@@ -168,35 +163,35 @@ function Dashboard() {
 
   // ── Fetch: OEE ───────────────────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.oee);
     getOEEDashboard(startTimestamp, endTimestamp)
       .then((res) => setOeeData(res.data || null))
       .catch(() => setOeeData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.oee]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: In House Quality ───────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.inHouseRejection);
     getInhouseDashboard(startTimestamp, endTimestamp)
       .then((res) => setInHouseData(res.data || null))
       .catch(() => setInHouseData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.inHouseRejection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: OEE Trend (Production Report) ─────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.oeeTrend);
     getProductionReport(startTimestamp, endTimestamp)
       .then((res) => setProdReportData(res?.data?.data || res?.data || []))
       .catch(() => setProdReportData([]));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.oeeTrend]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Customer Quality (Customer Complaints dept) ────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.customerQuality);
     getCustomerQuality(startTimestamp, endTimestamp)
       .then((res) => setCustQualData(res?.data?.data || res?.data || null))
       .catch(() => setCustQualData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.customerQuality]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Incoming Inspection (dept) ────────────────────────────────────
   useEffect(() => {
@@ -214,27 +209,27 @@ function Dashboard() {
 
   // ── Fetch: Continuous Improvement ────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.continuousImprovement);
     getContinuousImprovement(startTimestamp, endTimestamp)
       .then((res) => setContinuousImpData(res?.data?.data || res?.data || null))
       .catch(() => setContinuousImpData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.continuousImprovement]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Procurement Dept ───────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.pendingProcurements);
     getProcurementDashboard(startTimestamp, endTimestamp)
       .then((res) => setProcurementDeptData(res?.data?.data || res?.data || null))
       .catch(() => setProcurementDeptData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.pendingProcurements]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Inward Dept ────────────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.openInwardPayments);
     getInwardDashboard(startTimestamp, endTimestamp)
       .then((res) => setInwardDeptData(res?.data?.data || res?.data || null))
       .catch(() => setInwardDeptData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.openInwardPayments]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Quotation Status (dept) ───────────────────────────────────────
   useEffect(() => {
@@ -252,11 +247,11 @@ function Dashboard() {
 
   // ── Fetch: Dockets (Customer Payment) ────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
+    const { startTimestamp, endTimestamp } = rangeOf(cardRanges.customerPayment);
     getMainDockets(startTimestamp, endTimestamp)
       .then((res) => setDocketsData(res?.data?.data || res?.data || null))
       .catch(() => setDocketsData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, [cardRanges.customerPayment]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch: Product Success Rate ──────────────────────────────────────────
   useEffect(() => {
@@ -267,11 +262,11 @@ function Dashboard() {
 
   // ── Fetch: Settings Dashboard ─────────────────────────────────────────────
   useEffect(() => {
-    const { startTimestamp, endTimestamp } = getTimestamps();
-    getSettingsDashboard(startTimestamp, endTimestamp)
+    // This API ignores dates, so the card has no date filter
+    getSettingsDashboard()
       .then((res) => setSettingsDeptData(res?.data || null))
       .catch(() => setSettingsDeptData(null));
-  }, [filters.startDate, filters.endDate, getTimestamps]);
+  }, []);
 
   // ── Fetch: Calibration Due ───────────────────────────────────────────────
   useEffect(() => {
@@ -295,16 +290,21 @@ function Dashboard() {
   }, []);
 
   // ── Filter handlers ───────────────────────────────────────────────────────
-  const handleApplyFilter = (section) => (filterValues) => {
-    setFilters((prev) => ({
-      ...prev,
-      startDate: filterValues.startDate || prev.startDate,
-      endDate: filterValues.endDate || prev.endDate,
-      ...(filterValues.fields || {}),
-    }));
+  const handleApplyFilter = (cardKey) => ({ startDate, endDate }) => {
+    setCardRanges((prev) => {
+      const next = { ...prev };
+      if (startDate || endDate) next[cardKey] = { startDate, endDate };
+      else delete next[cardKey]; // Clear → back to the card's default range
+      return next;
+    });
   };
 
-  const hasFilter = () => !!(filters.startDate || filters.endDate || filters.salesPerson || filters.location);
+  // Props for a card's own date filter
+  const cardFilterProps = (cardKey, defaultLabel) => ({
+    onApply: handleApplyFilter(cardKey),
+    value: cardRanges[cardKey],
+    defaultLabel,
+  });
 
   // ── Helper: format table data ─────────────────────────────────────────────
   const formatProcessTableData = (data, mapping) => {
@@ -349,14 +349,9 @@ function Dashboard() {
           {/* 1. ORDER LIST */}
           <StatCard
             title="Order List (Active)"
+            info={MAIN_INFO.orderList}
             minWidth="650px"
             count={orderListData?.length || 0}
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("orders")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
           >
             <Suspense fallback={<ChartSkeleton type="table" />}>
               <Box maxH="220px" overflowY="auto">
@@ -365,6 +360,9 @@ function Dashboard() {
                   data={(orderListData || []).map(row => {
                     const items = row.items;
                     const dateVal = items.find(i => i.key === 'DATE')?.value;
+                    // DUE = ORDER DATE (or DATE) + LEAD TIME days → days left / overdue
+                    const orderDate = Number(items.find(i => i.key === 'ORDER DATE')?.value) || Number(dateVal);
+                    const leadTime = Number(items.find(i => i.key === 'LEAD TIME')?.value) || 0;
                     return {
                       customerName: items.find(i => i.key === 'CUSTOMER NAME')?.value || '-',
                       po: items.find(i => i.key === 'PO NO')?.value || '-',
@@ -372,8 +370,8 @@ function Dashboard() {
                       partName: items.find(i => i.key === 'PART NAME')?.value || '-',
                       date: dateVal && !isNaN(dateVal) ? new Date(Number(dateVal)).toLocaleDateString() : '-',
                       qty: items.find(i => i.key === 'QTY')?.value || '0',
-                      due: dateVal && !isNaN(dateVal)
-                        ? `${Math.floor((new Date() - new Date(Number(dateVal))) / (1000 * 60 * 60 * 24))} Days`
+                      due: orderDate
+                        ? dueLabel(orderDate + leadTime * 24 * 60 * 60 * 1000)
                         : "-",
                     };
                   })}
@@ -386,21 +384,9 @@ function Dashboard() {
           {/* 2. STOCK DATA */}
           <StatCard
             title="Stock Data (Finished Goods)"
+            info={MAIN_INFO.stock}
             minWidth="400px"
             count={stockData?.totalStockQty}
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("stock")}
-                hasActiveFilter={hasFilter()}
-                fields={[
-                  {
-                    name: "itemCode",
-                    label: "Item Code",
-                    options: ["CODE-A", "CODE-B"],
-                  },
-                ]}
-              />
-            }
           >
             <Suspense fallback={<ChartSkeleton type="table" />}>
               <Box maxH="220px" overflowY="auto">
@@ -420,12 +406,12 @@ function Dashboard() {
           {/* 3. PENDING PROCUREMENT */}
           <StatCard
             title="Pending Procurements"
+            info={MAIN_INFO.pendingProcurements}
             count={procurementDeptData?.totalPending || 0}
             minWidth="600px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("pendingProcurements")}
-                hasActiveFilter={hasFilter()}
+                {...cardFilterProps("pendingProcurements", "all records")}
               />
             }
           >
@@ -464,12 +450,12 @@ function Dashboard() {
           {/* 4. OPEN INWARD PAYMENT */}
           <StatCard
             title="Open Inward Payments"
+            info={MAIN_INFO.inwardPayments}
             count={inwardDeptData?.totalOpen || 0}
             minWidth="500px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("openInwardPayments")}
-                hasActiveFilter={hasFilter()}
+                {...cardFilterProps("openInwardPayments", "all records")}
               />
             }
           >
@@ -504,12 +490,12 @@ function Dashboard() {
           {/* 5. CUSTOMER PAYMENT STATUS */}
           <StatCard
             title="Customer Payment Status"
+            info={MAIN_INFO.customerPayments}
             count={docketsData?.totalOpen || 0}
             minWidth="600px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("customerPayment")}
-                hasActiveFilter={hasFilter()}
+                {...cardFilterProps("customerPayment", "all records")}
               />
             }
           >
@@ -520,12 +506,11 @@ function Dashboard() {
                   data={(docketsData?.openRecords || []).map((row) => {
                     const items = row.items;
                     const dateVal = items.find((i) => i.key === "DELIVERY DATE")?.value;
-                    let due = "-";
-                    if (dateVal && !isNaN(dateVal)) {
-                      const dueDate = Number(dateVal) + 2 * 24 * 60 * 60 * 1000;
-                      const diffDays = Math.ceil((dueDate - Date.now()) / (1000 * 60 * 60 * 24));
-                      due = diffDays > 0 ? `${diffDays} days` : diffDays < 0 ? `${Math.abs(diffDays)} days ago` : "Today";
-                    }
+                    // Payment due = DELIVERY DATE + this docket's CREDIT PERIOD (days)
+                    const creditPeriod = Number(items.find((i) => i.key === "CREDIT PERIOD")?.value) || 0;
+                    const due = dateVal && !isNaN(dateVal)
+                      ? dueLabel(Number(dateVal) + creditPeriod * 24 * 60 * 60 * 1000)
+                      : "-";
                     return {
                       vendor: items.find((i) => i.key === "CUSTOMER NAME")?.value || "-",
                       invoice: items.find((i) => i.key === "INVOICE NO")?.value || "-",
@@ -544,14 +529,9 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("DD/R/010")) && (
             <StatCard
               title="NPD Register"
+            info={MAIN_INFO.npd}
               count={npdMainData.length}
               minWidth="380px"
-              headerRight={
-                <DashboardCardFilter
-                  onApply={handleApplyFilter("npd")}
-                  hasActiveFilter={hasFilter()}
-                />
-              }
             >
               <Suspense fallback={<ChartSkeleton type="table" />}>
                 <Box maxH="220px" overflowY="auto">
@@ -567,7 +547,7 @@ function Dashboard() {
                     ]}
                     data={npdMainData.map((row) => ({
                       from: row.from,
-                      date: formatEpochDate(row.date),
+                      date: row.date ? formatEpochDate(row.date) : "-",
                       part: row.part,
                       proto: row.proto,
                       validation: row.validation,
@@ -596,13 +576,8 @@ function Dashboard() {
           {/* 7. PRODUCTION PLAN */}
           <StatCard
             title="Production Plan (Qty by Part No)"
+            info={MAIN_INFO.productionPlanChart}
             minWidth="400px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("productionPlanGraph")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
           >
             <Suspense fallback={<ChartSkeleton type="chart" />}>
               <BarChart
@@ -619,14 +594,9 @@ function Dashboard() {
           {/* 8. PRODUCTION PLAN PENDING */}
           <StatCard
             title="Production Plan - Pending"
-            count={productionPlan.totalPlanQty}
+            info={MAIN_INFO.productionPlanPending}
+            count={productionPlan.pendingPlanQty ?? 0}
             minWidth="500px"
-            headerRight={
-              <DashboardCardFilter
-                onApply={handleApplyFilter("productionPlan")}
-                hasActiveFilter={hasFilter()}
-              />
-            }
           >
             <Suspense fallback={<ChartSkeleton type="table" />}>
               <Box maxH="220px" overflowY="auto">
@@ -670,13 +640,13 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("MR/R/002")) && (
             <StatCard
               title="Average OEE"
+            info={MAIN_INFO.averageOEE}
               count={`${oeeData?.averageOEE || 0}%`}
               minH="150px"
               minWidth="200px"
               headerRight={
                 <DashboardCardFilter
-                  onApply={handleApplyFilter("oee")}
-                  hasActiveFilter={hasFilter()}
+                  {...cardFilterProps("oee", "this year's records")}
                 />
               }
             >
@@ -704,11 +674,11 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("MR/R/003")) && (
             <StatCard
               title="Rejection"
+            info={MAIN_INFO.rejection}
               minWidth="340px"
               headerRight={
                 <DashboardCardFilter
-                  onApply={handleApplyFilter("inHouseRejection")}
-                  hasActiveFilter={hasFilter()}
+                  {...cardFilterProps("inHouseRejection", "this year's records")}
                 />
               }
             >
@@ -776,12 +746,12 @@ function Dashboard() {
           {/* 11. DISPATCH DATA */}
           <StatCard
             title="Dispatch Data"
+            info={MAIN_INFO.dispatch}
             count={dispatch?.totalQuantity}
             minWidth="350px"
             headerRight={
               <DashboardCardFilter
-                onApply={handleApplyFilter("dispatch")}
-                hasActiveFilter={hasFilter()}
+                {...cardFilterProps("dispatch", "this year's records")}
               />
             }
           >
@@ -804,11 +774,11 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("QA/R/007")) && (
             <StatCard
               title="Customer Quality"
+            info={MAIN_INFO.customerQuality}
               minWidth="300px"
               headerRight={
                 <DashboardCardFilter
-                  onApply={handleApplyFilter("customerQuality")}
-                  hasActiveFilter={hasFilter()}
+                  {...cardFilterProps("customerQuality", "this year's records")}
                 />
               }
             >
@@ -886,6 +856,7 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("QA/R/003")) && (
             <StatCard
               title="Incoming Inspection"
+            info={MAIN_INFO.incomingInspection}
               count={incomingInspData?.pendingCount || 0}
               minWidth="300px"
             >
@@ -916,6 +887,7 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("QA/F/005")) && (
             <StatCard
               title="Quality Audits (Pending)"
+            info={MAIN_INFO.qualityAudits}
               count={qualityAuditsData?.totalPending || 0}
               minWidth="600px"
             >
@@ -935,11 +907,11 @@ function Dashboard() {
           {(isAdmin || hasAccessToProcess("MR/R/005")) && (
             <StatCard
               title="Continuous Improvement"
+            info={MAIN_INFO.continuousImprovement}
               minWidth="300px"
               headerRight={
                 <DashboardCardFilter
-                  onApply={handleApplyFilter("continuousImprovement")}
-                  hasActiveFilter={hasFilter()}
+                  {...cardFilterProps("continuousImprovement", "all records")}
                 />
               }
             >
@@ -985,14 +957,9 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("DD/R/005")) && (
               <StatCard
                 title="Revision Control"
+            info={MAIN_INFO.revisionControl}
                 count={revisionControlData.length}
                 minWidth="450px"
-                headerRight={
-                  <DashboardCardFilter
-                    onApply={handleApplyFilter("revisionControl")}
-                    hasActiveFilter={hasFilter()}
-                  />
-                }
               >
                 <Suspense fallback={<ChartSkeleton type="table" />}>
                   <Box maxH="220px" overflowY="auto">
@@ -1016,11 +983,11 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("MR/R/002")) && (
               <StatCard
                 title="OEE Trend"
+            info={MAIN_INFO.oeeTrend}
                 minWidth="450px"
                 headerRight={
                   <DashboardCardFilter
-                    onApply={handleApplyFilter("oeeTrend")}
-                    hasActiveFilter={hasFilter()}
+                    {...cardFilterProps("oeeTrend", "this year's records")}
                   />
                 }
               >
@@ -1041,13 +1008,8 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("MR/R/003A")) && (
               <StatCard
                 title="Rework Status"
+            info={MAIN_INFO.rework}
                 minWidth="200px"
-                headerRight={
-                  <DashboardCardFilter
-                    onApply={handleApplyFilter("inHouseRework")}
-                    hasActiveFilter={hasFilter()}
-                  />
-                }
               >
                 <Suspense fallback={<ChartSkeleton type="circles" />}>
                   <VStack justify="center" h="100%" py={2}>
@@ -1087,14 +1049,9 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("MR/R/002A")) && (
               <StatCard
                 title="Settings Performance"
+            info={MAIN_INFO.settings}
                 count={settingsDeptData?.noOfSettings || 0}
                 minWidth="350px"
-                headerRight={
-                  <DashboardCardFilter
-                    onApply={handleApplyFilter("settings")}
-                    hasActiveFilter={hasFilter()}
-                  />
-                }
               >
                 <Suspense fallback={<ChartSkeleton type="circles" />}>
                   <HStack justify="space-around" align="center" py={4} w="100%">
@@ -1151,14 +1108,9 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("DD/R/001")) && (
               <StatCard
                 title="Overall Products Summary"
+            info={MAIN_INFO.productsSummary}
                 minH="150px"
                 minWidth="280px"
-                headerRight={
-                  <DashboardCardFilter
-                    onApply={handleApplyFilter("products")}
-                    hasActiveFilter={hasFilter()}
-                  />
-                }
               >
                 <Suspense fallback={<ChartSkeleton type="circles" />}>
                   <HStack
@@ -1231,6 +1183,7 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("DD/R/007")) && (
               <StatCard
                 title="Product Success Rate"
+            info={MAIN_INFO.productSuccess}
                 count={`${productSuccessData?.data?.totalOpen || 0}`}
                 minWidth="300px"
                 headerRight
@@ -1265,93 +1218,12 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("QA/R/002")) && (
               <StatCard
                 title="Instrument Status"
+            info={MAIN_INFO.instruments}
                 count={calibrationDeptData?.totalFiltered || 0}
                 minWidth="400px"
               >
                 <Suspense fallback={<ChartSkeleton type="table" />}>
-                  <VStack spacing={4} align="stretch" w="100%">
-                    <HStack spacing={4} justify="start" pb={2}>
-                      <Box
-                        bg="green.50"
-                        px={4}
-                        py={2}
-                        borderRadius="lg"
-                        border="1px solid"
-                        borderColor="green.100"
-                        minW="100px"
-                      >
-                        <Text fontSize="xs" fontWeight="bold" color="green.600">
-                          DONE
-                        </Text>
-                        <Text
-                          fontSize="2xl"
-                          fontWeight="black"
-                          color="green.700"
-                          lineHeight={1}
-                        >
-                          {calibrationDeptData?.doneCount || 0}
-                        </Text>
-                      </Box>
-                      <Box
-                        bg="red.50"
-                        px={4}
-                        py={2}
-                        borderRadius="lg"
-                        border="1px solid"
-                        borderColor="red.100"
-                        minW="100px"
-                      >
-                        <Text fontSize="xs" fontWeight="bold" color="red.600">
-                          DUE
-                        </Text>
-                        <Text
-                          fontSize="2xl"
-                          fontWeight="black"
-                          color="red.700"
-                          lineHeight={1}
-                        >
-                          {calibrationDeptData?.dueCount || 0}
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <Box
-                      overflowX="auto"
-                      borderTop="1px solid"
-                      borderColor="gray.100"
-                      pt={4}
-                    >
-                      <TableChart
-                        headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
-                        data={(calibrationDeptData?.openRecords || [])
-                          .map((row) => {
-                            const items = row.items || [];
-                            const formatDate = (val) => {
-                              if (!val || isNaN(Number(val))) return val || "-";
-                              return new Date(Number(val)).toLocaleDateString(
-                                "en-GB",
-                              );
-                            };
-                            return {
-                              instrument:
-                                items.find(
-                                  (i) =>
-                                    i.key.includes("INSTRUMENT") ||
-                                    i.key.includes("NAME"),
-                                )?.value ||
-                                "-",
-                              done: formatDate(
-                                items.find((i) => i.key === "DONE")?.value ||
-                                  items.find((i) => i.key === "DATE")?.value,
-                              ),
-                              due: formatDate(
-                                items.find((i) => i.key === "DUE")?.value,
-                              ),
-                            };
-                          })}
-                        keys={["instrument", "done", "due"]}
-                      />
-                    </Box>
-                  </VStack>
+                  <InstrumentStatusBody data={calibrationDeptData} />
                 </Suspense>
               </StatCard>
             )}
@@ -1360,6 +1232,7 @@ function Dashboard() {
             {(isAdmin || hasAccessToProcess("QA/R/009")) && (
               <StatCard
                 title="Process Control Plan"
+            info={MAIN_INFO.processControlPlan}
                 count={pcpDeptData?.totalRecords || 0}
                 minWidth="400px"
               >
@@ -1442,6 +1315,7 @@ function Dashboard() {
             {/* Certificate Renewal Status */}
             <StatCard
               title="Certificate Renewal Status"
+            info={MAIN_INFO.certificates}
               count={(certsDeptData || []).filter(c => c.isDue).length}
               minWidth="450px"
             >
@@ -1481,13 +1355,8 @@ function Dashboard() {
             {/* Quotation List Status */}
             <StatCard
               title="Quotation List Status"
+            info={MAIN_INFO.quotationStatus}
               minWidth="350px"
-              headerRight={
-                <DashboardCardFilter
-                  onApply={handleApplyFilter("quotation")}
-                  hasActiveFilter={hasFilter()}
-                />
-              }
             >
               <Suspense fallback={<ChartSkeleton type="chart" />}>
                 <HStack w="100%" h="100%" justify="space-evenly" align="center">
@@ -1510,12 +1379,12 @@ function Dashboard() {
             {/* Output Trends */}
             <StatCard
               title="Output (Trends)"
+            info={MAIN_INFO.outputTrend}
               count={dispatch?.totalQuantity}
               minWidth="400px"
               headerRight={
                 <DashboardCardFilter
-                  onApply={handleApplyFilter("dispatch")}
-                  hasActiveFilter={hasFilter()}
+                  {...cardFilterProps("dispatch", "this year's records")}
                 />
               }
             >

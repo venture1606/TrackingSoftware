@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
+  Select,
+  Input,
   Box,
   SimpleGrid,
   Heading,
@@ -9,14 +11,10 @@ import {
   Spinner,
   Center,
   useToast,
-  Badge,
   Flex,
 } from "@chakra-ui/react";
 import {
-  getNPDRegister,
-  getProductsDashboard,
-  getRevisionControl,
-  getProductSuccess,
+  getDesignDashboard,
   getOEEDashboard,
   getProductionReport,
   getInhouseDashboard,
@@ -28,13 +26,7 @@ import {
   getEmployeeAttendance,
   getProcurementDashboard,
   getInwardDashboard,
-  getSalesCustomerCount,
-  getSalesTrend,
-  getQuotationStatus,
-  getSalesOrderDetails,
-  getSalesPaymentAndDelivery,
-  getSalesTrailStatus,
-  getMainDockets,
+  getSalesDashboard,
   getSettingsDashboard,
   getCalibrationDueDashboard,
   getProcessControlPlanDashboard,
@@ -44,50 +36,82 @@ import {
 
 // Import Dashboard Components
 import StatCard from "../components/dashboard/StatCard";
+import InstrumentStatusBody from "../components/dashboard/InstrumentStatusBody";
 import AreaChart from "../components/dashboard/AreaChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import GaugeChart from "../components/dashboard/GaugeChart";
 import TableChart from "../components/dashboard/TableChart";
+import LineChart from "../components/dashboard/LineChart";
+import BarChart from "../components/dashboard/BarChart";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
-import { formatEpochDate } from "../utils/dateUtils";
+import { formatEpochDate, toDayRange, toInputDate, last30Days } from "../utils/dateUtils";
+import { DESIGN_INFO, SALES_INFO, MANUFACTURING_INFO, QUALITY_INFO, HR_INFO, PURCHASE_INFO, STOCK_INFO } from "../utils/dashboardInfo";
 
 const DepartmentDashboard = ({ Content }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
   const toast = useToast();
 
-  // DASHBOARD FILTERS STATE
-  const [globalFilters, setGlobalFilters] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0], // Last 30 days
-    endDate: new Date().toISOString().split("T")[0],
+  // PER-CARD DATE RANGES: { [cardKey]: { startDate, endDate } } ("YYYY-MM-DD").
+  // A card without an entry uses the default: the last 30 days (both days included).
+  const [cardRanges, setCardRanges] = useState({});
+
+  // SALES TREND FILTERS (group by day / month / year, date range, ENQ BY)
+  const [salesTrendFilters, setSalesTrendFilters] = useState(() => ({
+    groupBy: "month",
+    startDate: `${new Date().getFullYear()}-01-01`,
+    endDate: toInputDate(),
+    enqBy: "",
+  }));
+  const salesTrendFiltersRef = useRef(salesTrendFilters);
+  const [trendLoading, setTrendLoading] = useState(false);
+
+  const salesTrendParams = (f) => ({
+    groupBy: f.groupBy,
+    startDate: f.startDate ? new Date(`${f.startDate}T00:00:00`).getTime() : undefined,
+    endDate: f.endDate ? new Date(`${f.endDate}T23:59:59.999`).getTime() : undefined,
+    enqBy: f.enqBy || undefined,
   });
 
+  const updateSalesTrendFilter = async (patch) => {
+    const next = { ...salesTrendFiltersRef.current, ...patch };
+    salesTrendFiltersRef.current = next;
+    setSalesTrendFilters(next);
+    setTrendLoading(true);
+    try {
+      const res = await getSalesDashboard(salesTrendParams(next));
+      setData((prev) => ({
+        ...prev,
+        sales: { ...(prev.sales || {}), salesTrend: res?.data?.salesTrend },
+      }));
+    } catch (error) {
+      toast({
+        title: "Error fetching sales trend",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setTrendLoading(false);
+    }
+  };
+
   const fetchData = useCallback(
-    async (deptName, filters = globalFilters) => {
+    async (deptName) => {
       setLoading(true);
       const department = deptName?.toLowerCase();
       try {
         let dashboardData = {};
 
-        // Convert string dates to timestamps for backend
-        const startTimestamp = filters.startDate
-          ? new Date(filters.startDate).getTime()
-          : undefined;
-        const endTimestamp = filters.endDate
-          ? new Date(filters.endDate).getTime()
-          : undefined;
+        // Initial load: every date-aware card starts on the default range (last 30 days)
+        const def = last30Days();
+        const { startTimestamp, endTimestamp } = toDayRange(def.startDate, def.endDate);
 
         switch (department) {
           case "design":
-            const [npd, products, revision, productSuccess] = await Promise.all([
-              getNPDRegister(),
-              getProductsDashboard(),
-              getRevisionControl(),
-              getProductSuccess(),
-            ]);
-            dashboardData = { npd, products, revision, productSuccess };
+            const design = await getDesignDashboard();
+            dashboardData = { design: design?.data || {} };
             break;
 
           case "manufacturing":
@@ -147,32 +171,10 @@ const DepartmentDashboard = ({ Content }) => {
             break;
 
           case "sales":
-            const [
-              salesCust,
-              salesTrend,
-              quotation,
-              salesOrder,
-              salesPay,
-              salesTrail,
-              dockets,
-            ] = await Promise.all([
-              getSalesCustomerCount(),
-              getSalesTrend(startTimestamp, endTimestamp),
-              getQuotationStatus(),
-              getSalesOrderDetails(),
-              getSalesPaymentAndDelivery(),
-              getSalesTrailStatus(),
-              getMainDockets(startTimestamp, endTimestamp),
-            ]);
-            dashboardData = {
-              salesCust,
-              salesTrend,
-              quotation,
-              salesOrder,
-              salesPay,
-              salesTrail,
-              dockets,
-            };
+            const sales = await getSalesDashboard(
+              salesTrendParams(salesTrendFiltersRef.current),
+            );
+            dashboardData = { sales: sales?.data || {} };
             break;
 
           case "stock":
@@ -199,23 +201,60 @@ const DepartmentDashboard = ({ Content }) => {
         setLoading(false);
       }
     },
-    [toast, globalFilters],
+    [toast],
   );
 
   useEffect(() => {
     if (Content) {
+      setCardRanges({});
       fetchData(Content);
     }
   }, [Content, fetchData]);
 
-  const handleFilterApply = (filterValues) => {
-    const newFilters = {
-      startDate: filterValues.startDate,
-      endDate: filterValues.endDate,
-    };
-    setGlobalFilters(newFilters);
-    fetchData(Content, newFilters);
+  // Re-fetch ONE card for its own date range (Clear → back to the last 30 days)
+  const CARD_FETCHERS = {
+    oee: [getOEEDashboard, "oee"],
+    oeeTrend: [getProductionReport, "prodReport"],
+    rejection: [getInhouseDashboard, "inhouse"],
+    customerComplaints: [getCustomerQuality, "custQual"],
+    improvement: [getContinuousImprovement, "improvement"],
+    departmentDistribution: [getEmployeeAttendance, "attendance"],
+    procurement: [getProcurementDashboard, "procurement"],
+    inward: [getInwardDashboard, "inward"],
   };
+
+  const applyCardRange = (cardKey) => async ({ startDate, endDate }) => {
+    const custom = startDate || endDate ? { startDate, endDate } : null;
+    setCardRanges((prev) => {
+      const next = { ...prev };
+      if (custom) next[cardKey] = custom;
+      else delete next[cardKey];
+      return next;
+    });
+    const range = custom || last30Days();
+    const { startTimestamp, endTimestamp } = toDayRange(range.startDate, range.endDate);
+    const [fetcher, slot] = CARD_FETCHERS[cardKey];
+    try {
+      const res = await fetcher(startTimestamp, endTimestamp);
+      setData((prev) => ({ ...prev, [slot]: res }));
+    } catch (error) {
+      toast({
+        title: "Error applying date filter",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const cardFilter = (cardKey) => (
+    <DashboardCardFilter
+      onApply={applyCardRange(cardKey)}
+      value={cardRanges[cardKey]}
+      defaultLabel="the last 30 days"
+    />
+  );
 
   if (loading) {
     return (
@@ -230,115 +269,133 @@ const DepartmentDashboard = ({ Content }) => {
     );
   }
 
-  const renderDesignDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Product Success Rate"
-        count={`${data.productSuccess?.data?.totalOpen || 0}`}
-        minWidth={{ base: "100%", md: "300px" }}
-      >
-        <VStack align="center" justify="center" h="100%" py={2}>
-          <Box
-            boxSize="100px"
-            borderRadius="full"
-            border="8px solid"
-            borderColor="green.400"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            bg="green.50"
-          >
-            <Text fontSize="xl" fontWeight="black" color="green.600">
-              {data.productSuccess?.data?.avgSuccessRate || 0}%
-            </Text>
-          </Box>
-          <Text color="gray.500" fontWeight="bold" mt={2} fontSize="xs">
-            Average Performance
-          </Text>
-        </VStack>
-      </StatCard>
+  const renderDesignDashboard = () => {
+    const design = data.design || {};
+    const counts = design.productCounts || {};
+    const success = design.productSuccess || {};
+    const avg = Number(success.avgSuccessRate) || 0;
+    const revision = design.revision || {};
+    const npd = design.npd || {};
 
-      <StatCard title="Total Products" count={data.products?.data?.totalProducts || 0} minWidth={{ base: "100%", md: "300px" }}>
-        <VStack align="stretch" spacing={4} mt={4}>
-          <HStack justify="space-between">
-            <Text color="gray.600" fontSize="sm">
-              Total BOMs
-            </Text>
-            <Badge colorScheme="blue" borderRadius="full" px={2}>
-              {data.products?.data?.totalBOM || 0}
-            </Badge>
-          </HStack>
-          <Box
-            h="100px"
-            bg="blue.50"
-            borderRadius="md"
-            p={3}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text color="blue.600" fontWeight="bold">
-              Product Portfolio
-            </Text>
-          </Box>
-        </VStack>
-      </StatCard>
-
-      <StatCard
-        title="NPD Register (Pending)"
-        count={data.npd?.count || 0}
-        minWidth={{ base: "100%", md: "400px" }}
+    const CountTile = ({ label, value, source }) => (
+      <VStack
+        flex="1 1 140px"
+        bg="blue.50"
+        border="1px solid"
+        borderColor="blue.100"
+        borderRadius="xl"
+        p={4}
+        spacing={2}
       >
-        <TableChart
-          headers={["PART", "FROM", "DUE"]}
-          data={(data.npd?.data || []).slice(0, 5)}
-          keys={["part", "from", "due"]}
-        />
-      </StatCard>
+        <Text fontSize="xs" fontWeight="bold" color="blue.600" textTransform="uppercase" textAlign="center">
+          {label}
+        </Text>
+        <Text fontSize="4xl" fontWeight="black" color="blue.700" lineHeight={1}>
+          {value ?? 0}
+        </Text>
+        <Text fontSize="10px" color="gray.500" textAlign="center">
+          {source}
+        </Text>
+      </VStack>
+    );
 
-      <StatCard
-        title="Process Success"
-        count={data.productSuccess?.data?.totalOpen || 0}
-        minWidth={{ base: "100%", lg: "500px" }}
-      >
-        <TableChart
-          headers={["PART NO", "SOLD", "RET", "SUC %"]}
-          data={(data.productSuccess?.data?.openRecords || []).map((row) => {
-            const items = row.items;
-            const successRate =
-              items.find((i) => i.key === "SUCCESS RATE")?.value || 0;
-            return {
-              partNo: items.find((i) => i.key === "PART NO")?.value || "-",
-              sold: items.find((i) => i.key === "QTY SOLD")?.value || "0",
-              returned: items.find((i) => i.key === "QTY RETURNED")?.value || "0",
-              success: (Number(successRate) * 100).toFixed(1) + "%",
-            };
-          })}
-          keys={["partNo", "sold", "returned", "success"]}
-        />
-      </StatCard>
+    return (
+      <Flex wrap="wrap" gap={6}>
+        <StatCard title="Products" info={DESIGN_INFO.products} minWidth={{ base: "100%", md: "420px" }}>
+          <Flex gap={4} wrap="wrap" align="stretch" h="100%">
+            <CountTile label="Count of Series" value={counts.seriesCount} source="Product List · SERIES" />
+            <CountTile label="Count of Main Product" value={counts.mainProductCount} source="Product List · PART NO" />
+            <CountTile label="Count of Sub Product" value={counts.subProductCount} source="Products · PART NO" />
+          </Flex>
+        </StatCard>
 
-      <StatCard
-        title="Revision Control (In Revision)"
-        count={data.revision?.count || 0}
-        minWidth={{ base: "100%", md: "400px" }}
-      >
-        <TableChart
-          headers={["PART NO", "PART NAME", "DUE DATE"]}
-          data={(data.revision?.data || []).slice(0, 5)}
-          keys={["partNo", "partName", "dueDate"]}
-        />
-      </StatCard>
-    </Flex>
-  );
+        <StatCard
+          title="Product Success Rate"
+          info={DESIGN_INFO.productSuccess}
+          count={success.totalRecords || 0}
+          minWidth={{ base: "100%", lg: "600px" }}
+        >
+          <Flex gap={4} direction={{ base: "column", md: "row" }} align="center">
+            <VStack minW="200px" spacing={0}>
+              <DonutChart
+                data={[
+                  { name: "Success %", value: avg },
+                  { name: "Returned %", value: Number((100 - avg).toFixed(2)) },
+                ]}
+                height={180}
+              />
+              <Text fontSize="2xl" fontWeight="black" color="green.600">
+                {avg}%
+              </Text>
+              <Text fontSize="xs" fontWeight="bold" color="gray.500">
+                Average success rate
+              </Text>
+            </VStack>
+            <Box flex="1" w="100%">
+              <Text fontSize="xs" fontWeight="bold" color="gray.500" mb={2}>
+                LOWEST 5 SUCCESS RATES
+              </Text>
+              <TableChart
+                headers={["SERIES", "PART NO", "PART NAME", "QTY SOLD", "QTY RETURNED", "SUCCESS RATE"]}
+                data={(success.lowest || []).map((r) => ({
+                  ...r,
+                  successRate: `${r.successRate}%`,
+                }))}
+                keys={["series", "partNo", "partName", "qtySold", "qtyReturned", "successRate"]}
+              />
+            </Box>
+          </Flex>
+        </StatCard>
+
+        <StatCard
+          title="Revision Control (In Revision)"
+          info={DESIGN_INFO.revision}
+          count={revision.count || 0}
+          minWidth={{ base: "100%", lg: "500px" }}
+        >
+          {(revision.rows || []).length ? (
+            <TableChart
+              headers={["PART NO", "PROBLEM DESCRIPTION", "ENTERED", "DUE"]}
+              data={(revision.rows || []).map((r) => ({
+                ...r,
+                date: formatEpochDate(r.date),
+              }))}
+              keys={["partNo", "problemDescription", "date", "due"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">No parts in revision.</Text>
+            </Center>
+          )}
+        </StatCard>
+
+        <StatCard
+          title="NPD Register (Pending)"
+          info={DESIGN_INFO.npd}
+          count={npd.count || 0}
+          minWidth={{ base: "100%", lg: "600px" }}
+        >
+          <TableChart
+            headers={["FROM", "TARGET DATE", "PART", "PROTO", "VALIDATION", "MASTER", "DUE"]}
+            data={(npd.rows || []).map((r) => ({
+              ...r,
+              targetDate: r.targetDate ? formatEpochDate(r.targetDate) : "-",
+            }))}
+            keys={["from", "targetDate", "part", "proto", "validation", "master", "due"]}
+          />
+        </StatCard>
+      </Flex>
+    );
+  };
 
   const renderManufacturingDashboard = () => (
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Average OEE"
+            info={MANUFACTURING_INFO.averageOEE}
         count={`${data.oee?.data?.averageOEE || 0}%`}
         minWidth={{ base: "100%", md: "300px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("oee")}
       >
         <GaugeChart
           value={data.oee?.data?.averageOEE || 0}
@@ -354,7 +411,9 @@ const DepartmentDashboard = ({ Content }) => {
         />
       </StatCard>
 
-      <StatCard title="OEE Trend" minWidth={{ base: "100%", lg: "450px" }}>
+      <StatCard title="OEE Trend"
+            info={MANUFACTURING_INFO.oeeTrend}
+            headerRight={cardFilter("oeeTrend")} minWidth={{ base: "100%", lg: "450px" }}>
         <AreaChart
           data={data.prodReport?.data || []}
           xAxisKey="date"
@@ -365,8 +424,9 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Rejection"
+            info={MANUFACTURING_INFO.rejection}
         minWidth={{ base: "100%", md: "340px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("rejection")}
       >
         <Flex 
           justify="space-around" 
@@ -428,8 +488,8 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Rework Status"
+            info={MANUFACTURING_INFO.rework}
         minWidth={{ base: "100%", sm: "200px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <VStack justify="center" h="100%" py={2}>
           <Box
@@ -461,9 +521,9 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
       <StatCard
         title="Settings Performance"
+            info={MANUFACTURING_INFO.settings}
         count={data.settings?.data?.noOfSettings || 0}
         minWidth={{ base: "100%", md: "350px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
       >
         <Flex 
           justify="space-around" 
@@ -499,8 +559,9 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Customer Complaints"
+            info={QUALITY_INFO.customerComplaints}
         minWidth={{ base: "100%", md: "300px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("customerComplaints")}
       >
         <Flex 
           w="100%" 
@@ -564,6 +625,7 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Incoming Inspection"
+            info={QUALITY_INFO.incomingInspection}
         count={data.incoming?.data?.pendingCount || 0}
         minWidth={{ base: "100%", md: "300px" }}
       >
@@ -589,8 +651,9 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Continuous Improvement"
+            info={QUALITY_INFO.continuousImprovement}
         minWidth={{ base: "100%", md: "300px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("improvement")}
       >
         <VStack justify="center" h="100%" py={4}>
           <Box
@@ -623,6 +686,7 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Quality Audits (Pending)"
+            info={QUALITY_INFO.qualityAudits}
         count={data.audits?.data?.totalPending || 0}
         minWidth={{ base: "100%", lg: "600px" }}
       >
@@ -635,47 +699,15 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Instrument Status"
+            info={QUALITY_INFO.instruments}
         count={data.calibration?.data?.totalFiltered || 0}
         minWidth={{ base: "100%", md: "400px" }}
       >
-        <VStack spacing={4} align="stretch" w="100%">
-          <HStack spacing={4} justify="start" pb={2}>
-            <Box bg="green.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="green.100" minW="100px">
-              <Text fontSize="xs" fontWeight="bold" color="green.600">DONE</Text>
-              <Text fontSize="2xl" fontWeight="black" color="green.700" lineHeight={1}>
-                {data.calibration?.data?.doneCount || 0}
-              </Text>
-            </Box>
-            <Box bg="red.50" px={4} py={2} borderRadius="lg" border="1px solid" borderColor="red.100" minW="100px">
-              <Text fontSize="xs" fontWeight="bold" color="red.600">DUE</Text>
-              <Text fontSize="2xl" fontWeight="black" color="red.700" lineHeight={1}>
-                {data.calibration?.data?.dueCount || 0}
-              </Text>
-            </Box>
-          </HStack>
-
-          <Box overflowX="auto" borderTop="1px solid" borderColor="gray.100" pt={4}>
-             <TableChart
-               headers={["INSTRUMENT", "LAST DATE", "DUE DATE"]}
-               data={(data.calibration?.data?.openRecords || []).slice(0, 5).map(row => {
-                 const items = row.items || [];
-                 const formatDate = (val) => {
-                   if(!val || isNaN(Number(val))) return val || "-";
-                   return new Date(Number(val)).toLocaleDateString('en-GB');
-                 };
-                 return {
-                   instrument: items.find(i => i.key.includes("INSTRUMENT") || i.key.includes("NAME"))?.value || items[0]?.value || "-",
-                   done: formatDate(items.find(i => i.key === "DONE")?.value || items.find(i => i.key === "DATE")?.value),
-                   due: formatDate(items.find(i => i.key === "DUE")?.value),
-                 }
-               })}
-               keys={["instrument", "done", "due"]}
-             />
-          </Box>
-        </VStack>
+        <InstrumentStatusBody data={data.calibration?.data} />
       </StatCard>
       <StatCard
         title="Process Control Plan"
+            info={QUALITY_INFO.processControlPlan}
         count={data.pcp?.data?.totalRecords || 0}
         minWidth={{ base: "100%", md: "400px" }}
       >
@@ -713,6 +745,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
       <StatCard
         title="Certificate Renewal Status"
+            info={QUALITY_INFO.certificates}
         count={(data.certs?.data || []).filter(c => c.isDue).length}
         minWidth={{ base: "100%", lg: "600px" }}
       >
@@ -747,6 +780,7 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Employee Strength"
+            info={HR_INFO.employeeStrength}
         count={data.overhead?.data?.actualOverHead || 0}
         minWidth={{ base: "100%", md: "350px" }}
       >
@@ -762,17 +796,26 @@ const DepartmentDashboard = ({ Content }) => {
             </VStack>
             <VStack bg="green.50" p={5} borderRadius="xl">
               <Text fontSize="3xl" fontWeight="bold" color="green.700">
-                100%
+                {data.overhead?.data?.retentionRate != null
+                  ? `${data.overhead.data.retentionRate}%`
+                  : "—"}
               </Text>
               <Text fontSize="xs" color="green.500" fontWeight="bold">
-                Retention Rate
+                Retention Rate (12 months)
               </Text>
+              {data.overhead?.data?.retentionBase > 0 && (
+                <Text fontSize="10px" color="gray.500" textAlign="center">
+                  {data.overhead.data.leftInLast12Months} of {data.overhead.data.retentionBase} left
+                </Text>
+              )}
             </VStack>
           </SimpleGrid>
         </VStack>
       </StatCard>
 
-      <StatCard title="Department Distribution" minWidth={{ base: "100%", md: "400px" }}>
+      <StatCard title="Department Distribution"
+            info={HR_INFO.departmentDistribution}
+            headerRight={cardFilter("departmentDistribution")} minWidth={{ base: "100%", md: "400px" }}>
         <DonutChart
           data={data.attendance?.data || []}
           nameKey="label"
@@ -786,9 +829,10 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Pending Procurements"
+            info={PURCHASE_INFO.pendingProcurements}
         count={data.procurement?.data?.totalPending || 0}
         minWidth={{ base: "100%", lg: "500px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("procurement")}
       >
         <TableChart
           headers={[
@@ -837,9 +881,10 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Open Inward Payments"
+            info={PURCHASE_INFO.inwardPayments}
         count={data.inward?.data?.totalOpen || 0}
         minWidth={{ base: "100%", lg: "500px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
+        headerRight={cardFilter("inward")}
       >
         <TableChart
           headers={["VENDOR", "INVOICE", "VALUE", "PAYMENT DATE", "DUE"]}
@@ -879,94 +924,170 @@ const DepartmentDashboard = ({ Content }) => {
     </Flex>
   );
 
-  const renderSalesDashboard = () => (
-    <Flex wrap="wrap" gap={6}>
-      <StatCard
-        title="Customer Count"
-        count={data.salesCust?.data?.totalCustomers || 0}
-        minWidth={{ base: "100%", md: "300px" }}
+  const renderSalesDashboard = () => {
+    const sales = data.sales || {};
+    const quotation = sales.quotation || {};
+    const trend = sales.salesTrend || {};
+    const trendData = trend.data || [];
+    const pendingOrders = sales.pendingOrders || {};
+    const pendingPayments = sales.pendingPayments || {};
+    const money = (n) =>
+      Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+    const BigCount = ({ label, value, color = "blue" }) => (
+      <VStack
+        flex="1 1 140px"
+        bg={`${color}.50`}
+        border="1px solid"
+        borderColor={`${color}.100`}
+        borderRadius="xl"
+        p={4}
+        spacing={2}
+        justify="center"
       >
-        <VStack h="100%" justify="center">
-          <Box p={6} bg="orange.50" borderRadius="full">
-            <Text fontSize="4xl" fontWeight="bold" color="orange.600">
-              {data.salesCust?.data?.totalCustomers || 0}
-            </Text>
-          </Box>
-          <Text color="gray.500" fontWeight="bold">
-            Total Registered Customers
-          </Text>
-        </VStack>
-      </StatCard>
+        <Text fontSize="xs" fontWeight="bold" color={`${color}.600`} textTransform="uppercase" textAlign="center">
+          {label}
+        </Text>
+        <Text fontSize="4xl" fontWeight="black" color={`${color}.700`} lineHeight={1}>
+          {value ?? 0}
+        </Text>
+      </VStack>
+    );
 
-      <StatCard title="Sales Trend" minWidth={{ base: "100%", md: "450px" }}>
-        <AreaChart
-          data={data.salesTrend?.data || []}
-          xAxisKey="month"
-          dataKey="value"
-          color="#E53E3E"
-        />
-      </StatCard>
+    return (
+      <Flex wrap="wrap" gap={6}>
+        <StatCard title="Customer Count" info={SALES_INFO.customerCount} minWidth={{ base: "100%", md: "240px" }}>
+          <Flex h="100%" align="stretch">
+            <BigCount label="Count of Customers" value={sales.customerCount} color="orange" />
+          </Flex>
+        </StatCard>
 
-      <StatCard
-        title="Customer Payment Status"
-        count={data.dockets?.data?.totalOpen || 0}
-        minWidth={{ base: "100%", lg: "500px" }}
-        headerRight={<DashboardCardFilter onApply={handleFilterApply} />}
-      >
-        <TableChart
-          headers={["CUSTOMER NAME", "INVOICE", "VALUE", "PAYMENT DATE", "DUE"]}
-          data={(data.dockets?.data?.openRecords || []).map((row) => {
-            const items = row.items;
-            const dateVal = items.find((i) => i.key === "DELIVERY DATE")?.value;
-
-            let due = "-";
-            if (dateVal && !isNaN(dateVal)) {
-              // Add 2 more days to Delivery Date for due calculation
-              const dueDate = Number(dateVal) + 2 * 24 * 60 * 60 * 1000;
-              const diffDays = Math.ceil(
-                (dueDate - Date.now()) / (1000 * 60 * 60 * 24),
-              );
-              due =
-                diffDays > 0
-                  ? `${diffDays} days`
-                  : diffDays < 0
-                    ? `${Math.abs(diffDays)} days ago`
-                    : "Today";
-            }
-
-            return {
-              vendor: items.find((i) => i.key === "CUSTOMER NAME")?.value || "-",
-              invoice: items.find((i) => i.key === "INVOICE NO")?.value || "-",
-              value: items.find((i) => i.key === "VALUE")?.value || "-",
-              date:
-                dateVal && !isNaN(dateVal)
-                  ? new Date(Number(dateVal)).toLocaleDateString()
-                  : "-",
-              due,
-            };
-          })}
-          keys={["vendor", "invoice", "value", "date", "due"]}
-        />
-      </StatCard>
-
-      <StatCard
-        title="Quotation Status"
-        count={data.quotation?.count || 0}
-        minWidth={{ base: "100%", md: "300px" }}
-      >
-        <DonutChart
-          data={Object.entries(data.quotation?.data || {}).map(
-            ([name, value]) => ({ name, value }),
+        <StatCard title="Sales Trend (Dockets)" info={SALES_INFO.salesTrend} minWidth={{ base: "100%", lg: "640px" }}>
+          <Flex gap={2} wrap="wrap" mb={4} align="center">
+            <Select
+              size="sm"
+              w="120px"
+              value={salesTrendFilters.groupBy}
+              onChange={(e) => updateSalesTrendFilter({ groupBy: e.target.value })}
+            >
+              <option value="day">Date wise</option>
+              <option value="month">Month wise</option>
+              <option value="year">Year wise</option>
+            </Select>
+            <Input
+              size="sm"
+              type="date"
+              w="150px"
+              value={salesTrendFilters.startDate}
+              onChange={(e) => updateSalesTrendFilter({ startDate: e.target.value })}
+            />
+            <Text fontSize="sm" color="gray.500">to</Text>
+            <Input
+              size="sm"
+              type="date"
+              w="150px"
+              value={salesTrendFilters.endDate}
+              onChange={(e) => updateSalesTrendFilter({ endDate: e.target.value })}
+            />
+            <Select
+              size="sm"
+              w="150px"
+              placeholder="All ENQ BY"
+              value={salesTrendFilters.enqBy}
+              onChange={(e) => updateSalesTrendFilter({ enqBy: e.target.value })}
+            >
+              {(trend.enqByOptions || []).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </Select>
+            {trendLoading && <Spinner size="sm" color="blue.500" />}
+          </Flex>
+          {trendData.length ? (
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="red.500" mb={1}>
+                  VALUE
+                </Text>
+                <LineChart data={trendData} xAxisKey="period" dataKey="value" height={200} />
+              </Box>
+              <Box>
+                <Text fontSize="xs" fontWeight="bold" color="red.500" mb={1}>
+                  DELIVERY QTY
+                </Text>
+                <BarChart
+                  data={trendData}
+                  xAxisKey="period"
+                  dataKeys={[{ key: "deliveryQty", name: "Delivery Qty", color: "#3182ce" }]}
+                  height={200}
+                />
+              </Box>
+            </SimpleGrid>
+          ) : (
+            <Center h="200px">
+              <Text color="gray.500" fontSize="sm">
+                No dockets delivered in this period.
+              </Text>
+            </Center>
           )}
-        />
-      </StatCard>
-    </Flex>
-  );
+        </StatCard>
+
+        <StatCard title="Quote / Order Status" info={SALES_INFO.quotation} minWidth={{ base: "100%", md: "340px" }}>
+          <Flex gap={4} wrap="wrap" h="100%" align="stretch">
+            <BigCount label="Waiting for Order" value={quotation.waitingForOrder} color="green" />
+            <BigCount label="Waiting for Quote" value={quotation.waitingForQuote} color="purple" />
+          </Flex>
+        </StatCard>
+
+        <StatCard
+          title="Pending Order"
+          info={SALES_INFO.pendingOrders}
+          count={pendingOrders.count || 0}
+          minWidth={{ base: "100%", lg: "600px" }}
+        >
+          <TableChart
+            headers={["CUSTOMER", "PART NAME", "PART NUMBER", "PENDING QTY", "PENDING QTY VALUE", "DUE"]}
+            data={(pendingOrders.rows || []).map((r) => ({
+              ...r,
+              pendingValue: money(r.pendingValue),
+              due: r.leadTimeMissing && r.dueDate ? `${r.due} (no lead time)` : r.due,
+            }))}
+            keys={["customer", "partName", "partNo", "pendingQty", "pendingValue", "due"]}
+          />
+        </StatCard>
+
+        <StatCard
+          title="Pending Payment"
+          info={SALES_INFO.pendingPayments}
+          count={pendingPayments.count || 0}
+          minWidth={{ base: "100%", lg: "600px" }}
+        >
+          {(pendingPayments.rows || []).length ? (
+            <TableChart
+              headers={["CUSTOMER", "PART NUMBER", "VALUE", "CREDIT PERIOD", "DUE"]}
+              data={(pendingPayments.rows || []).map((r) => ({
+                ...r,
+                value: money(r.value),
+                creditPeriod: `${r.creditPeriod} days`,
+              }))}
+              keys={["customer", "partNo", "value", "creditPeriod", "due"]}
+            />
+          ) : (
+            <Center h="120px">
+              <Text color="gray.500" fontSize="sm">No open payments.</Text>
+            </Center>
+          )}
+        </StatCard>
+      </Flex>
+    );
+  };
 
   const renderStockDashboard = () => (
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Stock Data (Finished Goods)"
+            info={STOCK_INFO.finishedGoods}
         count={data.stock?.totalStockQty || 0}
         minWidth={{ base: "100%", lg: "600px" }}
       >

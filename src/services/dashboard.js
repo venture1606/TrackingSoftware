@@ -88,6 +88,12 @@ export const getDashboardStock = async () => {
 };
 
 // Design Dashboards
+// Single call returning product counts, product success, revision control and NPD sections
+export const getDesignDashboard = async () => {
+  const response = await axios.get(`${API_URL}/design/dashboard`, getAuthHeaders());
+  return response.data;
+};
+
 export const getNPDRegister = async () => {
   const response = await axios.get(`${API_URL}/design/npdRegister`, getAuthHeaders());
   return response.data;
@@ -190,6 +196,16 @@ export const getInwardDashboard = async (startDate, endDate) => {
 };
 
 // Sales Dashboards
+// Single call: customer count, quotation status, pending orders, pending payments, sales trend.
+// params: { groupBy: "day" | "month" | "year", startDate, endDate (epoch ms), enqBy }
+export const getSalesDashboard = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/sales/dashboard`, {
+    ...getAuthHeaders(),
+    params,
+  });
+  return response.data;
+};
+
 export const getSalesCustomerCount = async () => {
   const response = await axios.get(`${API_URL}/sales/customerCount`, getAuthHeaders());
   return response.data;

@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Heading, Badge, Flex } from "@chakra-ui/react";
+import CardInfo from "./CardInfo";
 
 const StatCard = ({
   title,
@@ -8,6 +9,7 @@ const StatCard = ({
   minH = "300px",
   headerRight,
   minWidth = "300px",
+  info, // optional: explanation shown via the (i) icon — see CardInfo.jsx
 }) => (
   <Box
     bg="white"
@@ -42,6 +44,7 @@ const StatCard = ({
         >
           {title}
         </Heading>
+        <CardInfo title={title} info={info} />
         {count !== undefined && count !== null && (
           <Badge
             colorScheme="pink"
