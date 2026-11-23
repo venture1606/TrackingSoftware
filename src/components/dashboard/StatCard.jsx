@@ -1,8 +1,17 @@
 import React from "react";
 import { Box, Heading, Badge, Flex } from "@chakra-ui/react";
 import CardInfo from "./CardInfo";
+import { usePermissions } from "../../services/permissions";
 
-const StatCard = ({
+const StatCard = ({ dashboardKey, ...props }) => {
+  // dashboardKey: the card's key in utils/dashboardCatalog.js — hidden when the admin hasn't
+  // given this user access to it (User permissions › Dashboard Access)
+  const { canSeeDashboard } = usePermissions();
+  if (dashboardKey && !canSeeDashboard(dashboardKey)) return null;
+  return <StatCardBody {...props} />;
+};
+
+const StatCardBody = ({
   title,
   count,
   children,

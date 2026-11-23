@@ -91,6 +91,19 @@ export const usePermissions = () => {
     };
 
     /**
+     * Dashboard cards the admin has ticked for this user (user.dashboardAccess).
+     * Not configured yet (field missing) → the old rules still apply (process / department access).
+     * Configured → only the ticked cards are shown. Admins always see every card.
+     */
+    const dashboardConfigured = Array.isArray(user?.dashboardAccess);
+    const dashboardAccess = dashboardConfigured ? user.dashboardAccess : [];
+    const canSeeDashboard = (key) => {
+      if (!key || isAdmin) return true;
+      if (!dashboardConfigured) return true;
+      return dashboardAccess.includes(key);
+    };
+
+    /**
      * Helper to check if the user has a specific action permission
      * @param {string} action - 'edit', 'create', or 'read'
      * @returns {boolean}
@@ -112,6 +125,9 @@ export const usePermissions = () => {
       hasAccessToDepartment,
       hasAccessToProcess,
       hasPermission,
+      dashboardConfigured,
+      dashboardAccess,
+      canSeeDashboard,
       user,
     };
   }, [user]);

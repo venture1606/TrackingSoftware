@@ -33,6 +33,8 @@ import {
 // Import Dashboard Components
 import { SearchIcon } from "@chakra-ui/icons";
 import StatCard from "../components/dashboard/StatCard";
+import NoDashboardAccess from "../components/dashboard/NoDashboardAccess";
+import { groupIdForDepartment } from "../utils/dashboardCatalog";
 import AreaChart from "../components/dashboard/AreaChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import GaugeChart from "../components/dashboard/GaugeChart";
@@ -365,7 +367,7 @@ const DepartmentDashboard = ({ Content }) => {
 
     return (
       <Flex wrap="wrap" gap={6}>
-        <StatCard title="Products" info={DESIGN_INFO.products} minWidth={{ base: "100%", md: "420px" }}>
+        <StatCard title="Products" info={DESIGN_INFO.products} dashboardKey="design.products" minWidth={{ base: "100%", md: "420px" }}>
           <Flex gap={4} wrap="wrap" align="stretch" h="100%">
             <CountTile label="Count of Series" value={counts.seriesCount} source="Product List · SERIES" />
             <CountTile label="Count of Main Product" value={counts.mainProductCount} source="Product List · PART NO" />
@@ -375,7 +377,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Product Success Rate"
-          info={DESIGN_INFO.productSuccess}
+          info={DESIGN_INFO.productSuccess} dashboardKey="design.productSuccess"
           count={success.totalRecords || 0}
           minWidth={{ base: "100%", lg: "600px" }}
         >
@@ -413,7 +415,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Revision Control (In Revision)"
-          info={DESIGN_INFO.revision}
+          info={DESIGN_INFO.revision} dashboardKey="design.revision"
           count={revision.count || 0}
           minWidth={{ base: "100%", lg: "500px" }}
         >
@@ -435,7 +437,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="NPD Register (Pending)"
-          info={DESIGN_INFO.npd}
+          info={DESIGN_INFO.npd} dashboardKey="design.npd"
           count={npd.count || 0}
           minWidth={{ base: "100%", lg: "600px" }}
         >
@@ -456,7 +458,7 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Average OEE"
-            info={MANUFACTURING_INFO.averageOEE}
+            info={MANUFACTURING_INFO.averageOEE} dashboardKey="manufacturing.averageOEE"
         count={`${data.oee?.data?.averageOEE || 0}%`}
         minWidth={{ base: "100%", md: "300px" }}
         headerRight={cardFilter("oee")}
@@ -476,7 +478,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
 
       <StatCard title="OEE Trend"
-            info={MANUFACTURING_INFO.oeeTrend}
+            info={MANUFACTURING_INFO.oeeTrend} dashboardKey="manufacturing.oeeTrend"
             headerRight={cardFilter("oeeTrend")} minWidth={{ base: "100%", lg: "450px" }}>
         <AreaChart
           data={data.prodReport?.data || []}
@@ -488,7 +490,7 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Rejection"
-            info={MANUFACTURING_INFO.rejection}
+            info={MANUFACTURING_INFO.rejection} dashboardKey="manufacturing.rejection"
         minWidth={{ base: "100%", md: "340px" }}
         headerRight={cardFilter("rejection")}
       >
@@ -552,7 +554,7 @@ const DepartmentDashboard = ({ Content }) => {
 
       <StatCard
         title="Rework Status"
-            info={MANUFACTURING_INFO.rework}
+            info={MANUFACTURING_INFO.rework} dashboardKey="manufacturing.rework"
         minWidth={{ base: "100%", sm: "200px" }}
       >
         <VStack justify="center" h="100%" py={2}>
@@ -585,7 +587,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
       <StatCard
         title="Settings Performance"
-            info={MANUFACTURING_INFO.settings}
+            info={MANUFACTURING_INFO.settings} dashboardKey="manufacturing.settings"
         count={data.settings?.data?.noOfSettings || 0}
         minWidth={{ base: "100%", md: "350px" }}
       >
@@ -659,7 +661,7 @@ const DepartmentDashboard = ({ Content }) => {
       <Flex wrap="wrap" gap={6}>
         <StatCard
           title="Customer Rejection Rate"
-          info={QUALITY_INFO.customerRejection}
+          info={QUALITY_INFO.customerRejection} dashboardKey="quality.customerRejection"
           minWidth={{ base: "100%", xl: "760px" }}
         >
           <Flex gap={2} wrap="wrap" mb={4} align="center">
@@ -726,7 +728,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Continuous Improvement"
-          info={QUALITY_INFO.improvementByDepartment}
+          info={QUALITY_INFO.improvementByDepartment} dashboardKey="quality.improvementByDepartment"
           count={ci.total || 0}
           minWidth={{ base: "100%", lg: "460px" }}
         >
@@ -774,7 +776,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Incoming Inspection"
-          info={QUALITY_INFO.incomingInspection}
+          info={QUALITY_INFO.incomingInspection} dashboardKey="quality.incomingInspection"
           minWidth={{ base: "100%", md: "260px" }}
         >
           <BigNumber value={q.incomingInspection?.pendingCount} label="Inspection pending" color="blue" />
@@ -782,7 +784,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Quality Audit Pending"
-          info={QUALITY_INFO.qualityAuditPending}
+          info={QUALITY_INFO.qualityAuditPending} dashboardKey="quality.qualityAuditPending"
           count={audits.pendingCount || 0}
           minWidth={{ base: "100%", lg: "560px" }}
         >
@@ -801,7 +803,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Instruments Pending"
-          info={QUALITY_INFO.instrumentsPending}
+          info={QUALITY_INFO.instrumentsPending} dashboardKey="quality.instrumentsPending"
           minWidth={{ base: "100%", md: "260px" }}
         >
           <BigNumber
@@ -814,7 +816,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Certificate Renewal"
-          info={QUALITY_INFO.certificateRenewalPending}
+          info={QUALITY_INFO.certificateRenewalPending} dashboardKey="quality.certificateRenewal"
           minWidth={{ base: "100%", md: "260px" }}
         >
           <BigNumber
@@ -827,7 +829,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Process Control Plan"
-          info={QUALITY_INFO.pcpRenewalPending}
+          info={QUALITY_INFO.pcpRenewalPending} dashboardKey="quality.processControlPlan"
           minWidth={{ base: "100%", md: "320px" }}
         >
           <BigNumber
@@ -857,7 +859,7 @@ const DepartmentDashboard = ({ Content }) => {
     <Flex wrap="wrap" gap={6}>
       <StatCard
         title="Employee Strength"
-            info={HR_INFO.employeeStrength}
+            info={HR_INFO.employeeStrength} dashboardKey="hr.employeeStrength"
         count={data.overhead?.data?.actualOverHead || 0}
         minWidth={{ base: "100%", md: "350px" }}
       >
@@ -891,7 +893,7 @@ const DepartmentDashboard = ({ Content }) => {
       </StatCard>
 
       <StatCard title="Department Distribution"
-            info={HR_INFO.departmentDistribution}
+            info={HR_INFO.departmentDistribution} dashboardKey="hr.departmentDistribution"
             headerRight={cardFilter("departmentDistribution")} minWidth={{ base: "100%", md: "400px" }}>
         <DonutChart
           data={data.attendance?.data || []}
@@ -943,7 +945,7 @@ const DepartmentDashboard = ({ Content }) => {
       <Flex wrap="wrap" gap={6}>
         <StatCard
           title="Procurement Detail"
-          info={PURCHASE_INFO.procurementDetail}
+          info={PURCHASE_INFO.procurementDetail} dashboardKey="purchase.procurementDetail"
           count={proc.pendingCount || 0}
           minWidth={{ base: "100%", lg: "640px" }}
         >
@@ -1008,7 +1010,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Supplier Payment"
-          info={PURCHASE_INFO.supplierPayment}
+          info={PURCHASE_INFO.supplierPayment} dashboardKey="purchase.supplierPayment"
           count={pay.openCount || 0}
           minWidth={{ base: "100%", lg: "560px" }}
         >
@@ -1084,13 +1086,13 @@ const DepartmentDashboard = ({ Content }) => {
 
     return (
       <Flex wrap="wrap" gap={6}>
-        <StatCard title="Customer Count" info={SALES_INFO.customerCount} minWidth={{ base: "100%", md: "240px" }}>
+        <StatCard title="Customer Count" info={SALES_INFO.customerCount} dashboardKey="sales.customerCount" minWidth={{ base: "100%", md: "240px" }}>
           <Flex h="100%" align="stretch">
             <BigCount label="Count of Customers" value={sales.customerCount} color="orange" />
           </Flex>
         </StatCard>
 
-        <StatCard title="Sales Trend (Dockets)" info={SALES_INFO.salesTrend} minWidth={{ base: "100%", lg: "640px" }}>
+        <StatCard title="Sales Trend (Dockets)" info={SALES_INFO.salesTrend} dashboardKey="sales.salesTrend" minWidth={{ base: "100%", lg: "640px" }}>
           <Flex gap={2} wrap="wrap" mb={4} align="center">
             <Select
               size="sm"
@@ -1161,7 +1163,7 @@ const DepartmentDashboard = ({ Content }) => {
           )}
         </StatCard>
 
-        <StatCard title="Quote / Order Status" info={SALES_INFO.quotation} minWidth={{ base: "100%", md: "340px" }}>
+        <StatCard title="Quote / Order Status" info={SALES_INFO.quotation} dashboardKey="sales.quotation" minWidth={{ base: "100%", md: "340px" }}>
           <Flex gap={4} wrap="wrap" h="100%" align="stretch">
             <BigCount label="Waiting for Order" value={quotation.waitingForOrder} color="green" />
             <BigCount label="Waiting for Quote" value={quotation.waitingForQuote} color="purple" />
@@ -1170,7 +1172,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Pending Order"
-          info={SALES_INFO.pendingOrders}
+          info={SALES_INFO.pendingOrders} dashboardKey="sales.pendingOrders"
           count={pendingOrders.count || 0}
           minWidth={{ base: "100%", lg: "600px" }}
         >
@@ -1187,7 +1189,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Pending Payment"
-          info={SALES_INFO.pendingPayments}
+          info={SALES_INFO.pendingPayments} dashboardKey="sales.pendingPayments"
           count={pendingPayments.count || 0}
           minWidth={{ base: "100%", lg: "600px" }}
         >
@@ -1224,7 +1226,7 @@ const DepartmentDashboard = ({ Content }) => {
       <Flex wrap="wrap" gap={6}>
         <StatCard
           title="Stock Data (Finished Goods)"
-          info={STOCK_INFO.finishedGoods}
+          info={STOCK_INFO.finishedGoods} dashboardKey="stores.finishedGoods"
           count={fg.itemCount || 0}
           minWidth={{ base: "100%", lg: "600px" }}
         >
@@ -1249,7 +1251,7 @@ const DepartmentDashboard = ({ Content }) => {
 
         <StatCard
           title="Stock Search"
-          info={STOCK_INFO.stockSearch}
+          info={STOCK_INFO.stockSearch} dashboardKey="stores.stockSearch"
           minWidth={{ base: "100%", lg: "480px" }}
         >
           <InputGroup size="md" mb={4}>
@@ -1342,7 +1344,9 @@ const DepartmentDashboard = ({ Content }) => {
             </Text>
           </Box>
         </HStack>
-        {renderContent()}
+        <NoDashboardAccess groupId={groupIdForDepartment(Content)}>
+          {renderContent()}
+        </NoDashboardAccess>
       </VStack>
     </Box>
   );

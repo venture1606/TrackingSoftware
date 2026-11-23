@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,8 @@ import { Icon } from "@iconify/react";
 import Auth from "../services/Auth";
 import { usePermissions } from "../services/permissions";
 import { PROCESS_MAPPINGS } from "../utils/processMappings";
+import { legacyDashboardKeys } from "../utils/dashboardCatalog";
+import DashboardAccessPicker from "../components/DashboardAccessPicker";
 
 // Importing common components
 import Loading from "../hooks/Loading";
@@ -56,7 +58,19 @@ function CreateAccount() {
     department: [],
     accessLevel: "",
     processAccess: [],
+    dashboardAccess: undefined, // undefined = follow department / process access (old rules)
   });
+
+  // Dashboards the new user would see from their department / process access — pre-ticked
+  const defaultDashboards = useMemo(
+    () =>
+      legacyDashboardKeys({
+        accessLevel: form.accessLevel,
+        department: form.department,
+        processAccess: form.processAccess,
+      }),
+    [form.accessLevel, form.department, form.processAccess],
+  );
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -161,6 +175,7 @@ function CreateAccount() {
           department: [],
           accessLevel: "",
           processAccess: [],
+          dashboardAccess: undefined,
         });
       }
     });
@@ -486,6 +501,17 @@ function CreateAccount() {
                   </Box>
                 )}
               </VStack>
+
+              <Divider />
+
+              {/* Dashboard Access */}
+              <DashboardAccessPicker
+                value={form.dashboardAccess}
+                defaults={defaultDashboards}
+                accessLevel={form.accessLevel}
+                departments={form.department}
+                onChange={(keys) => setForm((prev) => ({ ...prev, dashboardAccess: keys }))}
+              />
 
               <Flex justify="flex-end" pt={4}>
                 <Button

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { setMessage } from "../redux/slices/common";
 import { useNavigate, useParams } from "react-router-dom";
@@ -26,6 +26,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import Auth, { useUserDetails } from "../services/Auth";
 import { usePermissions } from "../services/permissions";
 import { PROCESS_MAPPINGS } from "../utils/processMappings";
+import { legacyDashboardKeys } from "../utils/dashboardCatalog";
+import DashboardAccessPicker from "../components/DashboardAccessPicker";
 
 // Importing common components
 import Loading from "../hooks/Loading";
@@ -54,7 +56,19 @@ function EditAccount() {
     department: [],
     accessLevel: "",
     processAccess: [],
+    dashboardAccess: undefined, // undefined = never configured (old visibility rules apply)
   });
+
+  // What this user sees under the old rules — pre-ticked until the admin customises
+  const defaultDashboards = useMemo(
+    () =>
+      legacyDashboardKeys({
+        accessLevel: form.accessLevel,
+        department: form.department,
+        processAccess: form.processAccess,
+      }),
+    [form.accessLevel, form.department, form.processAccess],
+  );
 
   // Redirect if not admin
   useEffect(() => {
@@ -83,6 +97,9 @@ function EditAccount() {
           : userToEdit.processAccess
             ? [userToEdit.processAccess]
             : [],
+        dashboardAccess: Array.isArray(userToEdit.dashboardAccess)
+          ? userToEdit.dashboardAccess
+          : undefined,
       });
     }
   }, [userToEdit]);
@@ -511,6 +528,17 @@ function EditAccount() {
                   </Box>
                 )}
               </VStack>
+
+              <Divider />
+
+              {/* Dashboard Access */}
+              <DashboardAccessPicker
+                value={form.dashboardAccess}
+                defaults={defaultDashboards}
+                accessLevel={form.accessLevel}
+                departments={form.department}
+                onChange={(keys) => setForm((prev) => ({ ...prev, dashboardAccess: keys }))}
+              />
 
               <Flex justify="flex-end" pt={4} gap={4}>
                 <Button

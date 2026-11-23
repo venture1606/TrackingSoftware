@@ -48,6 +48,7 @@ import {
 
 // importing common components
 import StatCard from "../components/dashboard/StatCard";
+import NoDashboardAccess from "../components/dashboard/NoDashboardAccess";
 import InstrumentStatusBody from "../components/dashboard/InstrumentStatusBody";
 import ChartSkeleton from "../components/dashboard/ChartSkeleton";
 import DashboardCardFilter from "../components/dashboard/DashboardCardFilter";
@@ -64,7 +65,11 @@ const GaugeChart = lazy(() => import("../components/dashboard/GaugeChart"));
 
 
 function Dashboard() {
-  const { hasAccessToProcess, isAdmin } = usePermissions();
+  const { hasAccessToProcess, isAdmin, dashboardConfigured } = usePermissions();
+  // Before dashboard permissions are configured for a user, cards follow process access (old rule).
+  // Once the admin ticks dashboards for the user, StatCard's dashboardKey decides instead.
+  const showGatedCard = (processId) =>
+    dashboardConfigured || isAdmin || hasAccessToProcess(processId);
   // Date range per card: { [cardKey]: { startDate, endDate } } ("YYYY-MM-DD").
   // Each card filters only itself; a card with no entry shows its API's default range.
   const [cardRanges, setCardRanges] = useState({});
@@ -342,6 +347,8 @@ function Dashboard() {
         </VStack>
       </Flex>
 
+      <NoDashboardAccess groupId="main" />
+
       <VStack spacing={8} align="stretch" mb={8}>
 
         {/* ── Priority Row 1: Order List, Stock Data, Pending Procurement ── */}
@@ -350,6 +357,7 @@ function Dashboard() {
           <StatCard
             title="Order List (Active)"
             info={MAIN_INFO.orderList}
+            dashboardKey="main.orderList"
             minWidth="650px"
             count={orderListData?.length || 0}
           >
@@ -385,6 +393,7 @@ function Dashboard() {
           <StatCard
             title="Stock Data (Finished Goods)"
             info={MAIN_INFO.stock}
+            dashboardKey="main.stock"
             minWidth="400px"
             count={stockData?.totalStockQty}
           >
@@ -407,6 +416,7 @@ function Dashboard() {
           <StatCard
             title="Pending Procurements"
             info={MAIN_INFO.pendingProcurements}
+            dashboardKey="main.pendingProcurements"
             count={procurementDeptData?.totalPending || 0}
             minWidth="600px"
             headerRight={
@@ -451,6 +461,7 @@ function Dashboard() {
           <StatCard
             title="Open Inward Payments"
             info={MAIN_INFO.inwardPayments}
+            dashboardKey="main.inwardPayments"
             count={inwardDeptData?.totalOpen || 0}
             minWidth="500px"
             headerRight={
@@ -491,6 +502,7 @@ function Dashboard() {
           <StatCard
             title="Customer Payment Status"
             info={MAIN_INFO.customerPayments}
+            dashboardKey="main.customerPayments"
             count={docketsData?.totalOpen || 0}
             minWidth="600px"
             headerRight={
@@ -526,10 +538,11 @@ function Dashboard() {
           </StatCard>
 
           {/* 6. NPD REGISTER */}
-          {(isAdmin || hasAccessToProcess("DD/R/010")) && (
+          {(showGatedCard("DD/R/010")) && (
             <StatCard
               title="NPD Register"
             info={MAIN_INFO.npd}
+            dashboardKey="main.npd"
               count={npdMainData.length}
               minWidth="380px"
             >
@@ -577,6 +590,7 @@ function Dashboard() {
           <StatCard
             title="Production Plan (Qty by Part No)"
             info={MAIN_INFO.productionPlanChart}
+            dashboardKey="main.productionPlanChart"
             minWidth="400px"
           >
             <Suspense fallback={<ChartSkeleton type="chart" />}>
@@ -595,6 +609,7 @@ function Dashboard() {
           <StatCard
             title="Production Plan - Pending"
             info={MAIN_INFO.productionPlanPending}
+            dashboardKey="main.productionPlanPending"
             count={productionPlan.pendingPlanQty ?? 0}
             minWidth="500px"
           >
@@ -637,10 +652,11 @@ function Dashboard() {
           </StatCard>
 
           {/* 9. AVAERAGE OEE */}
-          {(isAdmin || hasAccessToProcess("MR/R/002")) && (
+          {(showGatedCard("MR/R/002")) && (
             <StatCard
               title="Average OEE"
             info={MAIN_INFO.averageOEE}
+            dashboardKey="main.averageOEE"
               count={`${oeeData?.averageOEE || 0}%`}
               minH="150px"
               minWidth="200px"
@@ -671,10 +687,11 @@ function Dashboard() {
         {/* ── Priority Row 4: Rejection, Dispatch Data, Customer Quality ── */}
         <Flex wrap="wrap" gap={6}>
           {/* 10. REJECTION */}
-          {(isAdmin || hasAccessToProcess("MR/R/003")) && (
+          {(showGatedCard("MR/R/003")) && (
             <StatCard
               title="Rejection"
             info={MAIN_INFO.rejection}
+            dashboardKey="main.rejection"
               minWidth="340px"
               headerRight={
                 <DashboardCardFilter
@@ -747,6 +764,7 @@ function Dashboard() {
           <StatCard
             title="Dispatch Data"
             info={MAIN_INFO.dispatch}
+            dashboardKey="main.dispatch"
             count={dispatch?.totalQuantity}
             minWidth="350px"
             headerRight={
@@ -771,10 +789,11 @@ function Dashboard() {
           </StatCard>
 
           {/* 12. CUSTOMER QUALITY */}
-          {(isAdmin || hasAccessToProcess("QA/R/007")) && (
+          {(showGatedCard("QA/R/007")) && (
             <StatCard
               title="Customer Quality"
             info={MAIN_INFO.customerQuality}
+            dashboardKey="main.customerQuality"
               minWidth="300px"
               headerRight={
                 <DashboardCardFilter
@@ -853,10 +872,11 @@ function Dashboard() {
         {/* ── Priority Row 5: Incoming Inspection, Quality Audit, Continuous Improvement ── */}
         <Flex wrap="wrap" gap={6}>
           {/* 13. INCOMING INSPECTION */}
-          {(isAdmin || hasAccessToProcess("QA/R/003")) && (
+          {(showGatedCard("QA/R/003")) && (
             <StatCard
               title="Incoming Inspection"
             info={MAIN_INFO.incomingInspection}
+            dashboardKey="main.incomingInspection"
               count={incomingInspData?.pendingCount || 0}
               minWidth="300px"
             >
@@ -884,10 +904,11 @@ function Dashboard() {
           )}
 
           {/* 14. QUALITY AUDIT */}
-          {(isAdmin || hasAccessToProcess("QA/F/005")) && (
+          {(showGatedCard("QA/F/005")) && (
             <StatCard
               title="Quality Audits (Pending)"
             info={MAIN_INFO.qualityAudits}
+            dashboardKey="main.qualityAudits"
               count={qualityAuditsData?.totalPending || 0}
               minWidth="600px"
             >
@@ -904,10 +925,11 @@ function Dashboard() {
           )}
 
           {/* 15. CONTINUOUS IMPROVEMENT */}
-          {(isAdmin || hasAccessToProcess("MR/R/005")) && (
+          {(showGatedCard("MR/R/005")) && (
             <StatCard
               title="Continuous Improvement"
             info={MAIN_INFO.continuousImprovement}
+            dashboardKey="main.continuousImprovement"
               minWidth="300px"
               headerRight={
                 <DashboardCardFilter
@@ -954,10 +976,11 @@ function Dashboard() {
 
           <Flex wrap="wrap" gap={6}>
             {/* Revision Control */}
-            {(isAdmin || hasAccessToProcess("DD/R/005")) && (
+            {(showGatedCard("DD/R/005")) && (
               <StatCard
                 title="Revision Control"
             info={MAIN_INFO.revisionControl}
+            dashboardKey="main.revisionControl"
                 count={revisionControlData.length}
                 minWidth="450px"
               >
@@ -980,10 +1003,11 @@ function Dashboard() {
             )}
 
             {/* OEE Trend */}
-            {(isAdmin || hasAccessToProcess("MR/R/002")) && (
+            {(showGatedCard("MR/R/002")) && (
               <StatCard
                 title="OEE Trend"
             info={MAIN_INFO.oeeTrend}
+            dashboardKey="main.oeeTrend"
                 minWidth="450px"
                 headerRight={
                   <DashboardCardFilter
@@ -1005,10 +1029,11 @@ function Dashboard() {
             )}
 
             {/* Rework Status */}
-            {(isAdmin || hasAccessToProcess("MR/R/003A")) && (
+            {(showGatedCard("MR/R/003A")) && (
               <StatCard
                 title="Rework Status"
             info={MAIN_INFO.rework}
+            dashboardKey="main.rework"
                 minWidth="200px"
               >
                 <Suspense fallback={<ChartSkeleton type="circles" />}>
@@ -1046,10 +1071,11 @@ function Dashboard() {
 
           <Flex wrap="wrap" gap={6}>
             {/* Settings Performance */}
-            {(isAdmin || hasAccessToProcess("MR/R/002A")) && (
+            {(showGatedCard("MR/R/002A")) && (
               <StatCard
                 title="Settings Performance"
             info={MAIN_INFO.settings}
+            dashboardKey="main.settings"
                 count={settingsDeptData?.noOfSettings || 0}
                 minWidth="350px"
               >
@@ -1105,10 +1131,11 @@ function Dashboard() {
             )}
 
             {/* Overall Products Summary */}
-            {(isAdmin || hasAccessToProcess("DD/R/001")) && (
+            {(showGatedCard("DD/R/001")) && (
               <StatCard
                 title="Overall Products Summary"
             info={MAIN_INFO.productsSummary}
+            dashboardKey="main.productsSummary"
                 minH="150px"
                 minWidth="280px"
               >
@@ -1180,10 +1207,11 @@ function Dashboard() {
             )}
 
             {/* Product Success Rate */}
-            {(isAdmin || hasAccessToProcess("DD/R/007")) && (
+            {(showGatedCard("DD/R/007")) && (
               <StatCard
                 title="Product Success Rate"
             info={MAIN_INFO.productSuccess}
+            dashboardKey="main.productSuccess"
                 count={`${productSuccessData?.data?.totalOpen || 0}`}
                 minWidth="300px"
                 headerRight
@@ -1215,10 +1243,11 @@ function Dashboard() {
 
           <Flex wrap="wrap" gap={6}>
             {/* Instrument Status */}
-            {(isAdmin || hasAccessToProcess("QA/R/002")) && (
+            {(showGatedCard("QA/R/002")) && (
               <StatCard
                 title="Instrument Status"
             info={MAIN_INFO.instruments}
+            dashboardKey="main.instruments"
                 count={calibrationDeptData?.totalFiltered || 0}
                 minWidth="400px"
               >
@@ -1229,10 +1258,11 @@ function Dashboard() {
             )}
 
             {/* Process Control Plan */}
-            {(isAdmin || hasAccessToProcess("QA/R/009")) && (
+            {(showGatedCard("QA/R/009")) && (
               <StatCard
                 title="Process Control Plan"
             info={MAIN_INFO.processControlPlan}
+            dashboardKey="main.processControlPlan"
                 count={pcpDeptData?.totalRecords || 0}
                 minWidth="400px"
               >
@@ -1316,6 +1346,7 @@ function Dashboard() {
             <StatCard
               title="Certificate Renewal Status"
             info={MAIN_INFO.certificates}
+            dashboardKey="main.certificates"
               count={(certsDeptData || []).filter(c => c.isDue).length}
               minWidth="450px"
             >
@@ -1356,6 +1387,7 @@ function Dashboard() {
             <StatCard
               title="Quotation List Status"
             info={MAIN_INFO.quotationStatus}
+            dashboardKey="main.quotationStatus"
               minWidth="350px"
             >
               <Suspense fallback={<ChartSkeleton type="chart" />}>
@@ -1380,6 +1412,7 @@ function Dashboard() {
             <StatCard
               title="Output (Trends)"
             info={MAIN_INFO.outputTrend}
+            dashboardKey="main.outputTrend"
               count={dispatch?.totalQuantity}
               minWidth="400px"
               headerRight={
